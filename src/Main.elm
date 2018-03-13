@@ -1,8 +1,10 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, h1, img)
+import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src, style)
+import Keyboard
 import List.Extra
+import Point exposing (Point)
 
 
 ---- MODEL ----
@@ -15,10 +17,6 @@ type alias Model =
     , tileInstances : List TileInstance
     , defaultTile : Tile
     }
-
-
-type alias Point =
-    { x : Int, y : Int }
 
 
 type alias Tile =
@@ -49,6 +47,11 @@ init =
     )
 
 
+modelSetViewPosition : Point -> Model -> Model
+modelSetViewPosition viewPosition model =
+    { model | viewPosition = viewPosition }
+
+
 getTileByTileInstance : Model -> TileInstance -> Tile
 getTileByTileInstance model tileInstance =
     case List.Extra.getAt tileInstance.tileId model.tiles of
@@ -59,9 +62,14 @@ getTileByTileInstance model tileInstance =
             model.defaultTile
 
 
-gridToPixels : number
+gridToPixels : Int
 gridToPixels =
     16
+
+
+pixelsToGrid : Float
+pixelsToGrid =
+    1 / (toFloat gridToPixels)
 
 
 
@@ -70,11 +78,33 @@ gridToPixels =
 
 type Msg
     = NoOp
+    | KeyMsg Keyboard.KeyCode
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        KeyMsg keyCode ->
+            let
+                unit =
+                    if keyCode == 37 then
+                        Point -1 0
+                    else if keyCode == 38 then
+                        Point 0 -1
+                    else if keyCode == 39 then
+                        Point 1 0
+                    else if keyCode == 40 then
+                        Point 0 1
+                    else
+                        Point 0 0
+
+                movement =
+                    Point.mult unit gridToPixels
+            in
+                ( modelSetViewPosition (Point.add model.viewPosition movement) model, Cmd.none )
 
 
 
@@ -115,6 +145,17 @@ tileView model tileInstance =
 
 
 
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Keyboard.downs KeyMsg
+        ]
+
+
+
 ---- PROGRAM ----
 
 
@@ -124,5 +165,5 @@ main =
         { view = view
         , init = init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }
