@@ -5,6 +5,7 @@ import Html.Attributes exposing (src, style)
 import Keyboard
 import List.Extra
 import Point exposing (Point)
+import Mouse
 
 
 ---- MODEL ----
@@ -52,6 +53,21 @@ modelSetViewPosition viewPosition model =
     { model | viewPosition = viewPosition }
 
 
+modelAddTileInstance : TileInstance -> Model -> Model
+modelAddTileInstance tileInstance model =
+    { model | tileInstances = model.tileInstances ++ [ tileInstance ] }
+
+
+modelGetTileOrDefault : Int -> Model -> Tile
+modelGetTileOrDefault tileId model =
+    case List.Extra.getAt tileId model.tiles of
+        Just tile ->
+            tile
+
+        Nothing ->
+            model.defaultTile
+
+
 getTileByTileInstance : Model -> TileInstance -> Tile
 getTileByTileInstance model tileInstance =
     case List.Extra.getAt tileInstance.tileId model.tiles of
@@ -79,6 +95,7 @@ pixelsToGrid =
 type Msg
     = NoOp
     | KeyMsg Keyboard.KeyCode
+    | MouseDown Mouse.Position
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -102,9 +119,30 @@ update msg model =
                         Point 0 0
 
                 movement =
-                    Point.mult unit gridToPixels
+                    Point.mult unit (gridToPixels // 3)
             in
                 ( modelSetViewPosition (Point.add model.viewPosition movement) model, Cmd.none )
+
+        MouseDown mousePosition ->
+            let
+                tileId =
+                    0
+
+                tile =
+                    modelGetTileOrDefault tileId model
+
+                gridX =
+                    (toFloat mousePosition.x * pixelsToGrid |> floor) - (tile.gridSize.x // 2)
+
+                gridY =
+                    (toFloat mousePosition.y * pixelsToGrid |> floor) - (tile.gridSize.x // 2)
+
+                tileInstance =
+                    TileInstance tileId (Point gridX gridY)
+
+                -- (tile.gridSize.y // 2)
+            in
+                ( modelAddTileInstance tileInstance model, Cmd.none )
 
 
 
@@ -117,7 +155,15 @@ view model =
         tileViews =
             model.tileInstances |> List.sortBy (\a -> a.position.y) |> List.map (\a -> tileView model a)
     in
-        div [] tileViews
+        div
+            [ style
+                [ ( "background-image", "url(\"grid.png\")" )
+                , ( "width", "100%" )
+                , ( "height", "100vh" )
+                , ( "background-position", toString -model.viewPosition.x ++ "px " ++ toString -model.viewPosition.y ++ "px" )
+                ]
+            ]
+            tileViews
 
 
 tileView : Model -> TileInstance -> Html msg
@@ -152,6 +198,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Keyboard.downs KeyMsg
+        , Mouse.downs MouseDown
         ]
 
 
