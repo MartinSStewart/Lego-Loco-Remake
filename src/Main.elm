@@ -88,6 +88,18 @@ pixelsToGrid =
     1 / (toFloat gridToPixels)
 
 
+viewToGrid : Point -> Model -> Point
+viewToGrid viewPoint model =
+    let
+        gridX =
+            (toFloat (viewPoint.x + model.viewPosition.x) * pixelsToGrid |> floor)
+
+        gridY =
+            (toFloat (viewPoint.y + model.viewPosition.y) * pixelsToGrid |> floor)
+    in
+        Point gridX gridY
+
+
 
 ---- UPDATE ----
 
@@ -119,7 +131,7 @@ update msg model =
                         Point 0 0
 
                 movement =
-                    Point.mult unit (gridToPixels // 3)
+                    Point.mult unit (gridToPixels * 3)
             in
                 ( modelSetViewPosition (Point.add model.viewPosition movement) model, Cmd.none )
 
@@ -131,11 +143,14 @@ update msg model =
                 tile =
                     modelGetTileOrDefault tileId model
 
+                gridPos =
+                    viewToGrid mousePosition model
+
                 gridX =
-                    (toFloat mousePosition.x * pixelsToGrid |> floor) - (tile.gridSize.x // 2)
+                    gridPos.x - (tile.gridSize.x // 2)
 
                 gridY =
-                    (toFloat mousePosition.y * pixelsToGrid |> floor) - (tile.gridSize.x // 2)
+                    gridPos.y - (tile.gridSize.x // 2)
 
                 tileInstance =
                     TileInstance tileId (Point gridX gridY)
