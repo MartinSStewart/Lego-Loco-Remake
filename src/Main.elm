@@ -5,7 +5,7 @@ import Html.Attributes exposing (src, style)
 import Keyboard
 import List.Extra
 import Point exposing (Point)
-import Mouse
+import MouseEvents
 
 
 ---- MODEL ----
@@ -14,9 +14,7 @@ import Mouse
 type alias Model =
     { viewPosition : Point
     , viewSize : Point
-    , tiles : List Tile
     , tileInstances : List TileInstance
-    , defaultTile : Tile
     }
 
 
@@ -34,18 +32,32 @@ type alias TileInstance =
     }
 
 
+type alias Toolbox =
+    { viewPosition : Point
+    , selectedTileId : Int
+    }
+
+
 init : ( Model, Cmd Msg )
 init =
     ( Model
         (Point 0 0)
         (Point 500 500)
-        [ Tile "/house0.png" (Point 0 -10) "Red House" (Point 3 3)
-        ]
         [ TileInstance 0 (Point 0 3), TileInstance 0 (Point 0 0) ]
-      <|
-        Tile "/house0.png" (Point 0 -10) "Red House" (Point 3 3)
     , Cmd.none
     )
+
+
+tiles : List Tile
+tiles =
+    [ Tile "/house0.png" (Point 0 -10) "Red House" (Point 3 3)
+    , Tile "/house0.png" (Point 0 -10) "Red House" (Point 3 3)
+    ]
+
+
+defaultTile : Tile
+defaultTile =
+    Tile "/house0.png" (Point 0 -10) "Red House" (Point 3 3)
 
 
 modelSetViewPosition : Point -> Model -> Model
@@ -58,24 +70,24 @@ modelAddTileInstance tileInstance model =
     { model | tileInstances = model.tileInstances ++ [ tileInstance ] }
 
 
-modelGetTileOrDefault : Int -> Model -> Tile
-modelGetTileOrDefault tileId model =
-    case List.Extra.getAt tileId model.tiles of
+getTileOrDefault : Int -> Tile
+getTileOrDefault tileId =
+    case List.Extra.getAt tileId tiles of
         Just tile ->
             tile
 
         Nothing ->
-            model.defaultTile
+            defaultTile
 
 
-getTileByTileInstance : Model -> TileInstance -> Tile
-getTileByTileInstance model tileInstance =
-    case List.Extra.getAt tileInstance.tileId model.tiles of
+getTileByTileInstance : TileInstance -> Tile
+getTileByTileInstance tileInstance =
+    case List.Extra.getAt tileInstance.tileId tiles of
         Just tile ->
             tile
 
         Nothing ->
-            model.defaultTile
+            defaultTile
 
 
 gridToPixels : Int
@@ -107,7 +119,7 @@ viewToGrid viewPoint model =
 type Msg
     = NoOp
     | KeyMsg Keyboard.KeyCode
-    | MouseDown Mouse.Position
+    | MouseDown MouseEvents.MouseEvent
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -135,16 +147,16 @@ update msg model =
             in
                 ( modelSetViewPosition (Point.add model.viewPosition movement) model, Cmd.none )
 
-        MouseDown mousePosition ->
+        MouseDown mouseEvent ->
             let
                 tileId =
                     0
 
                 tile =
-                    modelGetTileOrDefault tileId model
+                    getTileOrDefault tileId
 
                 gridPos =
-                    viewToGrid mousePosition model
+                    viewToGrid (MouseEvents.relPos mouseEvent) model
 
                 gridX =
                     gridPos.x - (tile.gridSize.x // 2)
@@ -154,8 +166,6 @@ update msg model =
 
                 tileInstance =
                     TileInstance tileId (Point gridX gridY)
-
-                -- (tile.gridSize.y // 2)
             in
                 ( modelAddTileInstance tileInstance model, Cmd.none )
 
@@ -171,7 +181,8 @@ view model =
             model.tileInstances |> List.sortBy (\a -> a.position.y) |> List.map (\a -> tileView model a)
     in
         div
-            [ style
+            [ MouseEvents.onClick MouseDown
+            , style
                 [ ( "background-image", "url(\"grid.png\")" )
                 , ( "width", "100%" )
                 , ( "height", "100vh" )
@@ -185,7 +196,7 @@ tileView : Model -> TileInstance -> Html msg
 tileView model tileInstance =
     let
         tile =
-            getTileByTileInstance model tileInstance
+            getTileByTileInstance tileInstance
 
         x =
             tile.imageOffset.x + gridToPixels * tileInstance.position.x - model.viewPosition.x
@@ -213,7 +224,6 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Keyboard.downs KeyMsg
-        , Mouse.downs MouseDown
         ]
 
 
