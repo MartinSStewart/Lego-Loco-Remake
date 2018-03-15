@@ -4,63 +4,82 @@ import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src, style)
 import Keyboard
 import List.Extra
-import Point exposing (Point)
+import Int2 exposing (Int2)
 import MouseEvents
+import Toolbox exposing (Toolbox)
+import Helpers exposing (..)
+import Mouse exposing (Position)
+import Json.Decode as Decode
+import Html.Events exposing (on)
 
 
 ---- MODEL ----
 
 
 type alias Model =
-    { viewPosition : Point
-    , viewSize : Point
+    { viewPosition : Int2 -- Position of view in pixel coordinates.
+    , viewSize : Int2 -- Size of view in pixel coordinates.
     , tileInstances : List TileInstance
+    , toolbox : Toolbox
+    , drag : Maybe Drag
+    }
+
+
+type alias Drag =
+    { start : Position
+    , current : Position
     }
 
 
 type alias Tile =
     { imageName : String
-    , imageOffset : Point
+    , imageOffset : Int2
     , name : String
-    , gridSize : Point
+    , gridSize : Int2
     }
 
 
 type alias TileInstance =
     { tileId : Int
-    , position : Point
+    , position : Int2
     }
 
 
-type alias Toolbox =
-    { viewPosition : Point
-    , selectedTileId : Int
-    }
+modelSetToolbox : Model -> Toolbox -> Model
+modelSetToolbox model toolbox =
+    { model | toolbox = toolbox }
+
+
+modelSetToolboxViewPosition : Model -> Int2 -> Model
+modelSetToolboxViewPosition model viewPosition =
+    Toolbox.setViewPosition viewPosition model.toolbox |> modelSetToolbox model
 
 
 init : ( Model, Cmd Msg )
 init =
     ( Model
-        (Point 0 0)
-        (Point 500 500)
-        [ TileInstance 0 (Point 0 3), TileInstance 0 (Point 0 0) ]
+        (Int2 0 0)
+        (Int2 500 500)
+        [ TileInstance 0 (Int2 0 3), TileInstance 0 (Int2 0 0) ]
+        Toolbox.default
+        Nothing
     , Cmd.none
     )
 
 
 tiles : List Tile
 tiles =
-    [ Tile "/house0.png" (Point 0 -10) "Red House" (Point 3 3)
-    , Tile "/house0.png" (Point 0 -10) "Red House" (Point 3 3)
+    [ Tile "/house0.png" (Int2 0 -10) "Red House" (Int2 3 3)
+    , Tile "/house0.png" (Int2 0 -10) "Red House" (Int2 3 3)
     ]
 
 
 defaultTile : Tile
 defaultTile =
-    Tile "/house0.png" (Point 0 -10) "Red House" (Point 3 3)
+    Tile "/house0.png" (Int2 0 -10) "Red House" (Int2 3 3)
 
 
-modelSetViewPosition : Point -> Model -> Model
+modelSetViewPosition : Int2 -> Model -> Model
 modelSetViewPosition viewPosition model =
     { model | viewPosition = viewPosition }
 
@@ -100,7 +119,7 @@ pixelsToGrid =
     1 / (toFloat gridToPixels)
 
 
-viewToGrid : Point -> Model -> Point
+viewToGrid : Int2 -> Model -> Int2
 viewToGrid viewPoint model =
     let
         gridX =
@@ -109,7 +128,7 @@ viewToGrid viewPoint model =
         gridY =
             (toFloat (viewPoint.y + model.viewPosition.y) * pixelsToGrid |> floor)
     in
-        Point gridX gridY
+        Int2 gridX gridY
 
 
 
@@ -120,54 +139,90 @@ type Msg
     = NoOp
     | KeyMsg Keyboard.KeyCode
     | MouseDown MouseEvents.MouseEvent
+    | DragStart Position
+    | DragAt Position
+    | DragEnd Position
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        NoOp ->
-            ( model, Cmd.none )
+    let
+        drag =
+            model.drag
 
-        KeyMsg keyCode ->
-            let
-                unit =
-                    if keyCode == 37 then
-                        Point -1 0
-                    else if keyCode == 38 then
-                        Point 0 -1
-                    else if keyCode == 39 then
-                        Point 1 0
-                    else if keyCode == 40 then
-                        Point 0 1
-                    else
-                        Point 0 0
+        position =
+            model.toolbox.viewPosition
+    in
+        case msg of
+            NoOp ->
+                ( model, Cmd.none )
 
-                movement =
-                    Point.mult unit (gridToPixels * 3)
-            in
-                ( modelSetViewPosition (Point.add model.viewPosition movement) model, Cmd.none )
+            KeyMsg keyCode ->
+                let
+                    unit =
+                        if keyCode == 37 then
+                            Int2 -1 0
+                        else if keyCode == 38 then
+                            Int2 0 -1
+                        else if keyCode == 39 then
+                            Int2 1 0
+                        else if keyCode == 40 then
+                            Int2 0 1
+                        else
+                            Int2 0 0
 
-        MouseDown mouseEvent ->
-            let
-                tileId =
-                    0
+                    movement =
+                        Int2.mult unit (gridToPixels // 3)
+                in
+                    ( modelSetViewPosition (Int2.add model.viewPosition movement) model, Cmd.none )
 
-                tile =
-                    getTileOrDefault tileId
+            MouseDown mouseEvent ->
+                let
+                    tileId =
+                        0
 
-                gridPos =
-                    viewToGrid (MouseEvents.relPos mouseEvent) model
+                    tile =
+                        getTileOrDefault tileId
 
-                gridX =
-                    gridPos.x - (tile.gridSize.x // 2)
+                    gridPos =
+                        viewToGrid (MouseEvents.relPos mouseEvent) model
 
-                gridY =
-                    gridPos.y - (tile.gridSize.x // 2)
+                    gridX =
+                        gridPos.x - (tile.gridSize.x // 2)
 
-                tileInstance =
-                    TileInstance tileId (Point gridX gridY)
-            in
-                ( modelAddTileInstance tileInstance model, Cmd.none )
+                    gridY =
+                        gridPos.y - (tile.gridSize.x // 2)
+
+                    tileInstance =
+                        TileInstance tileId (Int2 gridX gridY)
+                in
+                    ( modelAddTileInstance tileInstance model, Cmd.none )
+
+            DragStart xy ->
+                ( { model | drag = (Just (Drag xy xy)) }, Cmd.none )
+
+            DragAt xy ->
+                let
+                    newDrag =
+                        case model.drag of
+                            Just drag ->
+                                Just { drag | current = xy }
+
+                            Nothing ->
+                                Just <| Drag xy xy
+
+                    newModel =
+                        { model | drag = newDrag }
+                in
+                    ( newModel, Cmd.none )
+
+            --position (Maybe.map (\{ start } -> Drag start xy) drag)
+            DragEnd xy ->
+                let
+                    newModel =
+                        modelSetToolboxViewPosition model <| getPosition model
+                in
+                    ( { newModel | drag = Nothing }, Cmd.none )
 
 
 
@@ -179,17 +234,28 @@ view model =
     let
         tileViews =
             model.tileInstances |> List.sortBy (\a -> a.position.y) |> List.map (\a -> tileView model a)
+
+        stylePosition point =
+            withSuffix point.x "px " ++ withSuffix point.y "px"
+
+        realPosition =
+            getPosition model
+
+        toolbox =
+            model.toolbox
     in
         div
             [ MouseEvents.onClick MouseDown
             , style
-                [ ( "background-image", "url(\"grid.png\")" )
+                [ background "grid.png"
                 , ( "width", "100%" )
                 , ( "height", "100vh" )
-                , ( "background-position", toString -model.viewPosition.x ++ "px " ++ toString -model.viewPosition.y ++ "px" )
+                , ( "background-position", Int2.negate model.viewPosition |> stylePosition )
                 ]
             ]
+        <|
             tileViews
+                ++ [ Toolbox.toolboxView { toolbox | viewPosition = realPosition } NoOp onMouseDown ]
 
 
 tileView : Model -> TileInstance -> Html msg
@@ -208,12 +274,34 @@ tileView model tileInstance =
             [ src "/house0.png"
             , style
                 [ ( "position", "absolute" )
-                , ( "left", toString x ++ "px" )
-                , ( "top", toString y ++ "px" )
+                , ( "left", withSuffix x "px" )
+                , ( "top", withSuffix y "px" )
                 , ( "margin", "0px" )
+                , ( "pointer-events", "none" )
                 ]
             ]
             []
+
+
+getPosition : Model -> Position
+getPosition model =
+    let
+        position =
+            model.toolbox.viewPosition
+    in
+        case model.drag of
+            Nothing ->
+                position
+
+            Just { start, current } ->
+                Position
+                    (position.x + current.x - start.x)
+                    (position.y + current.y - start.y)
+
+
+onMouseDown : Html.Attribute Msg
+onMouseDown =
+    on "mousedown" (Decode.map DragStart Mouse.position)
 
 
 
@@ -222,9 +310,14 @@ tileView model tileInstance =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ Keyboard.downs KeyMsg
-        ]
+    case model.drag of
+        Nothing ->
+            Sub.batch
+                [ Keyboard.downs KeyMsg
+                ]
+
+        Just _ ->
+            Sub.batch [ Mouse.moves DragAt, Mouse.ups DragEnd ]
 
 
 
