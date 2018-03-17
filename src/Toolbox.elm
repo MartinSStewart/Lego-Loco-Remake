@@ -41,6 +41,17 @@ toolboxTileMargin =
     3
 
 
+absoluteStyle : Int2 -> Int2 -> List ( String, String )
+absoluteStyle pixelPosition pixelSize =
+    [ ( "position", "absolute" )
+    , ( "left", px pixelPosition.x )
+    , ( "top", px pixelPosition.y )
+    , ( "width", px pixelSize.x )
+    , ( "height", px pixelSize.y )
+    , ( "margin", "0px" )
+    ]
+
+
 {-| Size of toolbox in view coordinates.
 -}
 toolboxSize : Int2
@@ -76,27 +87,15 @@ toolboxView toolbox noOp drag =
     in
         div
             [ onEvent "click" noOp
-            , style
-                [ background "/toolbox.png"
-                , ( "position", "absolute" )
-                , ( "left", withSuffix position.x "px" )
-                , ( "top", withSuffix position.y "px" )
-                , ( "width", withSuffix toolboxSize.x "px" )
-                , ( "height", withSuffix toolboxSize.y "px" )
-                , ( "background-color", "gray" )
-                , ( "margin", "0px" )
-                ]
+            , style <|
+                [ background "/toolbox.png" ]
+                    ++ absoluteStyle position toolboxSize
             ]
             [ div
                 [ drag
-                , style
-                    [ background "/toolboxHandle.png"
-                    , ( "position", "absolute" )
-                    , ( "left", withSuffix handlePosition.x "px" )
-                    , ( "top", withSuffix handlePosition.y "px" )
-                    , ( "width", withSuffix toolboxHandleSize.x "px" )
-                    , ( "height", withSuffix toolboxHandleSize.y "px" )
-                    ]
+                , style <|
+                    [ background "/toolboxHandle.png" ]
+                        ++ absoluteStyle handlePosition toolboxHandleSize
                 ]
                 []
             ]

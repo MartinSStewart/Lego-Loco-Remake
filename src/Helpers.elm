@@ -1,9 +1,9 @@
 module Helpers exposing (..)
 
 
-withSuffix : a -> String -> String
-withSuffix value suffix =
-    toString value ++ suffix
+px : number -> String
+px value =
+    toString value ++ "px"
 
 
 background : String -> ( String, String )

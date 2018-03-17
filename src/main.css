@@ -14,3 +14,11 @@ img {
   margin: 20px 0;
   max-width: 200px;
 }
+
+noSelect {
+    -khtml-user-select: none;
+    -o-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}

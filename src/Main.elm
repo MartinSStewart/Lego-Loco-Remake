@@ -60,7 +60,8 @@ init =
     ( Model
         (Int2 0 0)
         (Int2 500 500)
-        [ TileInstance 0 (Int2 0 3), TileInstance 0 (Int2 0 0) ]
+        []
+        --[ TileInstance 0 (Int2 0 3), TileInstance 0 (Int2 0 0) ]
         Toolbox.default
         Nothing
     , Cmd.none
@@ -70,13 +71,13 @@ init =
 tiles : List Tile
 tiles =
     [ Tile "/house0.png" (Int2 0 -10) "Red House" (Int2 3 3)
-    , Tile "/house0.png" (Int2 0 -10) "Red House" (Int2 3 3)
+    , Tile "/sidewalk.png" (Int2 0 0) "Red House" (Int2 1 1)
     ]
 
 
 defaultTile : Tile
 defaultTile =
-    Tile "/house0.png" (Int2 0 -10) "Red House" (Int2 3 3)
+    Tile "/sidewalk.png" (Int2 0 0) "Red House" (Int2 1 1)
 
 
 modelSetViewPosition : Int2 -> Model -> Model
@@ -86,7 +87,67 @@ modelSetViewPosition viewPosition model =
 
 modelAddTileInstance : TileInstance -> Model -> Model
 modelAddTileInstance tileInstance model =
-    { model | tileInstances = model.tileInstances ++ [ tileInstance ] }
+    let
+        newTileInstances =
+            List.filter (\a -> not (collidesWith a tileInstance)) model.tileInstances ++ [ tileInstance ]
+    in
+        { model | tileInstances = newTileInstances }
+
+
+collidesWith : TileInstance -> TileInstance -> Bool
+collidesWith tileInstance0 tileInstance1 =
+    let
+        getTileSize tileInstance =
+            getTileOrDefault tileInstance.tileId |> .gridSize
+    in
+        rectangleCollision
+            tileInstance0.position
+            (getTileSize tileInstance0)
+            tileInstance1.position
+            (getTileSize tileInstance1)
+
+
+collisionsAt : Model -> Int2 -> Int2 -> List TileInstance
+collisionsAt model gridPosition gridSize =
+    let
+        getTileSize tileInstance =
+            getTileOrDefault tileInstance.tileId |> .gridSize
+    in
+        List.filter
+            (\a -> rectangleCollision a.position (getTileSize a) gridPosition gridSize)
+            model.tileInstances
+
+
+rectangleCollision : Int2 -> Int2 -> Int2 -> Int2 -> Bool
+rectangleCollision topLeft0 size0 topLeft1 size1 =
+    let
+        topRight0 =
+            Int2.add topLeft0 (Int2 (size1.x - 1) 0)
+
+        bottomRight0 =
+            Int2.add topLeft0 size0 |> Int2.add (Int2 -1 -1)
+
+        topRight1 =
+            Int2.add topLeft1 (Int2 (size1.x - 1) 0)
+
+        bottomRight1 =
+            Int2.add topLeft1 size1 |> Int2.add (Int2 -1 -1)
+    in
+        pointInsideRectangle topLeft0 size0 topLeft1
+            || pointInsideRectangle topLeft0 size0 topRight1
+            || pointInsideRectangle topLeft0 size0 bottomRight1
+            || pointInsideRectangle topLeft1 size1 topLeft0
+            || pointInsideRectangle topLeft1 size1 topRight0
+            || pointInsideRectangle topLeft1 size1 bottomRight0
+
+
+pointInsideRectangle : Int2 -> Int2 -> Int2 -> Bool
+pointInsideRectangle topLeft rectangleSize point =
+    let
+        bottomRight =
+            Int2.add topLeft rectangleSize
+    in
+        topLeft.x <= point.x && point.x < bottomRight.x && topLeft.y <= point.y && point.y < bottomRight.y
 
 
 getTileOrDefault : Int -> Tile
@@ -172,7 +233,7 @@ update msg model =
                             Int2 0 0
 
                     movement =
-                        Int2.mult unit (gridToPixels // 3)
+                        Int2.multScalar unit (gridToPixels // 3)
                 in
                     ( modelSetViewPosition (Int2.add model.viewPosition movement) model, Cmd.none )
 
@@ -216,7 +277,6 @@ update msg model =
                 in
                     ( newModel, Cmd.none )
 
-            --position (Maybe.map (\{ start } -> Drag start xy) drag)
             DragEnd xy ->
                 let
                     newModel =
@@ -236,7 +296,7 @@ view model =
             model.tileInstances |> List.sortBy (\a -> a.position.y) |> List.map (\a -> tileView model a)
 
         stylePosition point =
-            withSuffix point.x "px " ++ withSuffix point.y "px"
+            px point.x ++ " " ++ px point.y
 
         realPosition =
             getPosition model
@@ -269,16 +329,17 @@ tileView model tileInstance =
 
         y =
             tile.imageOffset.y + gridToPixels * tileInstance.position.y - model.viewPosition.y
+
+        size =
+            tile.gridSize |> Int2.add (Int2 1 1) |> Int2.mult (Int2 gridToPixels gridToPixels)
     in
-        img
-            [ src "/house0.png"
-            , style
-                [ ( "position", "absolute" )
-                , ( "left", withSuffix x "px" )
-                , ( "top", withSuffix y "px" )
-                , ( "margin", "0px" )
+        div
+            [ style <|
+                [ background "house0.png"
+                , ( "background-repeat", "no-repeat" )
                 , ( "pointer-events", "none" )
                 ]
+                    ++ Toolbox.absoluteStyle (Int2 x y) size
             ]
             []
 

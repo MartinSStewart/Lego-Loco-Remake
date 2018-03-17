@@ -25,9 +25,14 @@ sub point0 point1 =
     { x = point0.x - point1.x, y = point0.y - point1.y }
 
 
-mult : { x : number, y : number } -> number -> { x : number, y : number }
-mult point scalar =
+multScalar : { x : number, y : number } -> number -> { x : number, y : number }
+multScalar point scalar =
     { x = point.x * scalar, y = point.y * scalar }
+
+
+mult : { x : number, y : number } -> { x : number, y : number } -> { x : number, y : number }
+mult point0 point1 =
+    { x = point0.x * point1.x, y = point0.y * point1.y }
 
 
 div : Int -> Int2 -> Int2
