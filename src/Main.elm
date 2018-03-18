@@ -260,7 +260,16 @@ update msg model =
                     ( modelAddTileInstance tileInstance model, Cmd.none )
 
             DragStart xy ->
-                ( { model | drag = (Just (Drag xy xy)) }, Cmd.none )
+                let
+                    newDrag =
+                        case model.drag of
+                            Nothing ->
+                                (Just (Drag xy xy))
+
+                            Just a ->
+                                Just a
+                in
+                    ( { model | drag = newDrag }, Cmd.none )
 
             DragAt xy ->
                 let
