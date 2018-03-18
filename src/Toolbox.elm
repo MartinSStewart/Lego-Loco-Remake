@@ -64,6 +64,17 @@ toolboxHandleSize =
     Int2 64 32
 
 
+insideToolbox : Int2 -> Toolbox -> Bool
+insideToolbox viewPoint toolbox =
+    Int2.pointInsideRectangle toolbox.viewPosition toolboxSize viewPoint
+        || Int2.pointInsideRectangle (toolboxHandlePosition toolbox) toolboxHandleSize viewPoint
+
+
+toolboxHandlePosition : Toolbox -> Int2
+toolboxHandlePosition toolbox =
+    Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) -14 |> Int2.add toolbox.viewPosition
+
+
 onEvent : String -> b -> Html.Attribute b
 onEvent eventName callback =
     Events.onWithOptions
@@ -72,11 +83,7 @@ onEvent eventName callback =
         (Decode.succeed callback)
 
 
-toolboxView :
-    Toolbox
-    -> msg
-    -> Html.Attribute msg
-    -> Html msg
+toolboxView : Toolbox -> msg -> Html.Attribute msg -> Html msg
 toolboxView toolbox noOp drag =
     let
         position =

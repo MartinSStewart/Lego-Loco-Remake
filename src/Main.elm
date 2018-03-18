@@ -22,6 +22,7 @@ type alias Model =
     , tileInstances : List TileInstance
     , toolbox : Toolbox
     , drag : Maybe Drag
+    , currentTile : Maybe TileInstance
     }
 
 
@@ -64,6 +65,7 @@ init =
         --[ TileInstance 0 (Int2 0 3), TileInstance 0 (Int2 0 0) ]
         Toolbox.default
         Nothing
+        (Just (TileInstance 0 (Int2 0 3)))
     , Cmd.none
     )
 
@@ -100,7 +102,7 @@ collidesWith tileInstance0 tileInstance1 =
         getTileSize tileInstance =
             getTileOrDefault tileInstance.tileId |> .gridSize
     in
-        rectangleCollision
+        Int2.rectangleCollision
             tileInstance0.position
             (getTileSize tileInstance0)
             tileInstance1.position
@@ -114,40 +116,8 @@ collisionsAt model gridPosition gridSize =
             getTileOrDefault tileInstance.tileId |> .gridSize
     in
         List.filter
-            (\a -> rectangleCollision a.position (getTileSize a) gridPosition gridSize)
+            (\a -> Int2.rectangleCollision a.position (getTileSize a) gridPosition gridSize)
             model.tileInstances
-
-
-rectangleCollision : Int2 -> Int2 -> Int2 -> Int2 -> Bool
-rectangleCollision topLeft0 size0 topLeft1 size1 =
-    let
-        topRight0 =
-            Int2.add topLeft0 (Int2 (size1.x - 1) 0)
-
-        bottomRight0 =
-            Int2.add topLeft0 size0 |> Int2.add (Int2 -1 -1)
-
-        topRight1 =
-            Int2.add topLeft1 (Int2 (size1.x - 1) 0)
-
-        bottomRight1 =
-            Int2.add topLeft1 size1 |> Int2.add (Int2 -1 -1)
-    in
-        pointInsideRectangle topLeft0 size0 topLeft1
-            || pointInsideRectangle topLeft0 size0 topRight1
-            || pointInsideRectangle topLeft0 size0 bottomRight1
-            || pointInsideRectangle topLeft1 size1 topLeft0
-            || pointInsideRectangle topLeft1 size1 topRight0
-            || pointInsideRectangle topLeft1 size1 bottomRight0
-
-
-pointInsideRectangle : Int2 -> Int2 -> Int2 -> Bool
-pointInsideRectangle topLeft rectangleSize point =
-    let
-        bottomRight =
-            Int2.add topLeft rectangleSize
-    in
-        topLeft.x <= point.x && point.x < bottomRight.x && topLeft.y <= point.y && point.y < bottomRight.y
 
 
 getTileOrDefault : Int -> Tile
@@ -192,6 +162,21 @@ viewToGrid viewPoint model =
         Int2 gridX gridY
 
 
+viewToTileGrid : Int2 -> Model -> Tile -> Int2
+viewToTileGrid viewPoint model tile =
+    let
+        gridPos =
+            viewToGrid viewPoint model
+
+        gridX =
+            gridPos.x - (tile.gridSize.x // 2)
+
+        gridY =
+            gridPos.y - (tile.gridSize.x // 2)
+    in
+        Int2 gridX gridY
+
+
 
 ---- UPDATE ----
 
@@ -203,6 +188,7 @@ type Msg
     | DragStart Position
     | DragAt Position
     | DragEnd Position
+    | MouseMoved Position
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -245,17 +231,8 @@ update msg model =
                     tile =
                         getTileOrDefault tileId
 
-                    gridPos =
-                        viewToGrid (MouseEvents.relPos mouseEvent) model
-
-                    gridX =
-                        gridPos.x - (tile.gridSize.x // 2)
-
-                    gridY =
-                        gridPos.y - (tile.gridSize.x // 2)
-
                     tileInstance =
-                        TileInstance tileId (Int2 gridX gridY)
+                        viewToTileGrid (MouseEvents.relPos mouseEvent) model tile |> TileInstance tileId
                 in
                     ( modelAddTileInstance tileInstance model, Cmd.none )
 
@@ -289,9 +266,29 @@ update msg model =
             DragEnd xy ->
                 let
                     newModel =
-                        modelSetToolboxViewPosition model <| getPosition model
+                        getPosition model |> modelSetToolboxViewPosition model |> mouseMove xy
                 in
                     ( { newModel | drag = Nothing }, Cmd.none )
+
+            MouseMoved xy ->
+                ( mouseMove xy model, Cmd.none )
+
+
+mouseMove : Int2 -> Model -> Model
+mouseMove mousePos model =
+    let
+        newCurrentTile =
+            if Toolbox.insideToolbox mousePos model.toolbox then
+                Nothing
+            else
+                case model.currentTile of
+                    Just a ->
+                        Just { a | position = getTileOrDefault a.tileId |> viewToTileGrid mousePos model }
+
+                    Nothing ->
+                        Just (TileInstance 0 mousePos)
+    in
+        { model | currentTile = newCurrentTile }
 
 
 
@@ -302,7 +299,7 @@ view : Model -> Html Msg
 view model =
     let
         tileViews =
-            model.tileInstances |> List.sortBy (\a -> a.position.y) |> List.map (\a -> tileView model a)
+            model.tileInstances |> List.sortBy (\a -> a.position.y) |> List.map (\a -> tileView model a False)
 
         stylePosition point =
             px point.x ++ " " ++ px point.y
@@ -312,6 +309,14 @@ view model =
 
         toolbox =
             model.toolbox
+
+        currentTileView =
+            case model.currentTile of
+                Just a ->
+                    [ tileView model a True ]
+
+                Nothing ->
+                    []
     in
         div
             [ MouseEvents.onClick MouseDown
@@ -324,11 +329,12 @@ view model =
             ]
         <|
             tileViews
+                ++ currentTileView
                 ++ [ Toolbox.toolboxView { toolbox | viewPosition = realPosition } NoOp onMouseDown ]
 
 
-tileView : Model -> TileInstance -> Html msg
-tileView model tileInstance =
+tileView : Model -> TileInstance -> Bool -> Html msg
+tileView model tileInstance seeThrough =
     let
         tile =
             getTileByTileInstance tileInstance
@@ -341,6 +347,12 @@ tileView model tileInstance =
 
         size =
             tile.gridSize |> Int2.add (Int2 1 1) |> Int2.mult (Int2 gridToPixels gridToPixels)
+
+        seeThroughStyle =
+            if seeThrough then
+                [ ( "opacity", "0.5" ) ]
+            else
+                []
     in
         div
             [ style <|
@@ -349,6 +361,7 @@ tileView model tileInstance =
                 , ( "pointer-events", "none" )
                 ]
                     ++ Toolbox.absoluteStyle (Int2 x y) size
+                    ++ seeThroughStyle
             ]
             []
 
@@ -384,6 +397,7 @@ subscriptions model =
         Nothing ->
             Sub.batch
                 [ Keyboard.downs KeyMsg
+                , Mouse.moves MouseMoved
                 ]
 
         Just _ ->

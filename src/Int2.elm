@@ -55,3 +55,35 @@ negate :
     -> { x : number, y : number }
 negate point =
     { x = -point.x, y = -point.y }
+
+
+rectangleCollision : Int2 -> Int2 -> Int2 -> Int2 -> Bool
+rectangleCollision topLeft0 size0 topLeft1 size1 =
+    let
+        topRight0 =
+            add topLeft0 (Int2 (size1.x - 1) 0)
+
+        bottomRight0 =
+            add topLeft0 size0 |> add (Int2 -1 -1)
+
+        topRight1 =
+            add topLeft1 (Int2 (size1.x - 1) 0)
+
+        bottomRight1 =
+            add topLeft1 size1 |> add (Int2 -1 -1)
+    in
+        pointInsideRectangle topLeft0 size0 topLeft1
+            || pointInsideRectangle topLeft0 size0 topRight1
+            || pointInsideRectangle topLeft0 size0 bottomRight1
+            || pointInsideRectangle topLeft1 size1 topLeft0
+            || pointInsideRectangle topLeft1 size1 topRight0
+            || pointInsideRectangle topLeft1 size1 bottomRight0
+
+
+pointInsideRectangle : Int2 -> Int2 -> Int2 -> Bool
+pointInsideRectangle topLeft rectangleSize point =
+    let
+        bottomRight =
+            add topLeft rectangleSize
+    in
+        topLeft.x <= point.x && point.x < bottomRight.x && topLeft.y <= point.y && point.y < bottomRight.y
