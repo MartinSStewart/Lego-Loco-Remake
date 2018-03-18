@@ -4,27 +4,37 @@ import Helpers exposing (..)
 import Int2 exposing (Int2)
 import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (src, style)
-import Html.Events as Events
+import Html.Events as Events exposing (on)
 import Json.Decode as Decode
 import Helpers exposing (..)
 import Tiles
+import Mouse
 
 
 type alias Toolbox =
     { viewPosition : Int2 -- Position of toolbox in view coordinates
     , selectedTileId : Int
-    , isDragged : Bool
+    , drag : Maybe Drag
+    }
+
+
+type ToolboxMsg
+    = NoOp
+    | DragStart Int2
+    | DragAt Mouse.Position
+    | DragEnd Int2
+    | TileSelect Int
+
+
+type alias Drag =
+    { start : Mouse.Position
+    , current : Mouse.Position
     }
 
 
 default : Toolbox
 default =
-    Toolbox (Int2 100 100) 0 False
-
-
-toolboxSetIsDragged : Bool -> Toolbox -> Toolbox
-toolboxSetIsDragged isDragged toolbox =
-    { toolbox | isDragged = isDragged }
+    Toolbox (Int2 100 100) 0 Nothing
 
 
 setViewPosition : Int2 -> Toolbox -> Toolbox
@@ -53,6 +63,66 @@ absoluteStyle pixelPosition pixelSize =
     ]
 
 
+update : ToolboxMsg -> Toolbox -> Toolbox
+update msg toolbox =
+    case msg of
+        DragStart xy ->
+            let
+                newDrag =
+                    case toolbox.drag of
+                        Nothing ->
+                            (Just (Drag xy xy))
+
+                        Just a ->
+                            Just a
+            in
+                { toolbox | drag = newDrag }
+
+        DragAt xy ->
+            let
+                newDrag =
+                    case toolbox.drag of
+                        Just drag ->
+                            Just { drag | current = xy }
+
+                        Nothing ->
+                            Just <| Drag xy xy
+
+                newToolbox =
+                    { toolbox | drag = newDrag }
+            in
+                newToolbox
+
+        DragEnd xy ->
+            let
+                newToolbox =
+                    setViewPosition (getPosition toolbox) toolbox
+            in
+                { newToolbox | drag = Nothing }
+
+        NoOp ->
+            toolbox
+
+        TileSelect _ ->
+            Debug.crash "TODO"
+
+
+getPosition : Toolbox -> Int2
+getPosition toolbox =
+    let
+        position =
+            toolbox.viewPosition
+    in
+        case toolbox.drag of
+            Nothing ->
+                position
+
+            Just { start, current } ->
+                Int2
+                    (position.x + current.x - start.x)
+                    (position.y + current.y - start.y)
+
+
 {-| Size of toolbox in view coordinates.
 -}
 toolboxSize : Int2
@@ -62,18 +132,22 @@ toolboxSize =
 
 toolboxHandleSize : Int2
 toolboxHandleSize =
-    Int2 64 32
+    Int2 64 37
 
 
 insideToolbox : Int2 -> Toolbox -> Bool
 insideToolbox viewPoint toolbox =
-    Int2.pointInsideRectangle toolbox.viewPosition toolboxSize viewPoint
+    Int2.pointInsideRectangle (getPosition toolbox) toolboxSize viewPoint
         || Int2.pointInsideRectangle (toolboxHandlePosition toolbox) toolboxHandleSize viewPoint
 
 
 toolboxHandlePosition : Toolbox -> Int2
 toolboxHandlePosition toolbox =
-    Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) -14 |> Int2.add toolbox.viewPosition
+    Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) -18 |> Int2.add (getPosition toolbox)
+
+
+
+---- VIEW ----
 
 
 onEvent : String -> b -> Html.Attribute b
@@ -84,30 +158,35 @@ onEvent eventName callback =
         (Decode.succeed callback)
 
 
-toolboxView : Toolbox -> msg -> Html.Attribute msg -> Html msg
-toolboxView toolbox noOp drag =
+toolboxView : Toolbox -> Html ToolboxMsg
+toolboxView toolbox =
     let
         position =
-            toolbox.viewPosition
+            getPosition toolbox
 
         handlePosition =
-            Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) -14
+            Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) -18
     in
         div
-            [ onEvent "click" noOp
+            [ onEvent "click" NoOp --Prevents clicks from propagating to UI underneath.
             , style <|
                 [ background "/toolbox.png" ]
                     ++ absoluteStyle position toolboxSize
             ]
             [ tileView (Int2 5 16) toolbox
             , div
-                [ drag
+                [ onMouseDown
                 , style <|
                     [ background "/toolboxHandle.png" ]
                         ++ absoluteStyle handlePosition toolboxHandleSize
                 ]
                 []
             ]
+
+
+onMouseDown : Html.Attribute ToolboxMsg
+onMouseDown =
+    on "mousedown" (Decode.map DragStart Mouse.position)
 
 
 tileView : Int2 -> Toolbox -> Html msg
@@ -126,7 +205,9 @@ tileView pixelPosition toolbox =
             Int2 3 3
 
         getPosition index =
-            Int2 (index // gridSize.x) (index % gridSize.x) |> Int2.mult tileButtonSize |> Int2.add pixelPosition
+            Int2 (index // gridSize.x) (index % gridSize.x)
+                |> Int2.mult tileButtonSize
+                |> Int2.add pixelPosition
 
         imageOffset tile =
             Int2.div (Int2.sub tileButtonLocalSize tile.icon.pixelSize) 2
@@ -147,3 +228,20 @@ tileView pixelPosition toolbox =
                     )
     in
         div [] tileDiv
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Toolbox -> Sub ToolboxMsg
+subscriptions toolbox =
+    case toolbox.drag of
+        Just _ ->
+            Sub.batch
+                [ Mouse.moves DragAt
+                , Mouse.ups DragEnd
+                ]
+
+        Nothing ->
+            Sub.batch []

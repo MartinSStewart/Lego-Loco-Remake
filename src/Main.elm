@@ -9,8 +9,6 @@ import MouseEvents
 import Toolbox exposing (Toolbox)
 import Helpers exposing (..)
 import Mouse exposing (Position)
-import Json.Decode as Decode
-import Html.Events exposing (on)
 import Tiles exposing (..)
 
 
@@ -22,14 +20,7 @@ type alias Model =
     , viewSize : Int2 -- Size of view in pixel coordinates.
     , tileInstances : List TileInstance
     , toolbox : Toolbox
-    , drag : Maybe Drag
     , currentTile : Maybe Int2
-    }
-
-
-type alias Drag =
-    { start : Position
-    , current : Position
     }
 
 
@@ -55,9 +46,7 @@ init =
         (Int2 0 0)
         (Int2 500 500)
         []
-        --[ TileInstance 0 (Int2 0 3), TileInstance 0 (Int2 0 0) ]
         Toolbox.default
-        Nothing
         (Just (Int2 0 3))
     , Cmd.none
     )
@@ -166,93 +155,58 @@ type Msg
     = NoOp
     | KeyMsg Keyboard.KeyCode
     | MouseDown MouseEvents.MouseEvent
-    | DragStart Position
-    | DragAt Position
-    | DragEnd Position
+    | ToolboxMsg Toolbox.ToolboxMsg
     | MouseMoved Position
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        drag =
-            model.drag
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
 
-        position =
-            model.toolbox.viewPosition
-    in
-        case msg of
-            NoOp ->
-                ( model, Cmd.none )
+        KeyMsg keyCode ->
+            let
+                unit =
+                    if keyCode == 37 then
+                        Int2 -1 0
+                    else if keyCode == 38 then
+                        Int2 0 -1
+                    else if keyCode == 39 then
+                        Int2 1 0
+                    else if keyCode == 40 then
+                        Int2 0 1
+                    else
+                        Int2 0 0
 
-            KeyMsg keyCode ->
-                let
-                    unit =
-                        if keyCode == 37 then
-                            Int2 -1 0
-                        else if keyCode == 38 then
-                            Int2 0 -1
-                        else if keyCode == 39 then
-                            Int2 1 0
-                        else if keyCode == 40 then
-                            Int2 0 1
-                        else
-                            Int2 0 0
+                movement =
+                    Int2.multScalar unit (gridToPixels // 3)
+            in
+                ( modelSetViewPosition (Int2.add model.viewPosition movement) model, Cmd.none )
 
-                    movement =
-                        Int2.multScalar unit (gridToPixels // 3)
-                in
-                    ( modelSetViewPosition (Int2.add model.viewPosition movement) model, Cmd.none )
+        MouseDown mouseEvent ->
+            let
+                tileId =
+                    0
 
-            MouseDown mouseEvent ->
-                let
-                    tileId =
-                        0
+                tile =
+                    getTileOrDefault tileId
 
-                    tile =
-                        getTileOrDefault tileId
+                tileInstance =
+                    viewToTileGrid (MouseEvents.relPos mouseEvent) model tile |> TileInstance tileId
+            in
+                ( modelAddTileInstance tileInstance model, Cmd.none )
 
-                    tileInstance =
-                        viewToTileGrid (MouseEvents.relPos mouseEvent) model tile |> TileInstance tileId
-                in
-                    ( modelAddTileInstance tileInstance model, Cmd.none )
+        MouseMoved xy ->
+            ( mouseMove xy model, Cmd.none )
 
-            DragStart xy ->
-                let
-                    newDrag =
-                        case model.drag of
-                            Nothing ->
-                                (Just (Drag xy xy))
+        ToolboxMsg toolboxMsg ->
+            ( Toolbox.update toolboxMsg model.toolbox |> setToolbox model, Cmd.none )
 
-                            Just a ->
-                                Just a
-                in
-                    ( { model | drag = newDrag }, Cmd.none )
 
-            DragAt xy ->
-                let
-                    newDrag =
-                        case model.drag of
-                            Just drag ->
-                                Just { drag | current = xy }
-
-                            Nothing ->
-                                Just <| Drag xy xy
-
-                    newModel =
-                        { model | drag = newDrag }
-                in
-                    ( newModel, Cmd.none )
-
-            DragEnd xy ->
-                let
-                    newModel =
-                        getPosition model |> modelSetToolboxViewPosition model |> mouseMove xy
-                in
-                    ( { newModel | drag = Nothing }, Cmd.none )
-
-            MouseMoved xy ->
-                ( mouseMove xy model, Cmd.none )
+setToolbox : { b | toolbox : a } -> c -> { b | toolbox : c }
+setToolbox model toolbox =
+    { model | toolbox = toolbox }
 
 
 mouseMove : Int2 -> Model -> Model
@@ -277,9 +231,6 @@ view model =
         tileViews =
             model.tileInstances |> List.sortBy (\a -> a.position.y) |> List.map (\a -> tileView model a False)
 
-        realPosition =
-            getPosition model
-
         toolbox =
             model.toolbox
 
@@ -303,7 +254,7 @@ view model =
         <|
             tileViews
                 ++ currentTileView
-                ++ [ Toolbox.toolboxView { toolbox | viewPosition = realPosition } NoOp onMouseDown ]
+                ++ [ Toolbox.toolboxView toolbox |> Html.map (\a -> ToolboxMsg a) ]
 
 
 tileView : Model -> TileInstance -> Bool -> Html msg
@@ -339,42 +290,19 @@ tileView model tileInstance seeThrough =
             []
 
 
-getPosition : Model -> Position
-getPosition model =
-    let
-        position =
-            model.toolbox.viewPosition
-    in
-        case model.drag of
-            Nothing ->
-                position
-
-            Just { start, current } ->
-                Position
-                    (position.x + current.x - start.x)
-                    (position.y + current.y - start.y)
-
-
-onMouseDown : Html.Attribute Msg
-onMouseDown =
-    on "mousedown" (Decode.map DragStart Mouse.position)
-
-
 
 -- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.drag of
-        Nothing ->
-            Sub.batch
-                [ Keyboard.downs KeyMsg
-                , Mouse.moves MouseMoved
-                ]
-
-        Just _ ->
-            Sub.batch [ Mouse.moves DragAt, Mouse.ups DragEnd ]
+    Sub.batch
+        [ Toolbox.subscriptions model.toolbox |> Sub.map (\a -> ToolboxMsg a)
+        , Sub.batch
+            [ Keyboard.downs KeyMsg
+            , Mouse.moves MouseMoved -- This move update needs to happen after the toolbox subscriptions.
+            ]
+        ]
 
 
 
