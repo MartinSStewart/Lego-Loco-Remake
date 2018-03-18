@@ -11,6 +11,7 @@ import Helpers exposing (..)
 import Mouse exposing (Position)
 import Json.Decode as Decode
 import Html.Events exposing (on)
+import Tiles exposing (..)
 
 
 ---- MODEL ----
@@ -22,21 +23,13 @@ type alias Model =
     , tileInstances : List TileInstance
     , toolbox : Toolbox
     , drag : Maybe Drag
-    , currentTile : Maybe TileInstance
+    , currentTile : Maybe Int2
     }
 
 
 type alias Drag =
     { start : Position
     , current : Position
-    }
-
-
-type alias Tile =
-    { imageName : String
-    , imageOffset : Int2
-    , name : String
-    , gridSize : Int2
     }
 
 
@@ -65,21 +58,9 @@ init =
         --[ TileInstance 0 (Int2 0 3), TileInstance 0 (Int2 0 0) ]
         Toolbox.default
         Nothing
-        (Just (TileInstance 0 (Int2 0 3)))
+        (Just (Int2 0 3))
     , Cmd.none
     )
-
-
-tiles : List Tile
-tiles =
-    [ Tile "/house0.png" (Int2 0 -10) "Red House" (Int2 3 3)
-    , Tile "/sidewalk.png" (Int2 0 0) "Red House" (Int2 1 1)
-    ]
-
-
-defaultTile : Tile
-defaultTile =
-    Tile "/sidewalk.png" (Int2 0 0) "Red House" (Int2 1 1)
 
 
 modelSetViewPosition : Int2 -> Model -> Model
@@ -281,12 +262,7 @@ mouseMove mousePos model =
             if Toolbox.insideToolbox mousePos model.toolbox then
                 Nothing
             else
-                case model.currentTile of
-                    Just a ->
-                        Just { a | position = getTileOrDefault a.tileId |> viewToTileGrid mousePos model }
-
-                    Nothing ->
-                        Just (TileInstance 0 mousePos)
+                model.toolbox.selectedTileId |> getTileOrDefault |> viewToTileGrid mousePos model |> Just
     in
         { model | currentTile = newCurrentTile }
 
@@ -313,7 +289,7 @@ view model =
         currentTileView =
             case model.currentTile of
                 Just a ->
-                    [ tileView model a True ]
+                    [ tileView model (TileInstance model.toolbox.selectedTileId a) True ]
 
                 Nothing ->
                     []
@@ -340,10 +316,10 @@ tileView model tileInstance seeThrough =
             getTileByTileInstance tileInstance
 
         x =
-            tile.imageOffset.x + gridToPixels * tileInstance.position.x - model.viewPosition.x
+            tile.sprite.pixelOffset.x + gridToPixels * tileInstance.position.x - model.viewPosition.x
 
         y =
-            tile.imageOffset.y + gridToPixels * tileInstance.position.y - model.viewPosition.y
+            tile.sprite.pixelOffset.y + gridToPixels * tileInstance.position.y - model.viewPosition.y
 
         size =
             tile.gridSize |> Int2.add (Int2 1 1) |> Int2.mult (Int2 gridToPixels gridToPixels)
