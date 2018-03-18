@@ -32,7 +32,7 @@ defaultTile =
 
 sidewalkSprite : Sprite
 sidewalkSprite =
-    Sprite "/sidewalk.png" (Int2 16 16) (Int2 0 0)
+    Sprite "/sidewalk.png" (Int2 16 16) Int2.zero
 
 
 house0Sprite : Sprite
@@ -42,4 +42,4 @@ house0Sprite =
 
 houseIcon0Sprite : Sprite
 houseIcon0Sprite =
-    Sprite "/houseIcon0.png" (Int2 0 0) (Int2 0 0)
+    Sprite "/houseIcon0.png" (Int2 44 41) Int2.zero

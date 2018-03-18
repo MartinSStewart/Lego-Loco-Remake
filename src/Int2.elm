@@ -35,8 +35,8 @@ mult point0 point1 =
     { x = point0.x * point1.x, y = point0.y * point1.y }
 
 
-div : Int -> Int2 -> Int2
-div divisor point =
+div : Int2 -> Int -> Int2
+div point divisor =
     { x = point.x // divisor, y = point.y // divisor }
 
 
@@ -55,6 +55,11 @@ negate :
     -> { x : number, y : number }
 negate point =
     { x = -point.x, y = -point.y }
+
+
+zero : { x : number, y : number1 }
+zero =
+    { x = 0, y = 0 }
 
 
 rectangleCollision : Int2 -> Int2 -> Int2 -> Int2 -> Bool

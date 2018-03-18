@@ -277,9 +277,6 @@ view model =
         tileViews =
             model.tileInstances |> List.sortBy (\a -> a.position.y) |> List.map (\a -> tileView model a False)
 
-        stylePosition point =
-            px point.x ++ " " ++ px point.y
-
         realPosition =
             getPosition model
 
@@ -300,7 +297,7 @@ view model =
                 [ background "grid.png"
                 , ( "width", "100%" )
                 , ( "height", "100vh" )
-                , ( "background-position", Int2.negate model.viewPosition |> stylePosition )
+                , Int2.negate model.viewPosition |> backgroundPosition
                 ]
             ]
         <|

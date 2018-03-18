@@ -7,6 +7,7 @@ import Html.Attributes exposing (src, style)
 import Html.Events as Events
 import Json.Decode as Decode
 import Helpers exposing (..)
+import Tiles
 
 
 type alias Toolbox =
@@ -98,7 +99,8 @@ toolboxView toolbox noOp drag =
                 [ background "/toolbox.png" ]
                     ++ absoluteStyle position toolboxSize
             ]
-            [ div
+            [ tileView (Int2 5 16) toolbox
+            , div
                 [ drag
                 , style <|
                     [ background "/toolboxHandle.png" ]
@@ -106,3 +108,42 @@ toolboxView toolbox noOp drag =
                 ]
                 []
             ]
+
+
+tileView : Int2 -> Toolbox -> Html msg
+tileView pixelPosition toolbox =
+    let
+        tileButtonMargin =
+            Int2 3 3
+
+        tileButtonLocalSize =
+            Int2 54 54
+
+        tileButtonSize =
+            Int2.add tileButtonMargin tileButtonLocalSize
+
+        gridSize =
+            Int2 3 3
+
+        getPosition index =
+            Int2 (index // gridSize.x) (index % gridSize.x) |> Int2.mult tileButtonSize |> Int2.add pixelPosition
+
+        imageOffset tile =
+            Int2.div (Int2.sub tileButtonLocalSize tile.icon.pixelSize) 2
+
+        tileDiv =
+            Tiles.tiles
+                |> List.indexedMap
+                    (\index a ->
+                        div
+                            [ style <|
+                                [ background a.icon.filepath
+                                , ( "background-repeat", "no-repeat" )
+                                , imageOffset a |> backgroundPosition
+                                ]
+                                    ++ absoluteStyle (getPosition index) tileButtonLocalSize
+                            ]
+                            []
+                    )
+    in
+        div [] tileDiv
