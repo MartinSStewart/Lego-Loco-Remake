@@ -103,8 +103,8 @@ update msg toolbox =
         NoOp ->
             toolbox
 
-        TileSelect _ ->
-            Debug.crash "TODO"
+        TileSelect tileId ->
+            { toolbox | selectedTileId = tileId }
 
 
 getPosition : Toolbox -> Int2
@@ -150,14 +150,6 @@ toolboxHandlePosition toolbox =
 ---- VIEW ----
 
 
-onEvent : String -> b -> Html.Attribute b
-onEvent eventName callback =
-    Events.onWithOptions
-        eventName
-        { stopPropagation = True, preventDefault = True }
-        (Decode.succeed callback)
-
-
 toolboxView : Toolbox -> Html ToolboxMsg
 toolboxView toolbox =
     let
@@ -173,7 +165,7 @@ toolboxView toolbox =
                 [ background "/toolbox.png" ]
                     ++ absoluteStyle position toolboxSize
             ]
-            [ tileView (Int2 5 16) toolbox
+            [ tileView (Int2 5 16)
             , div
                 [ onMouseDown
                 , style <|
@@ -189,8 +181,8 @@ onMouseDown =
     on "mousedown" (Decode.map DragStart Mouse.position)
 
 
-tileView : Int2 -> Toolbox -> Html msg
-tileView pixelPosition toolbox =
+tileView : Int2 -> Html ToolboxMsg
+tileView pixelPosition =
     let
         tileButtonMargin =
             Int2 3 3
@@ -217,7 +209,8 @@ tileView pixelPosition toolbox =
                 |> List.indexedMap
                     (\index a ->
                         div
-                            [ style <|
+                            [ onEvent "click" (TileSelect index)
+                            , style <|
                                 [ background a.icon.filepath
                                 , ( "background-repeat", "no-repeat" )
                                 , imageOffset a |> backgroundPosition

@@ -10,6 +10,8 @@ import Toolbox exposing (Toolbox)
 import Helpers exposing (..)
 import Mouse exposing (Position)
 import Tiles exposing (..)
+import Json.Decode
+import Html.Events
 
 
 ---- MODEL ----
@@ -21,11 +23,13 @@ type alias Model =
     , tileInstances : List TileInstance
     , toolbox : Toolbox
     , currentTile : Maybe Int2
+    , currentRotation : Int
     }
 
 
 type alias TileInstance =
     { tileId : Int
+    , rotationIndex : Int
     , position : Int2
     }
 
@@ -48,6 +52,7 @@ init =
         []
         Toolbox.default
         (Just (Int2 0 3))
+        0
     , Cmd.none
     )
 
@@ -157,6 +162,7 @@ type Msg
     | MouseDown MouseEvents.MouseEvent
     | ToolboxMsg Toolbox.ToolboxMsg
     | MouseMoved Position
+    | RotateTile Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -187,13 +193,17 @@ update msg model =
         MouseDown mouseEvent ->
             let
                 tileId =
-                    0
+                    model.toolbox.selectedTileId
 
                 tile =
                     getTileOrDefault tileId
 
                 tileInstance =
-                    viewToTileGrid (MouseEvents.relPos mouseEvent) model tile |> TileInstance tileId
+                    viewToTileGrid
+                        (MouseEvents.relPos mouseEvent)
+                        model
+                        tile
+                        |> TileInstance tileId model.currentRotation
             in
                 ( modelAddTileInstance tileInstance model, Cmd.none )
 
@@ -202,6 +212,19 @@ update msg model =
 
         ToolboxMsg toolboxMsg ->
             ( Toolbox.update toolboxMsg model.toolbox |> setToolbox model, Cmd.none )
+
+        RotateTile wheelDelta ->
+            let
+                rotateBy =
+                    if wheelDelta > 0 then
+                        1
+                    else
+                        -1
+
+                newModel =
+                    { model | currentRotation = (model.currentRotation + rotateBy) % directions }
+            in
+                ( newModel, Cmd.none )
 
 
 setToolbox : { b | toolbox : a } -> c -> { b | toolbox : c }
@@ -225,6 +248,11 @@ mouseMove mousePos model =
 ---- VIEW ----
 
 
+onWheel : (Int -> msg) -> Html.Attribute msg
+onWheel message =
+    Html.Events.on "wheel" (Json.Decode.map message (Json.Decode.at [ "deltaY" ] Json.Decode.int))
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -237,13 +265,14 @@ view model =
         currentTileView =
             case model.currentTile of
                 Just a ->
-                    [ tileView model (TileInstance model.toolbox.selectedTileId a) True ]
+                    [ tileView model (TileInstance model.toolbox.selectedTileId model.currentRotation a) True ]
 
                 Nothing ->
                     []
     in
         div
             [ MouseEvents.onClick MouseDown
+            , onWheel RotateTile
             , style
                 [ background "grid.png"
                 , ( "width", "100%" )
@@ -263,14 +292,18 @@ tileView model tileInstance seeThrough =
         tile =
             getTileByTileInstance tileInstance
 
-        x =
-            tile.sprite.pixelOffset.x + gridToPixels * tileInstance.position.x - model.viewPosition.x
+        sprite =
+            rotSpriteGetAt tile.sprite tileInstance.rotationIndex
 
-        y =
-            tile.sprite.pixelOffset.y + gridToPixels * tileInstance.position.y - model.viewPosition.y
+        pos =
+            Int2.multScalar tileInstance.position gridToPixels
+                |> Int2.add sprite.pixelOffset
+                |> Int2.add (Int2.negate model.viewPosition)
 
         size =
-            tile.gridSize |> Int2.add (Int2 1 1) |> Int2.mult (Int2 gridToPixels gridToPixels)
+            tile.gridSize
+                |> Int2.add (Int2 1 1)
+                |> Int2.mult (Int2 gridToPixels gridToPixels)
 
         seeThroughStyle =
             if seeThrough then
@@ -280,11 +313,11 @@ tileView model tileInstance seeThrough =
     in
         div
             [ style <|
-                [ background "house0.png"
+                [ background sprite.filepath
                 , ( "background-repeat", "no-repeat" )
                 , ( "pointer-events", "none" )
                 ]
-                    ++ Toolbox.absoluteStyle (Int2 x y) size
+                    ++ Toolbox.absoluteStyle pos size
                     ++ seeThroughStyle
             ]
             []
