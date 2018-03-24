@@ -65,6 +65,7 @@ tiles =
     [ Tile (Rot1 house0Sprite) "Red House" (Int2 3 3) houseIcon0Sprite
     , defaultTile
     , Tile (Rot2 roadHorizontalSprite roadVerticalSprite) "Road" (Int2 2 2) roadHorizontalSprite
+    , Tile (Rot4 roadTurnLeftDown roadTurnRightDown roadTurnRightUp roadTurnLeftUp) "Road Turn" (Int2 2 2) roadTurnLeftUp
     ]
 
 
@@ -96,3 +97,23 @@ roadVerticalSprite =
 roadHorizontalSprite : Sprite
 roadHorizontalSprite =
     Sprite "/roadHorizontal.png" (Int2 32 32) Int2.zero
+
+
+roadTurnLeftUp : Sprite
+roadTurnLeftUp =
+    Sprite "/roadTurnLeftUp.png" (Int2 32 32) Int2.zero
+
+
+roadTurnLeftDown : Sprite
+roadTurnLeftDown =
+    Sprite "/roadTurnLeftDown.png" (Int2 32 32) Int2.zero
+
+
+roadTurnRightUp : Sprite
+roadTurnRightUp =
+    Sprite "/roadTurnRightUp.png" (Int2 32 32) Int2.zero
+
+
+roadTurnRightDown : Sprite
+roadTurnRightDown =
+    Sprite "/roadTurnRightDown.png" (Int2 32 32) Int2.zero

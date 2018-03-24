@@ -42,6 +42,11 @@ setViewPosition viewPosition toolbox =
     { toolbox | viewPosition = viewPosition }
 
 
+setDrag : Maybe Drag -> Toolbox -> Toolbox
+setDrag drag toolbox =
+    { toolbox | drag = drag }
+
+
 toolboxTileSize : Int
 toolboxTileSize =
     54
@@ -63,20 +68,24 @@ absoluteStyle pixelPosition pixelSize =
     ]
 
 
-update : ToolboxMsg -> Toolbox -> Toolbox
-update msg toolbox =
+update : Int2 -> ToolboxMsg -> Toolbox -> Toolbox
+update windowSize msg toolbox =
     case msg of
         DragStart xy ->
             let
                 newDrag =
                     case toolbox.drag of
                         Nothing ->
-                            (Just (Drag xy xy))
+                            Just (Drag xy xy)
 
+                        -- If we were already dragging then don't do anything here.
                         Just a ->
                             Just a
             in
-                { toolbox | drag = newDrag }
+                toolbox
+                    -- Update the toolbox position. It's visible position might not match viewPosition if the window has been resized.
+                    |> setViewPosition (getPosition windowSize toolbox)
+                    |> setDrag newDrag
 
         DragAt xy ->
             let
@@ -87,18 +96,13 @@ update msg toolbox =
 
                         Nothing ->
                             Just <| Drag xy xy
-
-                newToolbox =
-                    { toolbox | drag = newDrag }
             in
-                newToolbox
+                toolbox |> setDrag newDrag
 
         DragEnd xy ->
-            let
-                newToolbox =
-                    setViewPosition (getPosition toolbox) toolbox
-            in
-                { newToolbox | drag = Nothing }
+            toolbox
+                |> setViewPosition (getPosition windowSize toolbox)
+                |> setDrag Nothing
 
         NoOp ->
             toolbox
@@ -107,20 +111,25 @@ update msg toolbox =
             { toolbox | selectedTileId = tileId }
 
 
-getPosition : Toolbox -> Int2
-getPosition toolbox =
+getPosition : Int2 -> Toolbox -> Int2
+getPosition windowSize toolbox =
     let
         position =
-            toolbox.viewPosition
-    in
-        case toolbox.drag of
-            Nothing ->
-                position
+            case toolbox.drag of
+                Nothing ->
+                    toolbox.viewPosition
 
-            Just { start, current } ->
-                Int2
-                    (position.x + current.x - start.x)
-                    (position.y + current.y - start.y)
+                Just { start, current } ->
+                    toolbox.viewPosition
+                        |> Int2.add current
+                        |> Int2.add (Int2.negate start)
+
+        maxPosition =
+            Int2.sub windowSize toolboxSize
+    in
+        position
+            |> Int2.max Int2.zero
+            |> Int2.min maxPosition
 
 
 {-| Size of toolbox in view coordinates.
@@ -135,26 +144,26 @@ toolboxHandleSize =
     Int2 64 37
 
 
-insideToolbox : Int2 -> Toolbox -> Bool
-insideToolbox viewPoint toolbox =
-    Int2.pointInsideRectangle (getPosition toolbox) toolboxSize viewPoint
-        || Int2.pointInsideRectangle (toolboxHandlePosition toolbox) toolboxHandleSize viewPoint
+insideToolbox : Int2 -> Int2 -> Toolbox -> Bool
+insideToolbox windowSize viewPoint toolbox =
+    Int2.pointInsideRectangle (getPosition windowSize toolbox) toolboxSize viewPoint
+        || Int2.pointInsideRectangle (toolboxHandlePosition windowSize toolbox) toolboxHandleSize viewPoint
 
 
-toolboxHandlePosition : Toolbox -> Int2
-toolboxHandlePosition toolbox =
-    Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) -18 |> Int2.add (getPosition toolbox)
+toolboxHandlePosition : Int2 -> Toolbox -> Int2
+toolboxHandlePosition windowSize toolbox =
+    Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) -18 |> Int2.add (getPosition windowSize toolbox)
 
 
 
 ---- VIEW ----
 
 
-toolboxView : Int -> Toolbox -> Html ToolboxMsg
-toolboxView zIndex toolbox =
+toolboxView : Int -> Int2 -> Toolbox -> Html ToolboxMsg
+toolboxView zIndex windowSize toolbox =
     let
         position =
-            getPosition toolbox
+            getPosition windowSize toolbox
 
         handlePosition =
             Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) -18
@@ -166,7 +175,7 @@ toolboxView zIndex toolbox =
                 [ background "/toolbox.png", ( "z-index", toString zIndex ) ]
                     ++ absoluteStyle position toolboxSize
             ]
-            [ tileView (Int2 5 16)
+            [ tileView (Int2 5 16) toolbox
             , div
                 [ onMouseDown
                 , style <|
@@ -182,8 +191,8 @@ onMouseDown =
     on "mousedown" (Decode.map DragStart Mouse.position)
 
 
-tileView : Int2 -> Html ToolboxMsg
-tileView pixelPosition =
+tileView : Int2 -> Toolbox -> Html ToolboxMsg
+tileView pixelPosition toolbox =
     let
         tileButtonMargin =
             Int2 3 3
@@ -209,16 +218,34 @@ tileView pixelPosition =
             Tiles.tiles
                 |> List.indexedMap
                     (\index a ->
-                        div
-                            [ onEvent "click" (TileSelect index)
-                            , style <|
-                                [ background a.icon.filepath
-                                , ( "background-repeat", "no-repeat" )
-                                , imageOffset a |> backgroundPosition
+                        let
+                            buttonDownDiv =
+                                if toolbox.selectedTileId == index then
+                                    div
+                                        [ style <|
+                                            [ background "/toolboxTileButtonDown.png" ]
+                                                ++ absoluteStyle Int2.zero tileButtonLocalSize
+                                        ]
+                                        []
+                                else
+                                    div [] []
+                        in
+                            div
+                                [ onEvent "click" (TileSelect index)
+                                , style <|
+                                    absoluteStyle (getPosition index) tileButtonLocalSize
                                 ]
-                                    ++ absoluteStyle (getPosition index) tileButtonLocalSize
-                            ]
-                            []
+                                [ buttonDownDiv
+                                , div
+                                    [ style <|
+                                        [ background a.icon.filepath
+                                        , ( "background-repeat", "no-repeat" )
+                                        , imageOffset a |> backgroundPosition
+                                        ]
+                                            ++ absoluteStyle Int2.zero tileButtonLocalSize
+                                    ]
+                                    []
+                                ]
                     )
     in
         div [] tileDiv

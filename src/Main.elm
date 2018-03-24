@@ -10,6 +10,8 @@ import Toolbox exposing (Toolbox)
 import Helpers exposing (..)
 import Mouse exposing (Position)
 import Tiles exposing (..)
+import Window
+import Task
 
 
 ---- MODEL ----
@@ -24,6 +26,7 @@ type alias Model =
     , currentRotation : Int
     , lastTilePosition : Maybe Int2
     , mousePosCurrent : Mouse.Position
+    , windowSize : Int2
     }
 
 
@@ -55,7 +58,8 @@ init =
         0
         Nothing
         (Position 0 0)
-    , Cmd.none
+        (Int2 1000 1000)
+    , Task.perform WindowResize Window.size
     )
 
 
@@ -176,6 +180,7 @@ type Msg
     | ToolboxMsg Toolbox.ToolboxMsg
     | MouseMoved Position
     | RotateTile Int
+    | WindowResize Window.Size
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -237,7 +242,7 @@ update msg model =
             ( mouseMove xy model |> setMousePosCurrent xy, Cmd.none )
 
         ToolboxMsg toolboxMsg ->
-            ( Toolbox.update toolboxMsg model.toolbox |> setToolbox model, Cmd.none )
+            ( Toolbox.update model.windowSize toolboxMsg model.toolbox |> setToolbox model, Cmd.none )
 
         RotateTile wheelDelta ->
             let
@@ -254,6 +259,9 @@ update msg model =
 
         MouseUp _ ->
             ( { model | lastTilePosition = Nothing }, Cmd.none )
+
+        WindowResize newSize ->
+            ( { model | windowSize = Int2 newSize.width newSize.height }, Cmd.none )
 
 
 setToolbox : { b | toolbox : a } -> c -> { b | toolbox : c }
@@ -274,7 +282,7 @@ mouseMove mousePos model =
                 |> getTileOrDefault
                 |> viewToTileGrid mousePos model
     in
-        if Toolbox.insideToolbox mousePos model.toolbox then
+        if Toolbox.insideToolbox model.windowSize mousePos model.toolbox then
             model |> setCurrentTile Nothing
         else
             model
@@ -340,7 +348,7 @@ view model =
         <|
             tileViews
                 ++ currentTileView
-                ++ [ Toolbox.toolboxView 9999 toolbox |> Html.map (\a -> ToolboxMsg a) ]
+                ++ [ Toolbox.toolboxView 9999 model.windowSize toolbox |> Html.map (\a -> ToolboxMsg a) ]
 
 
 tileView : Model -> TileInstance -> Bool -> Html msg
@@ -393,6 +401,7 @@ subscriptions model =
             [ Keyboard.downs KeyMsg
             , Mouse.moves MouseMoved -- This move update needs to happen after the toolbox subscriptions.
             , Mouse.ups MouseUp
+            , Window.resizes WindowResize
             ]
         ]
 

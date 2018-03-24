@@ -62,6 +62,22 @@ zero =
     { x = 0, y = 0 }
 
 
+min :
+    { a | x : comparable, y : comparable }
+    -> { b | x : comparable, y : comparable }
+    -> { x : comparable, y : comparable }
+min point0 point1 =
+    { x = Basics.min point0.x point1.x, y = Basics.min point0.y point1.y }
+
+
+max :
+    { a | x : comparable, y : comparable }
+    -> { b | x : comparable, y : comparable }
+    -> { x : comparable, y : comparable }
+max point0 point1 =
+    { x = Basics.max point0.x point1.x, y = Basics.max point0.y point1.y }
+
+
 rectangleCollision : Int2 -> Int2 -> Int2 -> Int2 -> Bool
 rectangleCollision topLeft0 size0 topLeft1 size1 =
     let
