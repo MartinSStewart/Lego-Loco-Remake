@@ -150,8 +150,8 @@ toolboxHandlePosition toolbox =
 ---- VIEW ----
 
 
-toolboxView : Toolbox -> Html ToolboxMsg
-toolboxView toolbox =
+toolboxView : Int -> Toolbox -> Html ToolboxMsg
+toolboxView zIndex toolbox =
     let
         position =
             getPosition toolbox
@@ -161,8 +161,9 @@ toolboxView toolbox =
     in
         div
             [ onEvent "click" NoOp --Prevents clicks from propagating to UI underneath.
+            , onEvent "mousedown" NoOp
             , style <|
-                [ background "/toolbox.png" ]
+                [ background "/toolbox.png", ( "z-index", toString zIndex ) ]
                     ++ absoluteStyle position toolboxSize
             ]
             [ tileView (Int2 5 16)

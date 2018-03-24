@@ -10,8 +10,6 @@ import Toolbox exposing (Toolbox)
 import Helpers exposing (..)
 import Mouse exposing (Position)
 import Tiles exposing (..)
-import Json.Decode
-import Html.Events
 
 
 ---- MODEL ----
@@ -24,6 +22,8 @@ type alias Model =
     , toolbox : Toolbox
     , currentTile : Maybe Int2
     , currentRotation : Int
+    , lastTilePosition : Maybe Int2
+    , mousePosCurrent : Mouse.Position
     }
 
 
@@ -53,6 +53,8 @@ init =
         Toolbox.default
         (Just (Int2 0 3))
         0
+        Nothing
+        (Position 0 0)
     , Cmd.none
     )
 
@@ -69,6 +71,16 @@ modelAddTileInstance tileInstance model =
             List.filter (\a -> not (collidesWith a tileInstance)) model.tileInstances ++ [ tileInstance ]
     in
         { model | tileInstances = newTileInstances }
+
+
+setLastTilePosition : Maybe Int2 -> Model -> Model
+setLastTilePosition lastTilePosition model =
+    { model | lastTilePosition = lastTilePosition }
+
+
+setMousePosCurrent : Position -> Model -> Model
+setMousePosCurrent position model =
+    { model | mousePosCurrent = position }
 
 
 collidesWith : TileInstance -> TileInstance -> Bool
@@ -160,6 +172,7 @@ type Msg
     = NoOp
     | KeyMsg Keyboard.KeyCode
     | MouseDown MouseEvents.MouseEvent
+    | MouseUp Position
     | ToolboxMsg Toolbox.ToolboxMsg
     | MouseMoved Position
     | RotateTile Int
@@ -186,9 +199,14 @@ update msg model =
                         Int2 0 0
 
                 movement =
-                    Int2.multScalar unit (gridToPixels // 3)
+                    Int2.multScalar unit gridToPixels |> Int2.add model.viewPosition
+
+                newModel =
+                    model
+                        |> modelSetViewPosition movement
+                        |> mouseMove model.mousePosCurrent
             in
-                ( modelSetViewPosition (Int2.add model.viewPosition movement) model, Cmd.none )
+                ( newModel, Cmd.none )
 
         MouseDown mouseEvent ->
             let
@@ -198,17 +216,25 @@ update msg model =
                 tile =
                     getTileOrDefault tileId
 
+                position =
+                    (MouseEvents.relPos mouseEvent)
+
                 tileInstance =
                     viewToTileGrid
-                        (MouseEvents.relPos mouseEvent)
+                        position
                         model
                         tile
                         |> TileInstance tileId model.currentRotation
+
+                newModel =
+                    model
+                        |> modelAddTileInstance tileInstance
+                        |> setLastTilePosition (Just position)
             in
-                ( modelAddTileInstance tileInstance model, Cmd.none )
+                ( newModel, Cmd.none )
 
         MouseMoved xy ->
-            ( mouseMove xy model, Cmd.none )
+            ( mouseMove xy model |> setMousePosCurrent xy, Cmd.none )
 
         ToolboxMsg toolboxMsg ->
             ( Toolbox.update toolboxMsg model.toolbox |> setToolbox model, Cmd.none )
@@ -226,38 +252,69 @@ update msg model =
             in
                 ( newModel, Cmd.none )
 
+        MouseUp _ ->
+            ( { model | lastTilePosition = Nothing }, Cmd.none )
+
 
 setToolbox : { b | toolbox : a } -> c -> { b | toolbox : c }
 setToolbox model toolbox =
     { model | toolbox = toolbox }
 
 
+setCurrentTile : Maybe Int2 -> Model -> Model
+setCurrentTile currentTile model =
+    { model | currentTile = currentTile }
+
+
 mouseMove : Int2 -> Model -> Model
 mouseMove mousePos model =
     let
-        newCurrentTile =
-            if Toolbox.insideToolbox mousePos model.toolbox then
-                Nothing
-            else
-                model.toolbox.selectedTileId |> getTileOrDefault |> viewToTileGrid mousePos model |> Just
+        tilePos =
+            model.toolbox.selectedTileId
+                |> getTileOrDefault
+                |> viewToTileGrid mousePos model
     in
-        { model | currentTile = newCurrentTile }
+        if Toolbox.insideToolbox mousePos model.toolbox then
+            model |> setCurrentTile Nothing
+        else
+            model
+                |> setCurrentTile (Just tilePos)
+                |> drawTiles tilePos
+
+
+drawTiles : Int2 -> Model -> Model
+drawTiles newTilePosition model =
+    let
+        tileSize =
+            model.toolbox.selectedTileId |> getTileOrDefault |> .gridSize
+
+        tileInstance =
+            TileInstance
+                model.toolbox.selectedTileId
+                model.currentRotation
+                newTilePosition
+    in
+        case model.lastTilePosition of
+            Nothing ->
+                model
+
+            Just pos ->
+                if Int2.rectangleCollision pos tileSize newTilePosition tileSize then
+                    model
+                else
+                    modelAddTileInstance tileInstance model |> setLastTilePosition (Just newTilePosition)
 
 
 
 ---- VIEW ----
 
 
-onWheel : (Int -> msg) -> Html.Attribute msg
-onWheel message =
-    Html.Events.on "wheel" (Json.Decode.map message (Json.Decode.at [ "deltaY" ] Json.Decode.int))
-
-
 view : Model -> Html Msg
 view model =
     let
         tileViews =
-            model.tileInstances |> List.sortBy (\a -> a.position.y) |> List.map (\a -> tileView model a False)
+            model.tileInstances
+                |> List.map (\a -> tileView model a False)
 
         toolbox =
             model.toolbox
@@ -271,7 +328,7 @@ view model =
                     []
     in
         div
-            [ MouseEvents.onClick MouseDown
+            [ MouseEvents.onMouseDown MouseDown
             , onWheel RotateTile
             , style
                 [ background "grid.png"
@@ -283,7 +340,7 @@ view model =
         <|
             tileViews
                 ++ currentTileView
-                ++ [ Toolbox.toolboxView toolbox |> Html.map (\a -> ToolboxMsg a) ]
+                ++ [ Toolbox.toolboxView 9999 toolbox |> Html.map (\a -> ToolboxMsg a) ]
 
 
 tileView : Model -> TileInstance -> Bool -> Html msg
@@ -316,6 +373,7 @@ tileView model tileInstance seeThrough =
                 [ background sprite.filepath
                 , ( "background-repeat", "no-repeat" )
                 , ( "pointer-events", "none" )
+                , ( "z-index", toString tileInstance.position.y )
                 ]
                     ++ Toolbox.absoluteStyle pos size
                     ++ seeThroughStyle
@@ -334,6 +392,7 @@ subscriptions model =
         , Sub.batch
             [ Keyboard.downs KeyMsg
             , Mouse.moves MouseMoved -- This move update needs to happen after the toolbox subscriptions.
+            , Mouse.ups MouseUp
             ]
         ]
 

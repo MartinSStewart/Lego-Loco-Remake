@@ -32,3 +32,8 @@ onEvent eventName callback =
         eventName
         { stopPropagation = True, preventDefault = True }
         (Decode.succeed callback)
+
+
+onWheel : (Int -> msg) -> Html.Attribute msg
+onWheel message =
+    Events.on "wheel" (Decode.map message (Decode.at [ "deltaY" ] Decode.int))
