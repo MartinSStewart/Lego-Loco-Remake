@@ -13,39 +13,10 @@ import Tiles exposing (..)
 import Window
 import Task
 import WebSocket
+import Model exposing (..)
 
 
 ---- MODEL ----
-
-
-type alias Model =
-    { viewPosition : Int2 -- Position of view in pixel coordinates.
-    , viewSize : Int2 -- Size of view in pixel coordinates.
-    , tileInstances : List Tile
-    , toolbox : Toolbox
-    , currentTile : Maybe Int2
-    , currentRotation : Int
-    , lastTilePosition : Maybe Int2
-    , mousePosCurrent : Mouse.Position
-    , windowSize : Int2
-    }
-
-
-type alias Tile =
-    { tileId : Int
-    , rotationIndex : Int
-    , position : Int2
-    }
-
-
-modelSetToolbox : Model -> Toolbox -> Model
-modelSetToolbox model toolbox =
-    { model | toolbox = toolbox }
-
-
-modelSetToolboxViewPosition : Model -> Int2 -> Model
-modelSetToolboxViewPosition model viewPosition =
-    Toolbox.setViewPosition viewPosition model.toolbox |> modelSetToolbox model
 
 
 init : ( Model, Cmd Msg )
@@ -62,74 +33,6 @@ init =
         (Int2 1000 1000)
     , Task.perform WindowResize Window.size
     )
-
-
-modelSetViewPosition : Int2 -> Model -> Model
-modelSetViewPosition viewPosition model =
-    { model | viewPosition = viewPosition }
-
-
-modelAddTileInstance : Tile -> Model -> Model
-modelAddTileInstance tileInstance model =
-    let
-        newTileInstances =
-            List.filter (\a -> not (collidesWith a tileInstance)) model.tileInstances ++ [ tileInstance ]
-    in
-        { model | tileInstances = newTileInstances }
-
-
-setLastTilePosition : Maybe Int2 -> Model -> Model
-setLastTilePosition lastTilePosition model =
-    { model | lastTilePosition = lastTilePosition }
-
-
-setMousePosCurrent : Position -> Model -> Model
-setMousePosCurrent position model =
-    { model | mousePosCurrent = position }
-
-
-collidesWith : Tile -> Tile -> Bool
-collidesWith tileInstance0 tileInstance1 =
-    let
-        getTileSize tileInstance =
-            getTileOrDefault tileInstance.tileId |> .gridSize
-    in
-        Int2.rectangleCollision
-            tileInstance0.position
-            (getTileSize tileInstance0)
-            tileInstance1.position
-            (getTileSize tileInstance1)
-
-
-collisionsAt : Model -> Int2 -> Int2 -> List Tile
-collisionsAt model gridPosition gridSize =
-    let
-        getTileSize tileInstance =
-            getTileOrDefault tileInstance.tileId |> .gridSize
-    in
-        List.filter
-            (\a -> Int2.rectangleCollision a.position (getTileSize a) gridPosition gridSize)
-            model.tileInstances
-
-
-getTileOrDefault : Int -> TileType
-getTileOrDefault tileId =
-    case List.Extra.getAt tileId tiles of
-        Just tile ->
-            tile
-
-        Nothing ->
-            defaultTile
-
-
-getTileByTileInstance : Tile -> TileType
-getTileByTileInstance tileInstance =
-    case List.Extra.getAt tileInstance.tileId tiles of
-        Just tile ->
-            tile
-
-        Nothing ->
-            defaultTile
 
 
 gridToPixels : Int
@@ -273,11 +176,6 @@ update msg model =
                 ( model, Cmd.none )
 
 
-setToolbox : { b | toolbox : a } -> c -> { b | toolbox : c }
-setToolbox model toolbox =
-    { model | toolbox = toolbox }
-
-
 sendMessage : Cmd msg
 sendMessage =
     let
@@ -285,11 +183,6 @@ sendMessage =
             WebSocket.send "ws://localhost:5523/socketservice" "Test" |> Debug.log "Message sent"
     in
         toSend
-
-
-setCurrentTile : Maybe Int2 -> Model -> Model
-setCurrentTile currentTile model =
-    { model | currentTile = currentTile }
 
 
 mouseMove : Int2 -> Model -> Model
