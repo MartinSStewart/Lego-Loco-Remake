@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,16 +12,21 @@ namespace Server
 {
     class Program
     {
+        public static ConcurrentQueue<Action> Queue { get; } = new ConcurrentQueue<Action>();
+
+        public static World World { get; } = new World();
+
         static void Main(string[] args)
         {
             var socketServer = new WebSocketServer(5523);
             socketServer.AddWebSocketService("/socketservice", () => new SocketService());
             socketServer.Start();
 
-            while (true)
-            {
-                Thread.Sleep(1000);
-            }
+            Console.ReadKey(true);
+            socketServer.Stop();
+
+
+
         }
 
         public class SocketService : WebSocketBehavior

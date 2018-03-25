@@ -4,7 +4,7 @@ import Int2 exposing (Int2)
 import List.Extra
 
 
-type alias Tile =
+type alias TileType =
     { sprite : RotSprite
     , name : String
     , gridSize : Int2
@@ -60,18 +60,18 @@ rotSpriteGetAt rotSprite index =
                 Debug.crash "There is no way this can happen."
 
 
-tiles : List Tile
+tiles : List TileType
 tiles =
-    [ Tile (Rot1 house0Sprite) "Red House" (Int2 3 3) houseIcon0Sprite
+    [ TileType (Rot1 house0Sprite) "Red House" (Int2 3 3) houseIcon0Sprite
     , defaultTile
-    , Tile (Rot2 roadHorizontalSprite roadVerticalSprite) "Road" (Int2 2 2) roadHorizontalSprite
-    , Tile (Rot4 roadTurnLeftDown roadTurnRightDown roadTurnRightUp roadTurnLeftUp) "Road Turn" (Int2 2 2) roadTurnLeftUp
+    , TileType (Rot2 roadHorizontalSprite roadVerticalSprite) "Road" (Int2 2 2) roadHorizontalSprite
+    , TileType (Rot4 roadTurnLeftDown roadTurnRightDown roadTurnRightUp roadTurnLeftUp) "Road Turn" (Int2 2 2) roadTurnLeftUp
     ]
 
 
-defaultTile : Tile
+defaultTile : TileType
 defaultTile =
-    Tile (Rot1 sidewalkSprite) "Sidewalk" (Int2 1 1) sidewalkSprite
+    TileType (Rot1 sidewalkSprite) "Sidewalk" (Int2 1 1) sidewalkSprite
 
 
 sidewalkSprite : Sprite

@@ -21,7 +21,7 @@ import WebSocket
 type alias Model =
     { viewPosition : Int2 -- Position of view in pixel coordinates.
     , viewSize : Int2 -- Size of view in pixel coordinates.
-    , tileInstances : List TileInstance
+    , tileInstances : List Tile
     , toolbox : Toolbox
     , currentTile : Maybe Int2
     , currentRotation : Int
@@ -31,7 +31,7 @@ type alias Model =
     }
 
 
-type alias TileInstance =
+type alias Tile =
     { tileId : Int
     , rotationIndex : Int
     , position : Int2
@@ -69,7 +69,7 @@ modelSetViewPosition viewPosition model =
     { model | viewPosition = viewPosition }
 
 
-modelAddTileInstance : TileInstance -> Model -> Model
+modelAddTileInstance : Tile -> Model -> Model
 modelAddTileInstance tileInstance model =
     let
         newTileInstances =
@@ -88,7 +88,7 @@ setMousePosCurrent position model =
     { model | mousePosCurrent = position }
 
 
-collidesWith : TileInstance -> TileInstance -> Bool
+collidesWith : Tile -> Tile -> Bool
 collidesWith tileInstance0 tileInstance1 =
     let
         getTileSize tileInstance =
@@ -101,7 +101,7 @@ collidesWith tileInstance0 tileInstance1 =
             (getTileSize tileInstance1)
 
 
-collisionsAt : Model -> Int2 -> Int2 -> List TileInstance
+collisionsAt : Model -> Int2 -> Int2 -> List Tile
 collisionsAt model gridPosition gridSize =
     let
         getTileSize tileInstance =
@@ -112,7 +112,7 @@ collisionsAt model gridPosition gridSize =
             model.tileInstances
 
 
-getTileOrDefault : Int -> Tile
+getTileOrDefault : Int -> TileType
 getTileOrDefault tileId =
     case List.Extra.getAt tileId tiles of
         Just tile ->
@@ -122,7 +122,7 @@ getTileOrDefault tileId =
             defaultTile
 
 
-getTileByTileInstance : TileInstance -> Tile
+getTileByTileInstance : Tile -> TileType
 getTileByTileInstance tileInstance =
     case List.Extra.getAt tileInstance.tileId tiles of
         Just tile ->
@@ -154,7 +154,7 @@ viewToGrid viewPoint model =
         Int2 gridX gridY
 
 
-viewToTileGrid : Int2 -> Model -> Tile -> Int2
+viewToTileGrid : Int2 -> Model -> TileType -> Int2
 viewToTileGrid viewPoint model tile =
     let
         gridPos =
@@ -231,7 +231,7 @@ update msg model =
                         position
                         model
                         tile
-                        |> TileInstance tileId model.currentRotation
+                        |> Tile tileId model.currentRotation
 
                 newModel =
                     model
@@ -266,7 +266,11 @@ update msg model =
             ( { model | windowSize = Int2 newSize.width newSize.height }, Cmd.none )
 
         WebSocketRecieve _ ->
-            ( model, Cmd.none )
+            let
+                a =
+                    Debug.log "Message recieved" ""
+            in
+                ( model, Cmd.none )
 
 
 setToolbox : { b | toolbox : a } -> c -> { b | toolbox : c }
@@ -276,7 +280,11 @@ setToolbox model toolbox =
 
 sendMessage : Cmd msg
 sendMessage =
-    WebSocket.send "ws://echo.websocket.org" "Test"
+    let
+        toSend =
+            WebSocket.send "ws://localhost:5523/socketservice" "Test" |> Debug.log "Message sent"
+    in
+        toSend
 
 
 setCurrentTile : Maybe Int2 -> Model -> Model
@@ -307,7 +315,7 @@ drawTiles newTilePosition model =
             model.toolbox.selectedTileId |> getTileOrDefault |> .gridSize
 
         tileInstance =
-            TileInstance
+            Tile
                 model.toolbox.selectedTileId
                 model.currentRotation
                 newTilePosition
@@ -340,7 +348,7 @@ view model =
         currentTileView =
             case model.currentTile of
                 Just a ->
-                    [ tileView model (TileInstance model.toolbox.selectedTileId model.currentRotation a) True ]
+                    [ tileView model (Tile model.toolbox.selectedTileId model.currentRotation a) True ]
 
                 Nothing ->
                     []
@@ -361,7 +369,7 @@ view model =
                 ++ [ Toolbox.toolboxView 9999 model.windowSize toolbox |> Html.map (\a -> ToolboxMsg a) ]
 
 
-tileView : Model -> TileInstance -> Bool -> Html msg
+tileView : Model -> Tile -> Bool -> Html msg
 tileView model tileInstance seeThrough =
     let
         tile =
@@ -412,7 +420,7 @@ subscriptions model =
             , Mouse.moves MouseMoved -- This move update needs to happen after the toolbox subscriptions.
             , Mouse.ups MouseUp
             , Window.resizes WindowResize
-            , WebSocket.listen "ws://echo.websocket.org" WebSocketRecieve
+            , WebSocket.listen "ws://localhost:5523/socketservice" WebSocketRecieve
             ]
         ]
 
