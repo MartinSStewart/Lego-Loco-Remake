@@ -12,6 +12,7 @@ import Mouse exposing (Position)
 import Tiles exposing (..)
 import Window
 import Task
+import WebSocket
 
 
 ---- MODEL ----
@@ -181,6 +182,7 @@ type Msg
     | MouseMoved Position
     | RotateTile Int
     | WindowResize Window.Size
+    | WebSocketRecieve String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -236,7 +238,7 @@ update msg model =
                         |> modelAddTileInstance tileInstance
                         |> setLastTilePosition (Just position)
             in
-                ( newModel, Cmd.none )
+                ( newModel, sendMessage )
 
         MouseMoved xy ->
             ( mouseMove xy model |> setMousePosCurrent xy, Cmd.none )
@@ -263,10 +265,18 @@ update msg model =
         WindowResize newSize ->
             ( { model | windowSize = Int2 newSize.width newSize.height }, Cmd.none )
 
+        WebSocketRecieve _ ->
+            ( model, Cmd.none )
+
 
 setToolbox : { b | toolbox : a } -> c -> { b | toolbox : c }
 setToolbox model toolbox =
     { model | toolbox = toolbox }
+
+
+sendMessage : Cmd msg
+sendMessage =
+    WebSocket.send "ws://echo.websocket.org" "Test"
 
 
 setCurrentTile : Maybe Int2 -> Model -> Model
@@ -402,6 +412,7 @@ subscriptions model =
             , Mouse.moves MouseMoved -- This move update needs to happen after the toolbox subscriptions.
             , Mouse.ups MouseUp
             , Window.resizes WindowResize
+            , WebSocket.listen "ws://echo.websocket.org" WebSocketRecieve
             ]
         ]
 
