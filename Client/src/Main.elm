@@ -3,7 +3,6 @@ module Main exposing (..)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src, style)
 import Keyboard
-import List.Extra
 import Int2 exposing (Int2)
 import MouseEvents
 import Toolbox exposing (Toolbox)
@@ -12,8 +11,8 @@ import Mouse exposing (Position)
 import Tiles exposing (..)
 import Window
 import Task
-import WebSocket
 import Model exposing (..)
+import Server
 
 
 ---- MODEL ----
@@ -141,7 +140,7 @@ update msg model =
                         |> modelAddTileInstance tileInstance
                         |> setLastTilePosition (Just position)
             in
-                ( newModel, sendMessage )
+                ( newModel, Server.addTile tileInstance )
 
         MouseMoved xy ->
             ( mouseMove xy model |> setMousePosCurrent xy, Cmd.none )
@@ -168,21 +167,12 @@ update msg model =
         WindowResize newSize ->
             ( { model | windowSize = Int2 newSize.width newSize.height }, Cmd.none )
 
-        WebSocketRecieve _ ->
+        WebSocketRecieve text ->
             let
                 a =
-                    Debug.log "Message recieved" ""
+                    Debug.log "Message recieved" text
             in
                 ( model, Cmd.none )
-
-
-sendMessage : Cmd msg
-sendMessage =
-    let
-        toSend =
-            WebSocket.send "ws://localhost:5523/socketservice" "Test" |> Debug.log "Message sent"
-    in
-        toSend
 
 
 mouseMove : Int2 -> Model -> Model
@@ -313,7 +303,7 @@ subscriptions model =
             , Mouse.moves MouseMoved -- This move update needs to happen after the toolbox subscriptions.
             , Mouse.ups MouseUp
             , Window.resizes WindowResize
-            , WebSocket.listen "ws://localhost:5523/socketservice" WebSocketRecieve
+            , Server.subscription WebSocketRecieve
             ]
         ]
 

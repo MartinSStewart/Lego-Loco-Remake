@@ -14,6 +14,8 @@ namespace Server
     {
         public static ConcurrentQueue<Action> Queue { get; } = new ConcurrentQueue<Action>();
 
+        public static int a = 0;
+
         public static World World { get; } = new World();
 
         static void Main(string[] args)
@@ -44,6 +46,9 @@ namespace Server
             protected override void OnMessage(MessageEventArgs e)
             {
                 base.OnMessage(e);
+
+                var message = Convert.ToBase64String(BitConverter.GetBytes(a++));
+                SendAsync(message, result => Console.WriteLine(result + " " + message));
             }
         }
     }
