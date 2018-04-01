@@ -15,14 +15,14 @@ namespace Server
         /// <summary>
         /// Number of clockwise 90 degree turns applied to this tile.
         /// </summary>
-        public uint Rotation { get; }
+        public int Rotation { get; }
 
         public TileType TileType => World.TileTypes[(int)TileId];
 
         private readonly Envelope _envelope;
         public ref readonly Envelope Envelope => ref _envelope;
 
-        public Tile(uint tileId, Int2 gridPosition, uint rotation)
+        public Tile(uint tileId, Int2 gridPosition, int rotation)
         {
             TileId = tileId;
             GridPosition = gridPosition;

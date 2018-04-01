@@ -30,7 +30,7 @@ init =
         Nothing
         (Position 0 0)
         (Int2 1000 1000)
-    , Task.perform WindowResize Window.size
+    , Cmd.batch [ Task.perform WindowResize Window.size, [ Server.GetRegion (Int2 0 0) (Int2 1000 1000) ] |> Server.send ]
     )
 
 
@@ -128,19 +128,21 @@ update msg model =
                 position =
                     (MouseEvents.relPos mouseEvent)
 
-                tileInstance =
+                tilePos =
                     viewToTileGrid
                         position
                         model
                         tile
-                        |> Tile tileId model.currentRotation
+
+                tileInstance =
+                    Tile tileId tilePos model.currentRotation
 
                 newModel =
                     model
-                        |> modelAddTileInstance tileInstance
+                        |> modelAddTile tileInstance
                         |> setLastTilePosition (Just position)
             in
-                ( newModel, Server.addTile tileInstance )
+                ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
 
         MouseMoved xy ->
             ( mouseMove xy model |> setMousePosCurrent xy, Cmd.none )
@@ -172,7 +174,7 @@ update msg model =
                 a =
                     Debug.log "Message recieved" text
             in
-                ( model, Cmd.none )
+                ( Server.update text model, Cmd.none )
 
 
 mouseMove : Int2 -> Model -> Model
@@ -200,8 +202,8 @@ drawTiles newTilePosition model =
         tileInstance =
             Tile
                 model.toolbox.selectedTileId
-                model.currentRotation
                 newTilePosition
+                model.currentRotation
     in
         case model.lastTilePosition of
             Nothing ->
@@ -211,7 +213,7 @@ drawTiles newTilePosition model =
                 if Int2.rectangleCollision pos tileSize newTilePosition tileSize then
                     model
                 else
-                    modelAddTileInstance tileInstance model |> setLastTilePosition (Just newTilePosition)
+                    modelAddTile tileInstance model |> setLastTilePosition (Just newTilePosition)
 
 
 
@@ -231,7 +233,7 @@ view model =
         currentTileView =
             case model.currentTile of
                 Just a ->
-                    [ tileView model (Tile model.toolbox.selectedTileId model.currentRotation a) True ]
+                    [ tileView model (Tile model.toolbox.selectedTileId a model.currentRotation) True ]
 
                 Nothing ->
                     []

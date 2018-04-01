@@ -22,8 +22,8 @@ type alias Model =
 
 type alias Tile =
     { tileId : Int
-    , rotationIndex : Int
     , position : Int2
+    , rotationIndex : Int
     }
 
 
@@ -52,8 +52,8 @@ setCurrentTile currentTile model =
     { model | currentTile = currentTile }
 
 
-modelAddTileInstance : Tile -> Model -> Model
-modelAddTileInstance tileInstance model =
+modelAddTile : Tile -> Model -> Model
+modelAddTile tileInstance model =
     let
         newTileInstances =
             List.filter (\a -> not (collidesWith a tileInstance)) model.tileInstances ++ [ tileInstance ]
