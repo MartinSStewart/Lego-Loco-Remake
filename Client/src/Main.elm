@@ -191,8 +191,16 @@ mouseMove mousePos model =
             let
                 ( tiles, newModel ) =
                     model |> setCurrentTile (Just tilePos) |> drawTiles tilePos
+
+                cmd =
+                    case tiles of
+                        a :: rest ->
+                            tiles |> List.map Server.AddTile |> Server.send
+
+                        _ ->
+                            Cmd.none
             in
-                ( newModel, Cmd.batch [ tiles |> List.map Server.AddTile |> Server.send ] )
+                ( newModel, cmd )
 
 
 drawTiles : Int2 -> Model -> ( List Tile, Model )
