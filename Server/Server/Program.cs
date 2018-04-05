@@ -8,6 +8,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
 using WebSocketSharp.Server;
+using Newtonsoft;
+using Newtonsoft.Json.Linq;
+using System.Collections.Immutable;
 
 namespace Server
 {
@@ -23,14 +26,14 @@ namespace Server
             socketServer.AddWebSocketService("/socketservice", () => new SocketService());
             socketServer.Start();
 
-            World.AddTile(new Tile(0, new Int2(), 0));
+            World.AddTile(new Tile(1, new Int2(11, 12), 3));
             
             Task.Run(async () =>
             {
                 while (true)
                 {
                     await Task.Delay(10);
-                    foreach (var item in MessageQueue)
+                    while (MessageQueue.TryDequeue(out (string, IClientMessage) item))
                     {
                         var (id, message) = item;
                         switch (message)
@@ -43,16 +46,18 @@ namespace Server
                                 break;
                             case GetRegionMessage msg:
                                 var region = World.GetRegion(msg.TopLeft, msg.GridSize);
-                                
-                                var reply = Convert.ToBase64String(Serialization.GetWriteStream()
-                                    .WriteInt2(msg.TopLeft)
-                                    .WriteInt2(msg.GridSize)
-                                    .WriteList(region.ToArray(), Serialization.WriteTile)
-                                    .ToArray());
+
+                                var response = new GotRegionMessage(msg.TopLeft, msg.GridSize, region.ToImmutableList());
+                                var byteArray = Serialization.WriteMessage(new[] { response }).ToArray();
+                                var reply = Convert.ToBase64String(byteArray);
+                                Console.WriteLine(
+                                    $"Sent: \n" +
+                                    $"{JToken.FromObject(response).ToString()}\n" +
+                                    $"{(string.Join(",", byteArray)) }]");
                                 socketServer.WebSocketServices["/socketservice"].Sessions.SendToAsync(reply, id, _ => { });
                                 break;
                             default:
-                                throw new Exception("Unhandled case.");
+                                throw new NotImplementedException();
                         }
                     }
                 }
@@ -85,6 +90,7 @@ namespace Server
                     try
                     {
                         var messages = stream.ReadMessage();
+                        Console.WriteLine("Received: " + JToken.FromObject(messages).ToString());
                         foreach (var message in messages)
                         {
                             MessageQueue.Enqueue((ID, message));

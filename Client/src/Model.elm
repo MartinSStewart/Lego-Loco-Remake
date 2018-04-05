@@ -10,7 +10,7 @@ import Tiles exposing (..)
 type alias Model =
     { viewPosition : Int2 -- Position of view in pixel coordinates.
     , viewSize : Int2 -- Size of view in pixel coordinates.
-    , tileInstances : List Tile
+    , tiles : List Tile
     , toolbox : Toolbox
     , currentTile : Maybe Int2
     , currentRotation : Int
@@ -53,12 +53,8 @@ setCurrentTile currentTile model =
 
 
 modelAddTile : Tile -> Model -> Model
-modelAddTile tileInstance model =
-    let
-        newTileInstances =
-            List.filter (\a -> not (collidesWith a tileInstance)) model.tileInstances ++ [ tileInstance ]
-    in
-        { model | tileInstances = newTileInstances }
+modelAddTile tile model =
+    { model | tiles = model.tiles |> List.filter (\a -> not (collidesWith a tile)) |> (::) tile }
 
 
 setLastTilePosition : Maybe Int2 -> Model -> Model
@@ -66,9 +62,13 @@ setLastTilePosition lastTilePosition model =
     { model | lastTilePosition = lastTilePosition }
 
 
-setMousePosCurrent : Position -> Model -> Model
-setMousePosCurrent position model =
-    { model | mousePosCurrent = position }
+setMousePosCurrent : Position -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+setMousePosCurrent position modelCmd =
+    let
+        model =
+            Tuple.first modelCmd
+    in
+        ( { model | mousePosCurrent = position }, Tuple.second modelCmd )
 
 
 collidesWith : Tile -> Tile -> Bool
@@ -92,7 +92,7 @@ collisionsAt model gridPosition gridSize =
     in
         List.filter
             (\a -> Int2.rectangleCollision a.position (getTileSize a) gridPosition gridSize)
-            model.tileInstances
+            model.tiles
 
 
 getTileOrDefault : Int -> TileType

@@ -146,8 +146,8 @@ toolboxHandleSize =
 
 insideToolbox : Int2 -> Int2 -> Toolbox -> Bool
 insideToolbox windowSize viewPoint toolbox =
-    Int2.pointInsideRectangle (getPosition windowSize toolbox) toolboxSize viewPoint
-        || Int2.pointInsideRectangle (toolboxHandlePosition windowSize toolbox) toolboxHandleSize viewPoint
+    Int2.pointInRectangle (getPosition windowSize toolbox) toolboxSize viewPoint
+        || Int2.pointInRectangle (toolboxHandlePosition windowSize toolbox) toolboxHandleSize viewPoint
 
 
 toolboxHandlePosition : Int2 -> Toolbox -> Int2

@@ -47,6 +47,31 @@ namespace Server
             return stream;
         }
 
+        public static MemoryStream WriteMessage(ICollection<IServerMessage> messages)
+        {
+            var stream = GetWriteStream();
+            return stream.WriteList(messages, WriteServerAction);
+        }
+
+        public static MemoryStream WriteServerAction(this MemoryStream stream, IServerMessage message)
+        {
+            switch (message)
+            {
+                case AddedTileMessage msg:
+                    throw new NotImplementedException();
+                case RemovedTileMessage msg:
+                    throw new NotImplementedException();
+                case GotRegionMessage msg:
+                    return stream
+                        .WriteInt(2)
+                        .WriteInt2(msg.TopLeft)
+                        .WriteInt2(msg.GridSize)
+                        .WriteList(msg.Tiles, WriteTile);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         public static List<IClientMessage> ReadMessage(this MemoryStream stream)
         {
             var version = stream.ReadInt();
@@ -121,7 +146,7 @@ namespace Server
                         return new GetRegionMessage(topLeft, gridSize);
                     }
                 default:
-                    throw new DecodeException();
+                    throw new NotImplementedException();
             }
         }
     }

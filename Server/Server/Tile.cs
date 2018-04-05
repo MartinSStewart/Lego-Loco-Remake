@@ -17,9 +17,12 @@ namespace Server
         /// </summary>
         public int Rotation { get; }
 
+        [Newtonsoft.Json.JsonIgnore]
         public TileType TileType => World.TileTypes[(int)TileId];
 
+        [Newtonsoft.Json.JsonIgnore]
         private readonly Envelope _envelope;
+        [Newtonsoft.Json.JsonIgnore]
         public ref readonly Envelope Envelope => ref _envelope;
 
         public Tile(uint tileId, Int2 gridPosition, int rotation)

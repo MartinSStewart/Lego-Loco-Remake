@@ -93,16 +93,16 @@ rectangleCollision topLeft0 size0 topLeft1 size1 =
         bottomRight1 =
             add topLeft1 size1 |> add (Int2 -1 -1)
     in
-        pointInsideRectangle topLeft0 size0 topLeft1
-            || pointInsideRectangle topLeft0 size0 topRight1
-            || pointInsideRectangle topLeft0 size0 bottomRight1
-            || pointInsideRectangle topLeft1 size1 topLeft0
-            || pointInsideRectangle topLeft1 size1 topRight0
-            || pointInsideRectangle topLeft1 size1 bottomRight0
+        pointInRectangle topLeft0 size0 topLeft1
+            || pointInRectangle topLeft0 size0 topRight1
+            || pointInRectangle topLeft0 size0 bottomRight1
+            || pointInRectangle topLeft1 size1 topLeft0
+            || pointInRectangle topLeft1 size1 topRight0
+            || pointInRectangle topLeft1 size1 bottomRight0
 
 
-pointInsideRectangle : Int2 -> Int2 -> Int2 -> Bool
-pointInsideRectangle topLeft rectangleSize point =
+pointInRectangle : Int2 -> Int2 -> Int2 -> Bool
+pointInRectangle topLeft rectangleSize point =
     let
         bottomRight =
             add topLeft rectangleSize

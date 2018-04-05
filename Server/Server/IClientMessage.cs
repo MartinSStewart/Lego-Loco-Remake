@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,5 +41,31 @@ namespace Server
             TopLeft = topLeft;
             GridSize = gridSize;
         }
+    }
+
+    public interface IServerMessage
+    {
+    }
+
+    public class GotRegionMessage : IServerMessage
+    {
+        public Int2 TopLeft { get; }
+        public Int2 GridSize { get; }
+        public ImmutableList<Tile> Tiles { get; }
+
+        public GotRegionMessage(Int2 topLeft, Int2 gridSize, ImmutableList<Tile> tiles)
+        {
+            TopLeft = topLeft;
+            GridSize = gridSize;
+            Tiles = tiles;
+        }
+    }
+
+    public class AddedTileMessage : IServerMessage
+    {
+    }
+
+    public class RemovedTileMessage : IServerMessage
+    {
     }
 }

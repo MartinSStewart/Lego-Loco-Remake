@@ -115,7 +115,7 @@ update msg model =
                         |> modelSetViewPosition movement
                         |> mouseMove model.mousePosCurrent
             in
-                ( newModel, Cmd.none )
+                newModel
 
         MouseDown mouseEvent ->
             let
@@ -145,7 +145,7 @@ update msg model =
                 ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
 
         MouseMoved xy ->
-            ( mouseMove xy model |> setMousePosCurrent xy, Cmd.none )
+            mouseMove xy model |> setMousePosCurrent xy
 
         ToolboxMsg toolboxMsg ->
             ( Toolbox.update model.windowSize toolboxMsg model.toolbox |> setToolbox model, Cmd.none )
@@ -177,7 +177,7 @@ update msg model =
                 ( Server.update text model, Cmd.none )
 
 
-mouseMove : Int2 -> Model -> Model
+mouseMove : Int2 -> Model -> ( Model, Cmd msg )
 mouseMove mousePos model =
     let
         tilePos =
@@ -186,14 +186,16 @@ mouseMove mousePos model =
                 |> viewToTileGrid mousePos model
     in
         if Toolbox.insideToolbox model.windowSize mousePos model.toolbox then
-            model |> setCurrentTile Nothing
+            ( setCurrentTile Nothing model, Cmd.none )
         else
-            model
-                |> setCurrentTile (Just tilePos)
-                |> drawTiles tilePos
+            let
+                ( tiles, newModel ) =
+                    model |> setCurrentTile (Just tilePos) |> drawTiles tilePos
+            in
+                ( newModel, Cmd.batch [ tiles |> List.map Server.AddTile |> Server.send ] )
 
 
-drawTiles : Int2 -> Model -> Model
+drawTiles : Int2 -> Model -> ( List Tile, Model )
 drawTiles newTilePosition model =
     let
         tileSize =
@@ -207,13 +209,15 @@ drawTiles newTilePosition model =
     in
         case model.lastTilePosition of
             Nothing ->
-                model
+                ( [], model )
 
             Just pos ->
                 if Int2.rectangleCollision pos tileSize newTilePosition tileSize then
-                    model
+                    ( [], model )
                 else
-                    modelAddTile tileInstance model |> setLastTilePosition (Just newTilePosition)
+                    modelAddTile tileInstance model
+                        |> setLastTilePosition (Just newTilePosition)
+                        |> (,) [ tileInstance ]
 
 
 
@@ -224,8 +228,7 @@ view : Model -> Html Msg
 view model =
     let
         tileViews =
-            model.tileInstances
-                |> List.map (\a -> tileView model a False)
+            model.tiles |> List.map (\a -> tileView model a False)
 
         toolbox =
             model.toolbox

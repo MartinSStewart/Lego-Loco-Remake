@@ -1,4 +1,4 @@
-module Server exposing (send, update, subscription, readInt, writeInt, Action(..))
+module Server exposing (..)
 
 import WebSocket
 import Model exposing (..)
@@ -14,10 +14,14 @@ version =
 
 send : List Action -> Cmd msg
 send actions =
-    writeInt version
-        ++ writeList writeAction actions
-        |> encode
-        |> WebSocket.send serverUrl
+    let
+        _ =
+            Debug.log "Sending" actions
+    in
+        writeInt version
+            ++ writeList writeAction actions
+            |> encode
+            |> WebSocket.send serverUrl
 
 
 type Action
@@ -66,15 +70,20 @@ update data model =
                                 model
 
                             GotRegion topLeft size tiles ->
-                                model
-                     --List.foldl modelAddTile model
+                                let
+                                    newTiles =
+                                        model.tiles
+                                            |> List.filter (\a -> Int2.pointInRectangle topLeft size a.position |> not)
+                                            |> (++) tiles
+                                in
+                                    { model | tiles = newTiles }
                     )
                     model
 
         Err error ->
             let
                 _ =
-                    Debug.log "" error
+                    Debug.log "Invalid base64" error
             in
                 model
 
@@ -86,11 +95,15 @@ read data =
             (\( bytesLeft, version ) ->
                 readList readResponse bytesLeft
                     |> Maybe.andThen
-                        (\( bytesLeft, responses ) ->
-                            if List.length bytesLeft == 0 then
+                        (\( lastBytes, responses ) ->
+                            if List.length lastBytes == 0 then
                                 Just responses
                             else
-                                Nothing
+                                let
+                                    _ =
+                                        Debug.log "Decode error" ("Message too long " ++ toString lastBytes)
+                                in
+                                    Nothing
                         )
             )
 
@@ -131,6 +144,9 @@ readInt data =
 
         remainingBytes =
             List.drop 4 data
+
+        _ =
+            bytes |> List.all inIntRange |> assert "Value is outside integer range."
     in
         if List.length bytes == 4 then
             bytes
@@ -182,20 +198,12 @@ writeInt int =
     let
         _ =
             inIntRange int |> assert "Value is outside integer range."
-
-        byte0 =
-            int |> Bitwise.and 0xFF
-
-        byte1 =
-            int |> Bitwise.and 0xFF00 |> Bitwise.shiftRightZfBy 8
-
-        byte2 =
-            int |> Bitwise.and 0x00FF0000 |> Bitwise.shiftRightZfBy 16
-
-        byte3 =
-            int |> Bitwise.and 0xFF000000 |> Bitwise.shiftRightZfBy 24
     in
-        [ byte0, byte1, byte2, byte3 ]
+        [ int |> Bitwise.and 0xFF
+        , int |> Bitwise.and 0xFF00 |> Bitwise.shiftRightZfBy 8
+        , int |> Bitwise.and 0x00FF0000 |> Bitwise.shiftRightZfBy 16
+        , int |> Bitwise.and 0xFF000000 |> Bitwise.shiftRightZfBy 24
+        ]
 
 
 writeList : (a -> ByteString) -> List a -> ByteString
