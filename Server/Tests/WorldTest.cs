@@ -32,5 +32,25 @@ namespace Tests
                 : new Tile[0];
             Assert.AreEqual(expected, result);
         }
+
+        [Test]
+        public void BugTest()
+        {
+            var world = new World();
+
+            var random = new Random();
+            for (var i = 0; i < 1000; i++)
+            {
+                world.AddTile(
+                    new Tile((uint)random.Next(2), 
+                    new Int2(random.Next(-100, 100), 
+                    random.Next(-100, 100)), random.Next(3)));
+            }
+
+            world.AddTile(new Tile(0, new Int2(120, 20), 0));
+
+            var result = world.GetRegion(new Int2(118, 19), new Int2(5, 5));
+            Assert.AreEqual(1, result.Count);
+        }
     }
 }

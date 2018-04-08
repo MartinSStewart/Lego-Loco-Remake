@@ -58,9 +58,13 @@ namespace Server
             switch (message)
             {
                 case AddedTileMessage msg:
-                    throw new NotImplementedException();
+                    return stream
+                        .WriteInt(0)
+                        .WriteTile(msg.Tile);
                 case RemovedTileMessage msg:
-                    throw new NotImplementedException();
+                    return stream
+                        .WriteInt(1)
+                        .WriteTile(msg.Tile);
                 case GotRegionMessage msg:
                     return stream
                         .WriteInt(2)

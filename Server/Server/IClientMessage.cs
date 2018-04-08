@@ -63,9 +63,21 @@ namespace Server
 
     public class AddedTileMessage : IServerMessage
     {
+        public Tile Tile { get; }
+
+        public AddedTileMessage(Tile tile)
+        {
+            Tile = tile;
+        }
     }
 
     public class RemovedTileMessage : IServerMessage
     {
+        public Tile Tile { get; }
+
+        public RemovedTileMessage(Tile tile)
+        {
+            Tile = tile;
+        }
     }
 }

@@ -64,7 +64,7 @@ update data model =
                     (\response model ->
                         case response of
                             AddedTile tile ->
-                                model
+                                modelAddTile tile model
 
                             RemovedTile tile ->
                                 model
@@ -113,9 +113,9 @@ readResponse data =
     let
         a bytes responseCode =
             if responseCode == 0 then
-                Nothing
+                readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, AddedTile tile ))
             else if responseCode == 1 then
-                Nothing
+                readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, RemovedTile tile ))
             else if responseCode == 2 then
                 readInt2 bytes
                     |> Maybe.andThen

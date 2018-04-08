@@ -170,11 +170,7 @@ update msg model =
             ( { model | windowSize = Int2 newSize.width newSize.height }, Cmd.none )
 
         WebSocketRecieve text ->
-            let
-                a =
-                    Debug.log "Message recieved" text
-            in
-                ( Server.update text model, Cmd.none )
+            ( Server.update text model, Cmd.none )
 
 
 mouseMove : Int2 -> Model -> ( Model, Cmd msg )

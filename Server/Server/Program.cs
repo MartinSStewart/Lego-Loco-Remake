@@ -27,7 +27,7 @@ namespace Server
             socketServer.Start();
 
             World.AddTile(new Tile(1, new Int2(11, 12), 3));
-            
+
             Task.Run(async () =>
             {
                 while (true)
@@ -40,21 +40,18 @@ namespace Server
                         {
                             case AddTileMessage msg:
                                 World.AddTile(msg.Tile);
+
+                                SendToEveryone(socketServer, new AddedTileMessage(msg.Tile));
                                 break;
                             case RemoveTileMessage msg:
                                 World.Remove(msg.Tile);
+
+                                SendToEveryone(socketServer, new RemovedTileMessage(msg.Tile));
                                 break;
                             case GetRegionMessage msg:
                                 var region = World.GetRegion(msg.TopLeft, msg.GridSize);
 
-                                var response = new GotRegionMessage(msg.TopLeft, msg.GridSize, region.ToImmutableList());
-                                var byteArray = Serialization.WriteMessage(new[] { response }).ToArray();
-                                var reply = Convert.ToBase64String(byteArray);
-                                Console.WriteLine(
-                                    $"Sent: \n" +
-                                    $"{JToken.FromObject(response).ToString()}\n" +
-                                    $"{(string.Join(",", byteArray)) }]");
-                                socketServer.WebSocketServices["/socketservice"].Sessions.SendToAsync(reply, id, _ => { });
+                                SendToUser(socketServer, id, new GotRegionMessage(msg.TopLeft, msg.GridSize, region.ToImmutableList()));
                                 break;
                             default:
                                 throw new NotImplementedException();
@@ -65,6 +62,26 @@ namespace Server
 
             Console.ReadKey(true);
             socketServer.Stop();
+        }
+         
+        public static void SendToUser(WebSocketServer socketServer, string id, params IServerMessage[] message)
+        {
+            var byteArray = Serialization.WriteMessage(message).ToArray();
+            var reply = Convert.ToBase64String(byteArray);
+            Console.WriteLine(
+                $"Sent: \n" +
+                $"{JToken.FromObject(message).ToString()}\n");
+            socketServer.WebSocketServices["/socketservice"].Sessions.SendToAsync(reply, id, _ => { });
+        }
+
+        public static void SendToEveryone(WebSocketServer socketServer, params IServerMessage[] message)
+        {
+            var byteArray = Serialization.WriteMessage(message).ToArray();
+            var reply = Convert.ToBase64String(byteArray);
+            Console.WriteLine(
+                $"Sent: \n" +
+                $"{JToken.FromObject(message).ToString()}\n");
+            socketServer.WebSocketServices["/socketservice"].Sessions.BroadcastAsync(reply, () => { });
         }
 
         public class SocketService : WebSocketBehavior
