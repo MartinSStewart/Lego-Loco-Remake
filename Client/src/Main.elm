@@ -25,7 +25,7 @@ init =
         (Int2 500 500)
         []
         Toolbox.default
-        (Just (Int2 0 3))
+        Nothing
         0
         Nothing
         (Position 0 0)
@@ -140,7 +140,10 @@ update msg model =
                 newModel =
                     model
                         |> modelAddTile tileInstance
-                        |> setLastTilePosition (Just position)
+                        |> setLastTilePosition (Just tilePos)
+
+                a =
+                    Debug.log "" newModel.lastTilePosition
             in
                 ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
 
@@ -232,7 +235,7 @@ view : Model -> Html Msg
 view model =
     let
         tileViews =
-            model.tiles |> List.map (\a -> tileView model a False)
+            model.tiles |> List.map (\a -> tileView model a False a.position.y)
 
         toolbox =
             model.toolbox
@@ -240,7 +243,7 @@ view model =
         currentTileView =
             case model.currentTile of
                 Just a ->
-                    [ tileView model (Tile model.toolbox.selectedTileId a model.currentRotation) True ]
+                    [ tileView model (Tile model.toolbox.selectedTileId a model.currentRotation) True 9998 ]
 
                 Nothing ->
                     []
@@ -261,8 +264,8 @@ view model =
                 ++ [ Toolbox.toolboxView 9999 model.windowSize toolbox |> Html.map (\a -> ToolboxMsg a) ]
 
 
-tileView : Model -> Tile -> Bool -> Html msg
-tileView model tileInstance seeThrough =
+tileView : Model -> Tile -> Bool -> Int -> Html msg
+tileView model tileInstance seeThrough zIndex =
     let
         tile =
             getTileByTileInstance tileInstance
@@ -291,7 +294,7 @@ tileView model tileInstance seeThrough =
                 [ background sprite.filepath
                 , ( "background-repeat", "no-repeat" )
                 , ( "pointer-events", "none" )
-                , ( "z-index", toString tileInstance.position.y )
+                , ( "z-index", toString zIndex )
                 ]
                     ++ Toolbox.absoluteStyle pos size
                     ++ seeThroughStyle

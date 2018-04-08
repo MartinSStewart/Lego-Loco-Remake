@@ -5,13 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MoreLinq;
-using RBush;
+using RTree;
 
 namespace Server
 {
     public class World
     {
-        private RBush<Tile> _tree = new RBush<Tile>();
+        private RTree<Tile> _tree = new RTree<Tile>();
+
+        public static Int2 MinGridPosition { get; } = new Int2(-1000000, -1000000);
+        public static Int2 MaxGridPosition { get; } = new Int2(1000000, 1000000);
+
+        public int TileCount => _tree.Count;
 
         public static ImmutableArray<TileType> TileTypes { get; } = 
             new[] 
@@ -24,20 +29,28 @@ namespace Server
 
         public void AddTile(Tile tile)
         {
-            foreach (var collision in _tree.Search(tile.Envelope))
+            foreach (var collision in _tree.Intersects(tile.Bounds))
             {
-                _tree.Delete(collision);
+                _tree.Delete(collision.Bounds, collision);
             }
-
-            _tree.Insert(tile);
+            
+            _tree.Add(tile.Bounds, tile);
         }
 
         public IReadOnlyList<Tile> GetRegion(Int2 topLeft, Int2 gridSize) => 
-            _tree.Search(Tile.GetGridEnvelope(topLeft, gridSize));
+            _tree.Intersects(Tile.GetBounds(topLeft, gridSize));
 
-        public void Remove(Tile tile)
+        public bool Remove(Tile tile)
         {
-            _tree.Delete(tile);
+            try
+            {
+                _tree.Delete(tile.Bounds, tile);
+                return true;
+            }
+            catch (KeyNotFoundException)
+            {
+                return false;
+            }
         }
     }
 }

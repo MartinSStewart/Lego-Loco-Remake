@@ -33,7 +33,7 @@ namespace Server
 
         public static MemoryStream WriteTile(this MemoryStream stream, Tile tile) => 
             stream
-                .WriteInt((int)tile.TileId)
+                .WriteInt((int)tile.TileTypeId)
                 .WriteInt2(tile.GridPosition)
                 .WriteInt(tile.Rotation);
 

@@ -1,5 +1,5 @@
 ﻿using Equ;
-using RBush;
+using RTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    public class Tile : MemberwiseEquatable<Tile>, ISpatialData
+    public class Tile : MemberwiseEquatable<Tile>
     {
-        public uint TileId { get; }
+        public uint TileTypeId { get; }
         public Int2 GridPosition { get; }
         /// <summary>
         /// Number of clockwise 90 degree turns applied to this tile.
@@ -18,28 +18,32 @@ namespace Server
         public int Rotation { get; }
 
         [Newtonsoft.Json.JsonIgnore]
-        public TileType TileType => World.TileTypes[(int)TileId];
+        public TileType TileType => World.TileTypes[(int)TileTypeId];
 
         [Newtonsoft.Json.JsonIgnore]
-        private readonly Envelope _envelope;
-        [Newtonsoft.Json.JsonIgnore]
-        public ref readonly Envelope Envelope => ref _envelope;
+        public Rectangle Bounds => GetBounds(GridPosition, TileType.GridSize);
 
-        public Tile(uint tileId, Int2 gridPosition, int rotation)
+        public Tile(uint tileTypeId, Int2 gridPosition, int rotation)
         {
-            TileId = tileId;
+            TileTypeId = tileTypeId;
             GridPosition = gridPosition;
             Rotation = rotation;
-
-            // We add some margin to the envelope to rounding errors giving false collisions.
-            _envelope = GetGridEnvelope(gridPosition, TileType.GridSize);
         }
 
-        public static Envelope GetGridEnvelope(Int2 gridPosition, Int2 gridSize) => 
-            new Envelope(
-                gridPosition.X + 0.1,
-                gridPosition.Y + 0.1,
-                gridPosition.X + gridSize.X - 0.1,
-                gridPosition.Y + gridSize.Y - 0.1);
+        public static Rectangle GetBounds(Int2 gridPosition, Int2 gridSize) =>
+            // We add some margin to the envelope to rounding errors giving false collisions.
+            new Rectangle(
+                new[]
+                {
+                    gridPosition.X + 0.25f,
+                    gridPosition.Y + 0.25f,
+                    0
+                },
+                new[]
+                {
+                    gridPosition.X + gridSize.X - 0.25f,
+                    gridPosition.Y + gridSize.Y - 0.25f,
+                    0
+                });
     }
 }

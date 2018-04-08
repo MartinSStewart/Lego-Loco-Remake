@@ -38,19 +38,50 @@ namespace Tests
         {
             var world = new World();
 
-            var random = new Random();
+            var random = new Random(123123);
             for (var i = 0; i < 1000; i++)
             {
-                world.AddTile(
-                    new Tile((uint)random.Next(2), 
-                    new Int2(random.Next(-100, 100), 
-                    random.Next(-100, 100)), random.Next(3)));
+                world.AddTile(RandomTile(random, new Int2(-100, -100), new Int2(100, 100)));
             }
 
             world.AddTile(new Tile(0, new Int2(120, 20), 0));
 
             var result = world.GetRegion(new Int2(118, 19), new Int2(5, 5));
             Assert.AreEqual(1, result.Count);
+        }
+
+        [Test]
+        public void RemoveTest()
+        {
+            var world = new World();
+
+            var seed = 123123;
+            var random0 = new Random(seed);
+            
+            for (int i = 0; i < 10000; i++)
+            {
+                var tile = RandomTile(random0, World.MinGridPosition, World.MaxGridPosition);
+                world.AddTile(tile);
+            }
+
+            var random1 = new Random(seed);
+            for (int i = 0; i < 10000; i++)
+            {
+                var tile = RandomTile(random1, World.MinGridPosition, World.MaxGridPosition);
+                world.Remove(tile);
+
+                world.Remove(tile);
+            }
+
+            Assert.AreEqual(0, world.TileCount);
+        }
+
+        public static Tile RandomTile(Random random, Int2 min, Int2 max)
+        {
+            return new Tile(
+                (uint)random.Next(2),
+                new Int2(random.Next(min.X, max.X), random.Next(min.Y, max.Y)), 
+                random.Next(3));
         }
     }
 }
