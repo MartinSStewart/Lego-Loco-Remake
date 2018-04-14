@@ -7,8 +7,9 @@ import Html.Attributes exposing (src, style)
 import Html.Events as Events exposing (on)
 import Json.Decode as Decode
 import Helpers exposing (..)
-import Tiles
 import Mouse
+import Tile
+import Sprite
 
 
 type alias Toolbox =
@@ -136,12 +137,12 @@ getPosition windowSize toolbox =
 -}
 toolboxSize : Int2
 toolboxSize =
-    Int2 180 234
+    Sprite.toolbox |> .pixelSize
 
 
 toolboxHandleSize : Int2
 toolboxHandleSize =
-    Int2 64 37
+    Sprite.toolboxHandle |> .pixelSize
 
 
 insideToolbox : Int2 -> Int2 -> Toolbox -> Bool
@@ -172,14 +173,14 @@ toolboxView zIndex windowSize toolbox =
             [ onEvent "click" NoOp --Prevents clicks from propagating to UI underneath.
             , onEvent "mousedown" NoOp
             , style <|
-                [ background "/toolbox.png", ( "z-index", toString zIndex ) ]
+                [ Sprite.toolbox |> .filepath |> background, ( "z-index", toString zIndex ) ]
                     ++ absoluteStyle position toolboxSize
             ]
             [ tileView (Int2 5 16) toolbox
             , div
                 [ onMouseDown
                 , style <|
-                    [ background "/toolboxHandle.png" ]
+                    [ Sprite.toolboxHandle |> .filepath |> background ]
                         ++ absoluteStyle handlePosition toolboxHandleSize
                 ]
                 []
@@ -215,7 +216,7 @@ tileView pixelPosition toolbox =
             Int2.div (Int2.sub tileButtonLocalSize tile.icon.pixelSize) 2
 
         tileDiv =
-            Tiles.tiles
+            Tile.tiles
                 |> List.indexedMap
                     (\index a ->
                         let
@@ -223,7 +224,7 @@ tileView pixelPosition toolbox =
                                 if toolbox.selectedTileId == index then
                                     div
                                         [ style <|
-                                            [ background "/toolboxTileButtonDown.png" ]
+                                            [ Sprite.toolboxTileButtonDown |> .filepath |> background ]
                                                 ++ absoluteStyle Int2.zero tileButtonLocalSize
                                         ]
                                         []

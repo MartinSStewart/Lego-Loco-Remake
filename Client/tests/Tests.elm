@@ -8,6 +8,7 @@ import BinaryBase64
 import Model exposing (collidesWith, Tile)
 import Fuzz exposing (list, int)
 import Bitwise
+import Main exposing (initModel)
 
 
 -- Check out http://package.elm-lang.org/packages/elm-community/elm-test/latest to learn more about testing in Elm!
@@ -97,6 +98,10 @@ all =
                         ++ extraBytes
                         |> readTile
                         |> Expect.equal (Just ( extraBytes, input ))
+
+        -- , test "Placing a house to the right of a sidewalk tile does not remove the sidewalk." <|
+        --     \_ ->
+        --         Main.initModel |> Model.modelAddTile (Tile 0 _ 0)
         ]
 
 

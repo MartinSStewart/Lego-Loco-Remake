@@ -1,0 +1,36 @@
+[{
+  "name": "Sidewalk",
+  "gridSize": {
+    "x": 1,
+    "y": 1
+  },
+  "imagePaths": [ "sidewalk.png" ],
+  "toolboxIconPath": "sidewalk.png"
+},
+{
+  "name": "Red House",
+  "gridSize": {
+    "x": 3,
+    "y": 3
+  },
+  "imagePaths": [ "house0.png" ],
+  "toolboxIconPath": "houseIcon0.png"
+},
+{
+  "name": "Straight Road",
+  "gridSize": {
+    "x": 2,
+    "y": 2
+  },
+  "imagePaths": [ "roadHorizontal.png", "roadVertical.png" ],
+  "toolboxIconPath": "roadHorizontal.png"
+},
+{
+  "name": "Curved Road",
+  "gridSize": {
+    "x": 2,
+    "y": 2
+  },
+  "imagePaths": [ "roadTurnLeftDown.png", "roadTurnLeftUp.png", "roadTurnRightDown.png", "roadTurnRightUp.png" ],
+  "toolboxIconPath": "roadTurnLeftDown.png"
+}]

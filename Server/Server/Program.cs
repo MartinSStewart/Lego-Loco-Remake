@@ -11,6 +11,7 @@ using WebSocketSharp.Server;
 using Newtonsoft;
 using Newtonsoft.Json.Linq;
 using System.Collections.Immutable;
+using Newtonsoft.Json;
 
 namespace Server
 {
@@ -18,15 +19,14 @@ namespace Server
     {
         public static ConcurrentQueue<(string Id, IClientMessage Message)> MessageQueue { get; } = new ConcurrentQueue<(string, IClientMessage)>();
 
-        public static World World { get; } = new World();
+        public static World World { get; } = 
+            new World(TileType.GetTileTypes());
 
         static void Main(string[] args)
         {
             var socketServer = new WebSocketServer(5523);
             socketServer.AddWebSocketService("/socketservice", () => new SocketService());
             socketServer.Start();
-
-            World.AddTile(new Tile(1, new Int2(11, 12), 3));
 
             Task.Run(async () =>
             {

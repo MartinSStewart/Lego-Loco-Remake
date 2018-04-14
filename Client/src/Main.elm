@@ -8,19 +8,21 @@ import MouseEvents
 import Toolbox exposing (Toolbox)
 import Helpers exposing (..)
 import Mouse exposing (Position)
-import Tiles exposing (..)
+import TileHelper exposing (..)
 import Window
 import Task
 import Model exposing (..)
 import Server
+import Sprite
+import Tile
 
 
 ---- MODEL ----
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( Model
+initModel : Model
+initModel =
+    Model
         (Int2 0 0)
         (Int2 500 500)
         []
@@ -30,6 +32,11 @@ init =
         Nothing
         (Position 0 0)
         (Int2 1000 1000)
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( initModel
     , Cmd.batch [ Task.perform WindowResize Window.size, [ Server.GetRegion (Int2 0 0) (Int2 1000 1000) ] |> Server.send ]
     )
 
@@ -56,7 +63,7 @@ viewToGrid viewPoint model =
         Int2 gridX gridY
 
 
-viewToTileGrid : Int2 -> Model -> TileType -> Int2
+viewToTileGrid : Int2 -> Model -> Tile.TileType -> Int2
 viewToTileGrid viewPoint model tile =
     let
         gridPos =
@@ -139,11 +146,7 @@ update msg model =
 
                 newModel =
                     model
-                        |> modelAddTile tileInstance
                         |> setLastTilePosition (Just tilePos)
-
-                a =
-                    Debug.log "" newModel.lastTilePosition
             in
                 ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
 
@@ -222,7 +225,8 @@ drawTiles newTilePosition model =
                 if Int2.rectangleCollision pos tileSize newTilePosition tileSize then
                     ( [], model )
                 else
-                    modelAddTile tileInstance model
+                    model
+                        --|> modelAddTile tileInstance
                         |> setLastTilePosition (Just newTilePosition)
                         |> (,) [ tileInstance ]
 
@@ -252,7 +256,7 @@ view model =
             [ MouseEvents.onMouseDown MouseDown
             , onWheel RotateTile
             , style
-                [ background "grid.png"
+                [ Sprite.grid |> .filepath |> background
                 , ( "width", "100%" )
                 , ( "height", "100vh" )
                 , Int2.negate model.viewPosition |> backgroundPosition
@@ -275,7 +279,7 @@ tileView model tileInstance seeThrough zIndex =
 
         pos =
             Int2.multScalar tileInstance.position gridToPixels
-                |> Int2.add sprite.pixelOffset
+                |> Int2.add (Int2.negate sprite.pixelOffset)
                 |> Int2.add (Int2.negate model.viewPosition)
 
         size =

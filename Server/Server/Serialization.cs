@@ -113,7 +113,7 @@ namespace Server
             var tileId = stream.ReadInt();
             var gridPos = stream.ReadInt2();
             var rotation = stream.ReadInt();
-            return new Tile((uint)tileId, gridPos, rotation);
+            return new Tile(tileId, gridPos, rotation);
         }
 
         public static List<T> ReadList<T>(this MemoryStream stream, Func<MemoryStream, T> reader)
