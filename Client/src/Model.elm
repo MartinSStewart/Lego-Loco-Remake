@@ -4,7 +4,7 @@ import Int2 exposing (Int2)
 import Mouse exposing (Position)
 import Toolbox exposing (Toolbox)
 import List.Extra
-import Tile
+import TileType
 
 
 type alias Model =
@@ -95,21 +95,21 @@ collisionsAt model gridPosition gridSize =
             model.tiles
 
 
-getTileOrDefault : Int -> Tile.TileType
+getTileOrDefault : Int -> TileType.TileType
 getTileOrDefault tileId =
-    case List.Extra.getAt tileId Tile.tiles of
+    case List.Extra.getAt tileId TileType.tiles of
         Just tile ->
             tile
 
         Nothing ->
-            Tile.sidewalk
+            TileType.sidewalk
 
 
-getTileByTileInstance : Tile -> Tile.TileType
+getTileByTileInstance : Tile -> TileType.TileType
 getTileByTileInstance tileInstance =
-    case List.Extra.getAt tileInstance.tileId Tile.tiles of
+    case List.Extra.getAt tileInstance.tileId TileType.tiles of
         Just tile ->
             tile
 
         Nothing ->
-            Tile.sidewalk
+            TileType.sidewalk

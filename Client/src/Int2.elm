@@ -82,7 +82,7 @@ rectangleCollision : Int2 -> Int2 -> Int2 -> Int2 -> Bool
 rectangleCollision topLeft0 size0 topLeft1 size1 =
     let
         topRight0 =
-            add topLeft0 (Int2 (size1.x - 1) 0)
+            add topLeft0 (Int2 (size0.x - 1) 0)
 
         bottomRight0 =
             add topLeft0 size0 |> add (Int2 -1 -1)

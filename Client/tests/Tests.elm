@@ -9,6 +9,7 @@ import Model exposing (collidesWith, Tile)
 import Fuzz exposing (list, int)
 import Bitwise
 import Main exposing (initModel)
+import TileType exposing (..)
 
 
 -- Check out http://package.elm-lang.org/packages/elm-community/elm-test/latest to learn more about testing in Elm!
@@ -25,15 +26,15 @@ all =
                 Expect.equal "a" (String.left 1 "abcdefg")
         , test "Tiles right on top of eachother should collide." <|
             \_ ->
-                collidesWith (Tile 0 (Int2 0 0) 0) (Tile 0 (Int2 0 0) 0)
+                collidesWith (Tile redHouseIndex (Int2 0 0) 0) (Tile 0 (Int2 0 0) 0)
                     |> Expect.equal True
         , test "Tiles next to eachother should not collide." <|
             \_ ->
-                collidesWith (Tile 0 (Int2 0 0) 0) (Tile 0 (Int2 3 0) 0)
+                collidesWith (Tile redHouseIndex (Int2 0 0) 0) (Tile 0 (Int2 3 0) 0)
                     |> Expect.equal False
         , test "Tiles overlapping should collide." <|
             \_ ->
-                collidesWith (Tile 0 (Int2 0 0) 0) (Tile 0 (Int2 2 -2) 0)
+                collidesWith (Tile redHouseIndex (Int2 0 0) 0) (Tile redHouseIndex (Int2 2 -2) 0)
                     |> Expect.equal True
         , test "Rectangles next to eachother should not collide." <|
             \_ ->
@@ -98,10 +99,14 @@ all =
                         ++ extraBytes
                         |> readTile
                         |> Expect.equal (Just ( extraBytes, input ))
-
-        -- , test "Placing a house to the right of a sidewalk tile does not remove the sidewalk." <|
-        --     \_ ->
-        --         Main.initModel |> Model.modelAddTile (Tile 0 _ 0)
+        , test "Placing a house to the right of a sidewalk tile does not remove the sidewalk." <|
+            \_ ->
+                Main.initModel
+                    |> Model.modelAddTile (Tile sidewalkIndex Int2.zero 0)
+                    |> Model.modelAddTile (Tile redHouseIndex (Int2 1 0) 0)
+                    |> .tiles
+                    |> List.length
+                    |> Expect.equal 2
         ]
 
 

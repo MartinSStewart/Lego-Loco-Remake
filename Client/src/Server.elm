@@ -14,14 +14,14 @@ version =
 
 send : List Action -> Cmd msg
 send actions =
-    let
-        _ =
-            Debug.log "Sending" actions
-    in
-        writeInt version
-            ++ writeList writeAction actions
-            |> encode
-            |> WebSocket.send serverUrl
+    -- let
+    --     _ =
+    --         Debug.log "Sending" actions
+    -- in
+    writeInt version
+        ++ writeList writeAction actions
+        |> encode
+        |> WebSocket.send serverUrl
 
 
 type Action

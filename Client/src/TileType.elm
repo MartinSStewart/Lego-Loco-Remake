@@ -1,14 +1,14 @@
 {- Auto generated code. -}
 
 
-module Tile exposing (..)
+module TileType exposing (..)
 
 import Int2 exposing (Int2)
 import Sprite exposing (Sprite)
 
 
 type alias TileType =
-    { sprite: RotSprite
+    { sprite : RotSprite
     , name : String
     , gridSize : Int2
     , icon : Sprite
@@ -41,8 +41,28 @@ redHouse =
     TileType (Rot1 Sprite.redHouse) "Red House" (Int2 3 3) Sprite.redHouseIcon
 
 
+sidewalkIndex : Int
+sidewalkIndex =
+    0
+
+
+straightRoadIndex : Int
+straightRoadIndex =
+    1
+
+
+roadTurnIndex : Int
+roadTurnIndex =
+    2
+
+
+redHouseIndex : Int
+redHouseIndex =
+    3
+
+
 tiles : List TileType
-tiles = 
+tiles =
     [ sidewalk
     , straightRoad
     , roadTurn

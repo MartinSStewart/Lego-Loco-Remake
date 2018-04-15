@@ -1,7 +1,7 @@
 module TileHelper exposing (..)
 
 import List.Extra
-import Tile exposing (..)
+import TileType exposing (..)
 import Sprite exposing (..)
 
 
@@ -10,7 +10,7 @@ directions =
     4
 
 
-rotSpriteToList : Tile.RotSprite -> List Sprite
+rotSpriteToList : TileType.RotSprite -> List Sprite
 rotSpriteToList rotSprite =
     case rotSprite of
         Rot1 sprite ->

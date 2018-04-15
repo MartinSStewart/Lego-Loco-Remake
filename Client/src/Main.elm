@@ -14,7 +14,7 @@ import Task
 import Model exposing (..)
 import Server
 import Sprite
-import Tile
+import TileType
 
 
 ---- MODEL ----
@@ -63,7 +63,7 @@ viewToGrid viewPoint model =
         Int2 gridX gridY
 
 
-viewToTileGrid : Int2 -> Model -> Tile.TileType -> Int2
+viewToTileGrid : Int2 -> Model -> TileType.TileType -> Int2
 viewToTileGrid viewPoint model tile =
     let
         gridPos =

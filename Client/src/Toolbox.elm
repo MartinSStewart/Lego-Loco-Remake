@@ -8,7 +8,7 @@ import Html.Events as Events exposing (on)
 import Json.Decode as Decode
 import Helpers exposing (..)
 import Mouse
-import Tile
+import TileType
 import Sprite
 
 
@@ -216,7 +216,7 @@ tileView pixelPosition toolbox =
             Int2.div (Int2.sub tileButtonLocalSize tile.icon.pixelSize) 2
 
         tileDiv =
-            Tile.tiles
+            TileType.tiles
                 |> List.indexedMap
                     (\index a ->
                         let

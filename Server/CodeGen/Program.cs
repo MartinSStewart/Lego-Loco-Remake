@@ -14,57 +14,49 @@ namespace CodeGen
 {
     class Program
     {
+        public static string ClientDirectory => Path.Combine("..", "..", "..", "..", "Client");
+
         static void Main(string[] args)
         {
-            var tiles = TileType.GetTileTypes();
-            var sprites = Sprite.GetSprites();
+            var spriteModule = "Sprite";
+            var tileTypeModule = "TileType";
 
-            var imageDirectory = Path.Combine("..", "..", "..", "..", "Client", "public", "Images");
-            var imagePaths = Directory.EnumerateFiles(imageDirectory, "*.png", SearchOption.AllDirectories).ToList();
+            var spriteCode = GetSpriteCode(Sprite.GetSprites(), spriteModule);
+            var tileTypeCode = GetTileTypeCode(TileType.GetTileTypes(), tileTypeModule);
 
-            var repeatNames = sprites.GroupBy(item => item.CodeName).Where(item => item.Count() > 1);
-            if (repeatNames.Any())
-            {
-                Console.WriteLine($"Sprites must all have unique names. The following names are used more than once:\n{repeatNames.Select(item => item.Key).ToDelimitedString(", ")}");
-                Console.WriteLine("Press any key to close...");
-                Console.Read();
-            }
+            File.WriteAllText(Path.Combine(ClientDirectory, "src", $"{spriteModule}.elm"), spriteCode);
+            File.WriteAllText(Path.Combine(ClientDirectory, "src", $"{tileTypeModule}.elm"), tileTypeCode);
+        }
 
-            string instanceFunc(string name, string type, params string[] parameters) =>
-                $"{name} : {type}\n" +
-                $"{name} =\n" +
-                $"    {type} {parameters.ToDelimitedString(" ")}\n";
+        public static string GetElmFunction(string name, string type, params string[] parameters) =>
+            $"{name} : {type}\n" +
+            $"{name} =\n" +
+            $"    {type} {parameters.ToDelimitedString(" ")}\n";
 
-            var spriteCode = sprites.Select(sprite =>
+        public static string GetSpriteCode(IEnumerable<Sprite> sprites, string moduleName)
+        {
+            var imageDirectory = Path.Combine(ClientDirectory, "public", "Images");
+
+            var spriteCode = sprites
+                .Select(sprite =>
                 {
                     var size = ImageSize(Path.Combine(imageDirectory, sprite.ImagePath));
 
                     var path = string.Join("/", new[] { "Images", sprite.ImagePath });
-                    return instanceFunc(
-                        sprite.CodeName, 
-                        "Sprite", 
-                        $"\"/{path}\"", 
-                        $"(Int2 {size.X} {size.Y})", 
+                    return GetElmFunction(
+                        sprite.CodeName,
+                        "Sprite",
+                        $"\"/{path}\"",
+                        $"(Int2 {size.X} {size.Y})",
                         $"(Int2 {sprite.Origin.X} {sprite.Origin.Y})");
                 })
                 .ToDelimitedString("\n\n");
 
-            var tileCode = tiles.Select(tile =>
-                instanceFunc(
-                    tile.CodeName,
-                    "TileType",
-                    $"(Rot{tile.Sprites.Count} {tile.Sprites.Select(item => "Sprite." + item).ToDelimitedString(" ")})",
-                    $"\"{tile.Name}\"",
-                    $"(Int2 {tile.GridSize.X} {tile.GridSize.Y})",
-                    "Sprite." + tile.ToolboxIconSprite))
-                .ToDelimitedString("\n\n");
-
-            var spriteModule = "Sprite";
-            var code =
+            return
 $@"{{- Auto generated code. -}}
 
 
-module {spriteModule} exposing (..)
+module {moduleName} exposing (..)
 
 import Int2 exposing (Int2)
 
@@ -77,19 +69,33 @@ type alias Sprite =
 
 
 {spriteCode}";
-            var tileModule = "Tile";
-            var tileCodeAll = 
+        }
+
+        public static string GetTileTypeCode(IEnumerable<TileType> tiles, string moduleName)
+        {
+            var tileCode = tiles
+                .Select(tile =>
+                    GetElmFunction(
+                        tile.CodeName,
+                        "TileType",
+                        $"(Rot{tile.Sprites.Count} {tile.Sprites.Select(item => "Sprite." + item).ToDelimitedString(" ")})",
+                        $"\"{tile.Name}\"",
+                        $"(Int2 {tile.GridSize.X} {tile.GridSize.Y})",
+                        "Sprite." + tile.ToolboxIconSprite))
+                .ToDelimitedString("\n\n");
+
+            return
 $@"{{- Auto generated code. -}}
 
 
-module {tileModule} exposing (..)
+module {moduleName} exposing (..)
 
 import Int2 exposing (Int2)
 import Sprite exposing (Sprite)
 
 
 type alias TileType =
-    {{ sprite: RotSprite
+    {{ sprite : RotSprite
     , name : String
     , gridSize : Int2
     , icon : Sprite
@@ -104,13 +110,18 @@ type RotSprite
 
 {tileCode}
 
+{tiles
+    .Index()
+    .Select(item =>
+        $"{item.Value.CodeName}Index : Int\n" +
+        $"{item.Value.CodeName}Index =\n" +
+        $"    {item.Key}\n")
+    .ToDelimitedString("\n\n")}
+
 tiles : List TileType
 tiles = 
     [ {tiles.Select(item => item.CodeName).ToDelimitedString("\n    , ")}
     ]";
-
-            File.WriteAllText(Path.Combine("..", "..", "..", "..", "Client", "src", $"{spriteModule}.elm"), code);
-            File.WriteAllText(Path.Combine("..", "..", "..", "..", "Client", "src", $"{tileModule}.elm"), tileCodeAll);
         }
 
         public static Int2 ImageSize(string path)
