@@ -25,8 +25,23 @@ sub point0 point1 =
     { x = point0.x - point1.x, y = point0.y - point1.y }
 
 
+rsub :
+    { x : number, y : number }
+    -> { x : number, y : number }
+    -> { x : number, y : number }
+rsub point1 point0 =
+    { x = point0.x - point1.x, y = point0.y - point1.y }
+
+
 multScalar : { x : number, y : number } -> number -> { x : number, y : number }
 multScalar point scalar =
+    { x = point.x * scalar, y = point.y * scalar }
+
+
+{-| Multiplies one point by a scalar but with the order reversed.
+-}
+rmultScalar : number -> { x : number, y : number } -> { x : number, y : number }
+rmultScalar scalar point =
     { x = point.x * scalar, y = point.y * scalar }
 
 
@@ -37,6 +52,13 @@ mult point0 point1 =
 
 div : Int2 -> Int -> Int2
 div point divisor =
+    { x = point.x // divisor, y = point.y // divisor }
+
+
+{-| Divides one point by an integer but with the order reversed.
+-}
+rdiv : Int -> Int2 -> Int2
+rdiv divisor point =
     { x = point.x // divisor, y = point.y // divisor }
 
 
@@ -76,6 +98,16 @@ max :
     -> { x : comparable, y : comparable }
 max point0 point1 =
     { x = Basics.max point0.x point1.x, y = Basics.max point0.y point1.y }
+
+
+floor : { a | x : Float, y : Float } -> { x : Int, y : Int }
+floor float2 =
+    Int2 (Basics.floor float2.x) (Basics.floor float2.y)
+
+
+toFloat2 : Int2 -> Float2
+toFloat2 int2 =
+    Float2 (toFloat int2.x) (toFloat int2.y)
 
 
 rectangleCollision : Int2 -> Int2 -> Int2 -> Int2 -> Bool

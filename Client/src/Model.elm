@@ -5,6 +5,8 @@ import Mouse exposing (Position)
 import Toolbox exposing (Toolbox)
 import List.Extra
 import TileType
+import Lenses exposing (..)
+import Monocle.Lens as Lens
 
 
 type alias Model =
@@ -27,48 +29,14 @@ type alias Tile =
     }
 
 
-modelSetToolbox : Model -> Toolbox -> Model
-modelSetToolbox model toolbox =
-    { model | toolbox = toolbox }
-
-
-setToolbox : { b | toolbox : a } -> c -> { b | toolbox : c }
-setToolbox model toolbox =
-    { model | toolbox = toolbox }
-
-
-modelSetToolboxViewPosition : Model -> Int2 -> Model
-modelSetToolboxViewPosition model viewPosition =
-    Toolbox.setViewPosition viewPosition model.toolbox |> modelSetToolbox model
-
-
-modelSetViewPosition : Int2 -> Model -> Model
-modelSetViewPosition viewPosition model =
-    { model | viewPosition = viewPosition }
-
-
-setCurrentTile : Maybe Int2 -> Model -> Model
-setCurrentTile currentTile model =
-    { model | currentTile = currentTile }
-
-
 modelAddTile : Tile -> Model -> Model
 modelAddTile tile model =
-    { model | tiles = model.tiles |> List.filter (\a -> not (collidesWith a tile)) |> (::) tile }
-
-
-setLastTilePosition : Maybe Int2 -> Model -> Model
-setLastTilePosition lastTilePosition model =
-    { model | lastTilePosition = lastTilePosition }
+    model |> Lens.modify tiles (\a -> List.filter (\b -> not (collidesWith b tile)) a |> (::) tile)
 
 
 setMousePosCurrent : Position -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 setMousePosCurrent position modelCmd =
-    let
-        model =
-            Tuple.first modelCmd
-    in
-        ( { model | mousePosCurrent = position }, Tuple.second modelCmd )
+    ( mousePosCurrent.set position (Tuple.first modelCmd), Tuple.second modelCmd )
 
 
 collidesWith : Tile -> Tile -> Bool

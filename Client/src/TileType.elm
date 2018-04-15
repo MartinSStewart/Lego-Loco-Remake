@@ -62,7 +62,7 @@ redHouseIndex =
 
 
 tiles : List TileType
-tiles =
+tiles = 
     [ sidewalk
     , straightRoad
     , roadTurn

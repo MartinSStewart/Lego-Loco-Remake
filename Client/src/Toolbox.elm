@@ -10,6 +10,7 @@ import Helpers exposing (..)
 import Mouse
 import TileType
 import Sprite
+import Lenses exposing (..)
 
 
 type alias Toolbox =
@@ -36,16 +37,6 @@ type alias Drag =
 default : Toolbox
 default =
     Toolbox (Int2 100 100) 0 Nothing
-
-
-setViewPosition : Int2 -> Toolbox -> Toolbox
-setViewPosition viewPosition toolbox =
-    { toolbox | viewPosition = viewPosition }
-
-
-setDrag : Maybe Drag -> Toolbox -> Toolbox
-setDrag drag toolbox =
-    { toolbox | drag = drag }
 
 
 toolboxTileSize : Int
@@ -84,9 +75,11 @@ update windowSize msg toolbox =
                             Just a
             in
                 toolbox
-                    -- Update the toolbox position. It's visible position might not match viewPosition if the window has been resized.
-                    |> setViewPosition (getPosition windowSize toolbox)
-                    |> setDrag newDrag
+                    {- Update the toolbox position.
+                       It's visible position might not match viewPosition if the window has been resized.
+                    -}
+                    |> viewPosition.set (getPosition windowSize toolbox)
+                    |> drag.set newDrag
 
         DragAt xy ->
             let
@@ -98,12 +91,12 @@ update windowSize msg toolbox =
                         Nothing ->
                             Just <| Drag xy xy
             in
-                toolbox |> setDrag newDrag
+                toolbox |> drag.set newDrag
 
         DragEnd xy ->
             toolbox
-                |> setViewPosition (getPosition windowSize toolbox)
-                |> setDrag Nothing
+                |> viewPosition.set (getPosition windowSize toolbox)
+                |> drag.set Nothing
 
         NoOp ->
             toolbox

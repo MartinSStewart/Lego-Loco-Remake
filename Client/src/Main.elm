@@ -15,6 +15,7 @@ import Model exposing (..)
 import Server
 import Sprite
 import TileType
+import Lenses exposing (..)
 
 
 ---- MODEL ----
@@ -53,29 +54,18 @@ pixelsToGrid =
 
 viewToGrid : Int2 -> Model -> Int2
 viewToGrid viewPoint model =
-    let
-        gridX =
-            (toFloat (viewPoint.x + model.viewPosition.x) * pixelsToGrid |> floor)
-
-        gridY =
-            (toFloat (viewPoint.y + model.viewPosition.y) * pixelsToGrid |> floor)
-    in
-        Int2 gridX gridY
+    viewPoint
+        |> Int2.add model.viewPosition
+        |> Int2.toFloat2
+        |> Int2.rmultScalar pixelsToGrid
+        |> Int2.floor
 
 
 viewToTileGrid : Int2 -> Model -> TileType.TileType -> Int2
 viewToTileGrid viewPoint model tile =
-    let
-        gridPos =
-            viewToGrid viewPoint model
-
-        gridX =
-            gridPos.x - (tile.gridSize.x // 2)
-
-        gridY =
-            gridPos.y - (tile.gridSize.x // 2)
-    in
-        Int2 gridX gridY
+    tile.gridSize
+        |> Int2.rdiv 2
+        |> Int2.sub (viewToGrid viewPoint model)
 
 
 
@@ -101,82 +91,94 @@ update msg model =
             ( model, Cmd.none )
 
         KeyMsg keyCode ->
-            let
-                unit =
-                    if keyCode == 37 then
-                        Int2 -1 0
-                    else if keyCode == 38 then
-                        Int2 0 -1
-                    else if keyCode == 39 then
-                        Int2 1 0
-                    else if keyCode == 40 then
-                        Int2 0 1
-                    else
-                        Int2 0 0
-
-                movement =
-                    Int2.multScalar unit gridToPixels |> Int2.add model.viewPosition
-
-                newModel =
-                    model
-                        |> modelSetViewPosition movement
-                        |> mouseMove model.mousePosCurrent
-            in
-                newModel
+            keyMsg keyCode model
 
         MouseDown mouseEvent ->
-            let
-                tileId =
-                    model.toolbox.selectedTileId
-
-                tile =
-                    getTileOrDefault tileId
-
-                position =
-                    (MouseEvents.relPos mouseEvent)
-
-                tilePos =
-                    viewToTileGrid
-                        position
-                        model
-                        tile
-
-                tileInstance =
-                    Tile tileId tilePos model.currentRotation
-
-                newModel =
-                    model
-                        |> setLastTilePosition (Just tilePos)
-            in
-                ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
+            mouseDown mouseEvent model
 
         MouseMoved xy ->
             mouseMove xy model |> setMousePosCurrent xy
 
         ToolboxMsg toolboxMsg ->
-            ( Toolbox.update model.windowSize toolboxMsg model.toolbox |> setToolbox model, Cmd.none )
+            ( model |> toolbox.set (Toolbox.update model.windowSize toolboxMsg model.toolbox), Cmd.none )
 
         RotateTile wheelDelta ->
-            let
-                rotateBy =
-                    if wheelDelta > 0 then
-                        1
-                    else
-                        -1
-
-                newModel =
-                    { model | currentRotation = (model.currentRotation + rotateBy) % directions }
-            in
-                ( newModel, Cmd.none )
+            rotateTile wheelDelta model
 
         MouseUp _ ->
-            ( { model | lastTilePosition = Nothing }, Cmd.none )
+            ( lastTilePosition.set Nothing model, Cmd.none )
 
         WindowResize newSize ->
-            ( { model | windowSize = Int2 newSize.width newSize.height }, Cmd.none )
+            ( windowSize.set (Int2 newSize.width newSize.height) model, Cmd.none )
 
         WebSocketRecieve text ->
             ( Server.update text model, Cmd.none )
+
+
+keyMsg : number -> Model -> ( Model, Cmd msg )
+keyMsg keyCode model =
+    let
+        unit =
+            if keyCode == 37 then
+                Int2 -1 0
+            else if keyCode == 38 then
+                Int2 0 -1
+            else if keyCode == 39 then
+                Int2 1 0
+            else if keyCode == 40 then
+                Int2 0 1
+            else
+                Int2 0 0
+
+        movement =
+            Int2.multScalar unit gridToPixels |> Int2.add model.viewPosition
+    in
+        model
+            |> viewPosition.set movement
+            |> mouseMove model.mousePosCurrent
+
+
+mouseDown : MouseEvents.MouseEvent -> Model -> ( Model, Cmd msg )
+mouseDown mouseEvent model =
+    let
+        tileId =
+            model.toolbox.selectedTileId
+
+        tile =
+            getTileOrDefault tileId
+
+        position =
+            (MouseEvents.relPos mouseEvent)
+
+        tilePos =
+            viewToTileGrid
+                position
+                model
+                tile
+
+        tileInstance =
+            Tile tileId tilePos model.currentRotation
+
+        newModel =
+            model
+                |> lastTilePosition.set (Just tilePos)
+    in
+        ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
+
+
+rotateTile : Int -> Model -> ( Model, Cmd msg )
+rotateTile wheelDelta model =
+    let
+        rotateBy =
+            if wheelDelta > 0 then
+                1
+            else
+                -1
+
+        newModel =
+            { model | currentRotation = (model.currentRotation + rotateBy) % directions }
+    in
+        ( newModel, Cmd.none )
 
 
 mouseMove : Int2 -> Model -> ( Model, Cmd msg )
@@ -188,11 +190,11 @@ mouseMove mousePos model =
                 |> viewToTileGrid mousePos model
     in
         if Toolbox.insideToolbox model.windowSize mousePos model.toolbox then
-            ( setCurrentTile Nothing model, Cmd.none )
+            ( currentTile.set Nothing model, Cmd.none )
         else
             let
                 ( tiles, newModel ) =
-                    model |> setCurrentTile (Just tilePos) |> drawTiles tilePos
+                    model |> currentTile.set (Just tilePos) |> drawTiles tilePos
 
                 cmd =
                     case tiles of
@@ -227,7 +229,7 @@ drawTiles newTilePosition model =
                 else
                     model
                         --|> modelAddTile tileInstance
-                        |> setLastTilePosition (Just newTilePosition)
+                        |> lastTilePosition.set (Just newTilePosition)
                         |> (,) [ tileInstance ]
 
 

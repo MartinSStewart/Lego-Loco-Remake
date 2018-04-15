@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
@@ -15,17 +16,73 @@ namespace CodeGen
     class Program
     {
         public static string ClientDirectory => Path.Combine("..", "..", "..", "..", "Client");
+        public const string CodeHeader = "{- Auto generated code. -}\n\n";
 
         static void Main(string[] args)
         {
             var spriteModule = "Sprite";
             var tileTypeModule = "TileType";
+            var lensModule = "Lenses";
+
+            var sourceDirectory = Path.Combine(ClientDirectory, "src");
 
             var spriteCode = GetSpriteCode(Sprite.GetSprites(), spriteModule);
             var tileTypeCode = GetTileTypeCode(TileType.GetTileTypes(), tileTypeModule);
+            var lensCode = GetLensCode(
+                new[] 
+                {
+                    File.ReadAllText(Path.Combine(sourceDirectory, "Model.elm")),
+                    File.ReadAllText(Path.Combine(sourceDirectory, "Toolbox.elm")),
+                    spriteCode,
+                    tileTypeCode
+                }, 
+                lensModule);
 
-            File.WriteAllText(Path.Combine(ClientDirectory, "src", $"{spriteModule}.elm"), spriteCode);
-            File.WriteAllText(Path.Combine(ClientDirectory, "src", $"{tileTypeModule}.elm"), tileTypeCode);
+            File.WriteAllText(Path.Combine(sourceDirectory, $"{spriteModule}.elm"), spriteCode);
+            File.WriteAllText(Path.Combine(sourceDirectory, $"{tileTypeModule}.elm"), tileTypeCode);
+            File.WriteAllText(Path.Combine(sourceDirectory, $"{lensModule}.elm"), lensCode);
+        }
+
+
+        public static string GetLensCode(IEnumerable<string> elmCode, string moduleName)
+        {
+            var text = elmCode
+                .ToDelimitedString("")
+                .Replace("\n", "")
+                .Replace("\r", "")
+                .Replace("\t", "");
+
+            var typeAliasRegex = new Regex("type +alias +.*?}");
+
+            var codeBody = typeAliasRegex
+                .Matches(text)
+                .OfType<Match>()
+                .SelectMany(match =>
+                {
+                    var matchText = match.ToString();
+                    var start = matchText.IndexOf('{') + 1;
+                    var end = matchText.LastIndexOf('}');
+                    return matchText
+                        .Substring(start, end - start)
+                        .Replace(" ", "")
+                        .Split(',')
+                        .Select(item => item.Split(':')[0]);
+                })
+                .Distinct()
+                .Select(item =>
+                    $"{item} : Lens {{ b | {item} : a }} a\n" +
+                    $"{item} =\n" +
+                    $"    Lens .{item} (\\value item -> {{ item | {item} = value }})\n")
+                .ToDelimitedString("\n\n");
+
+            return
+$@"{CodeHeader}
+module {moduleName} exposing (..)
+
+import Monocle.Lens as Lens exposing (Lens)
+
+
+{codeBody}";
         }
 
         public static string GetElmFunction(string name, string type, params string[] parameters) =>
@@ -53,9 +110,7 @@ namespace CodeGen
                 .ToDelimitedString("\n\n");
 
             return
-$@"{{- Auto generated code. -}}
-
-
+$@"{CodeHeader}
 module {moduleName} exposing (..)
 
 import Int2 exposing (Int2)
@@ -85,9 +140,7 @@ type alias Sprite =
                 .ToDelimitedString("\n\n");
 
             return
-$@"{{- Auto generated code. -}}
-
-
+$@"{CodeHeader}
 module {moduleName} exposing (..)
 
 import Int2 exposing (Int2)
