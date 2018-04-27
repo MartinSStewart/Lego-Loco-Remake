@@ -76,3 +76,8 @@ toolboxHandle =
 toolboxTileButtonDown : Sprite
 toolboxTileButtonDown =
     Sprite "/Images/toolboxTileButtonDown.png" (Int2 54 54) (Int2 0 0)
+
+
+toolboxLeft : Sprite
+toolboxLeft =
+    Sprite "/Images/toolboxLeft.png" (Int2 165 234) (Int2 0 0)

@@ -42,7 +42,8 @@ namespace Server
                 new Sprite("roadTurnRightDown", new Int2(0, 0),"roadTurnRightDown.png"),
                 new Sprite("toolbox", new Int2(0, 0),"toolbox.png"),
                 new Sprite("toolboxHandle", new Int2(0, 18), "toolboxHandle.png"),
-                new Sprite("toolboxTileButtonDown", new Int2(0, 0),"toolboxTileButtonDown.png")
+                new Sprite("toolboxTileButtonDown", new Int2(0, 0),"toolboxTileButtonDown.png"),
+                new Sprite("toolboxLeft", new Int2(0, 0), "toolboxLeft.png")
             }.ToImmutableList();
     }
 }

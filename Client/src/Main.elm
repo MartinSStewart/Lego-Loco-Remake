@@ -1,21 +1,23 @@
 module Main exposing (..)
 
+import Helpers exposing (..)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src, style)
-import Keyboard
+import Html.Events exposing (on)
 import Int2 exposing (Int2)
-import MouseEvents
-import Toolbox exposing (Toolbox)
-import Helpers exposing (..)
-import Mouse exposing (Position)
-import TileHelper exposing (..)
-import Window
-import Task
+import Json.Decode
+import Keyboard
+import Lenses exposing (..)
 import Model exposing (..)
+import Mouse exposing (Position)
+import MouseEvents
 import Server
 import Sprite
+import Task
+import TileHelper exposing (..)
 import TileType
-import Lenses exposing (..)
+import Toolbox exposing (Toolbox)
+import Window
 
 
 ---- MODEL ----
@@ -119,6 +121,7 @@ keyMsg : number -> Model -> ( Model, Cmd msg )
 keyMsg keyCode model =
     let
         unit =
+            -- Arrow keys
             if keyCode == 37 then
                 Int2 -1 0
             else if keyCode == 38 then
@@ -141,6 +144,9 @@ keyMsg keyCode model =
 mouseDown : MouseEvents.MouseEvent -> Model -> ( Model, Cmd msg )
 mouseDown mouseEvent model =
     let
+        a =
+            Debug.log "mouseDown" mouseEvent
+
         tileId =
             model.toolbox.selectedTileId
 
@@ -237,6 +243,11 @@ drawTiles newTilePosition model =
 ---- VIEW ----
 
 
+onMouseDown : (String -> msg) -> Html.Attribute msg
+onMouseDown tagger =
+    on "mousedown" (Json.Decode.map tagger Html.Events.targetValue)
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -253,9 +264,14 @@ view model =
 
                 Nothing ->
                     []
+
+        decode decoder =
+            Debug.log "asdf" NoOp
     in
         div
             [ MouseEvents.onMouseDown MouseDown
+
+            --onChange decode
             , onWheel RotateTile
             , style
                 [ Sprite.grid |> .filepath |> background
