@@ -8,7 +8,7 @@ type alias Model =
     { viewPosition : Point2 Int -- Position of view in pixel coordinates.
     , viewSize : Point2 Int -- Size of view in pixel coordinates.
     , tiles : List Tile
-    , toolbox : Toolbox
+    , toolbox : Toybox
     , currentTile : Maybe (Point2 Int)
     , currentRotation : Int
     , lastTilePosition : Maybe (Point2 Int)
@@ -25,7 +25,7 @@ type alias Tile =
     }
 
 
-type alias Toolbox =
+type alias Toybox =
     { viewPosition : Point2 Int -- Position of toolbox in view coordinates
     , drag : Maybe Drag
     }

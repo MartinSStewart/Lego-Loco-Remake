@@ -16,7 +16,7 @@ import Sprite
 import Task
 import TileHelper exposing (..)
 import TileType
-import Toolbox
+import Toybox
 import Window
 
 
@@ -29,7 +29,7 @@ initModel =
         (Point2 0 0)
         (Point2 500 500)
         []
-        Toolbox.default
+        Toybox.default
         Nothing
         0
         Nothing
@@ -106,7 +106,7 @@ update msg model =
             mouseMove xy model |> setMousePosCurrent xy
 
         ToolboxMsg toolboxMsg ->
-            ( Toolbox.update model.windowSize toolboxMsg model |> Tuple.first, Cmd.none )
+            ( Toybox.update model.windowSize toolboxMsg model |> Tuple.first, Cmd.none )
 
         RotateTile wheelDelta ->
             rotateTile wheelDelta model
@@ -210,7 +210,7 @@ rotateTile wheelDelta model =
 
 mouseMove : Point2 Int -> Model -> ( Model, Cmd msg )
 mouseMove mousePos model =
-    if Toolbox.insideToolbox model.windowSize mousePos model.toolbox then
+    if Toybox.insideToolbox model.windowSize mousePos model.toolbox then
         ( currentTile.set Nothing model, Cmd.none )
     else
         case model.editMode of
@@ -326,7 +326,7 @@ view model =
         <|
             tileViews
                 ++ currentTileView
-                ++ [ Toolbox.toolboxView 9999 model.windowSize model |> Html.map (\a -> ToolboxMsg a) ]
+                ++ [ Toybox.toolboxView 9999 model.windowSize model |> Html.map (\a -> ToolboxMsg a) ]
 
 
 tileView : Model -> Tile -> Bool -> Int -> Html msg
@@ -374,7 +374,7 @@ tileView model tileInstance seeThrough zIndex =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Toolbox.subscriptions model.toolbox |> Sub.map (\a -> ToolboxMsg a)
+        [ Toybox.subscriptions model.toolbox |> Sub.map (\a -> ToolboxMsg a)
         , Sub.batch
             [ Keyboard.downs KeyMsg
             , Mouse.moves MouseMoved -- This move update needs to happen after the toolbox subscriptions.

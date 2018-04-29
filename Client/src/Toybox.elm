@@ -1,4 +1,4 @@
-module Toolbox exposing (..)
+module Toybox exposing (..)
 
 import Helpers exposing (..)
 import Point2 exposing (Point2)
@@ -17,9 +17,9 @@ import Color
 import Monocle.Lens as Lens
 
 
-default : Toolbox
+default : Toybox
 default =
-    Toolbox (Point2 100 100) Nothing
+    Toybox (Point2 100 100) Nothing
 
 
 toolboxTileSize : Int
@@ -89,7 +89,7 @@ update windowSize msg model =
                 ( model, None )
 
 
-getPosition : Point2 Int -> Toolbox -> Point2 Int
+getPosition : Point2 Int -> Toybox -> Point2 Int
 getPosition windowSize toolbox =
     let
         position =
@@ -134,13 +134,13 @@ toolboxHandleSize =
     Sprite.toolboxHandle |> .size
 
 
-insideToolbox : Point2 Int -> Point2 Int -> Toolbox -> Bool
+insideToolbox : Point2 Int -> Point2 Int -> Toybox -> Bool
 insideToolbox windowSize viewPoint toolbox =
     Point2.pointInRectangle (getPosition windowSize toolbox) toolboxSize viewPoint
         || Point2.pointInRectangle (toolboxHandlePosition windowSize toolbox) toolboxHandleSize viewPoint
 
 
-toolboxHandlePosition : Point2 Int -> Toolbox -> Point2 Int
+toolboxHandlePosition : Point2 Int -> Toybox -> Point2 Int
 toolboxHandlePosition windowSize toolbox =
     Point2 ((toolboxSize.x - toolboxHandleSize.x) // 2) (Sprite.toolboxHandle |> .origin |> .y)
         |> Point2.add (getPosition windowSize toolbox)
@@ -214,7 +214,7 @@ indexedMap2 width mapper list =
         List.indexedMap (\index a -> mapper (getPosition index) a) list
 
 
-menuView : Point2 Int -> Toolbox -> Html ToolboxMsg
+menuView : Point2 Int -> Toybox -> Html ToolboxMsg
 menuView pixelPosition toolbox =
     let
         tileButtonMargin =
@@ -324,7 +324,7 @@ tileView pixelPosition model =
 -- SUBSCRIPTIONS
 
 
-subscriptions : Toolbox -> Sub ToolboxMsg
+subscriptions : Toybox -> Sub ToolboxMsg
 subscriptions toolbox =
     case toolbox.drag of
         Just _ ->
