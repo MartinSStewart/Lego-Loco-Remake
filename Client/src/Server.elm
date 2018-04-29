@@ -3,8 +3,9 @@ module Server exposing (..)
 import WebSocket
 import Model exposing (..)
 import BinaryBase64 exposing (..)
-import Int2 exposing (Int2)
+import Point2 exposing (Point2)
 import Bitwise
+import Helpers
 
 
 version : number
@@ -27,13 +28,13 @@ send actions =
 type Action
     = AddTile Tile
     | RemoveTile Tile
-    | GetRegion Int2 Int2
+    | GetRegion (Point2 Int) (Point2 Int)
 
 
 type Response
     = AddedTile Tile
     | RemovedTile Tile
-    | GotRegion Int2 Int2 (List Tile)
+    | GotRegion (Point2 Int) (Point2 Int) (List Tile)
 
 
 writeAction : Action -> ByteString
@@ -46,7 +47,7 @@ writeAction action =
             writeInt 1 ++ writeTile tile
 
         GetRegion topLeft gridSize ->
-            writeInt 2 ++ writeInt2 topLeft ++ writeInt2 gridSize
+            writeInt 2 ++ writePoint2 topLeft ++ writePoint2 gridSize
 
 
 serverUrl : String
@@ -64,7 +65,7 @@ update data model =
                     (\response model ->
                         case response of
                             AddedTile tile ->
-                                modelAddTile tile model
+                                Helpers.modelAddTile tile model
 
                             RemovedTile tile ->
                                 model
@@ -73,7 +74,7 @@ update data model =
                                 let
                                     newTiles =
                                         model.tiles
-                                            |> List.filter (\a -> Int2.pointInRectangle topLeft size a.position |> not)
+                                            |> List.filter (\a -> Point2.pointInRectangle topLeft size a.position |> not)
                                             |> (++) tiles
                                 in
                                     { model | tiles = newTiles }
@@ -117,10 +118,10 @@ readResponse data =
             else if responseCode == 1 then
                 readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, RemovedTile tile ))
             else if responseCode == 2 then
-                readInt2 bytes
+                readPoint2 bytes
                     |> Maybe.andThen
                         (\( bytesLeft, topLeft ) ->
-                            readInt2 bytesLeft
+                            readPoint2 bytesLeft
                                 |> Maybe.andThen
                                     (\( bytesLeft, size ) ->
                                         readList readTile bytesLeft
@@ -157,13 +158,13 @@ readInt data =
             Nothing
 
 
-readInt2 : ByteString -> Maybe ( ByteString, Int2 )
-readInt2 data =
+readPoint2 : ByteString -> Maybe ( ByteString, Point2 Int )
+readPoint2 data =
     readInt data
         |> Maybe.andThen
             (\( bytesLeft, x ) ->
                 readInt bytesLeft
-                    |> Maybe.andThen (\( bytesLeft, y ) -> Just ( bytesLeft, Int2 x y ))
+                    |> Maybe.andThen (\( bytesLeft, y ) -> Just ( bytesLeft, Point2 x y ))
             )
 
 
@@ -172,7 +173,7 @@ readTile data =
     readInt data
         |> Maybe.andThen
             (\( bytesLeft, tileId ) ->
-                readInt2 bytesLeft
+                readPoint2 bytesLeft
                     |> Maybe.andThen
                         (\( bytesLeft, gridPos ) ->
                             readInt bytesLeft
@@ -233,14 +234,14 @@ readList reader data =
             |> Maybe.andThen (\( bytesLeft, items ) -> Just ( bytesLeft, List.reverse items ))
 
 
-writeInt2 : Int2 -> ByteString
-writeInt2 int2 =
-    writeInt int2.x ++ writeInt int2.y
+writePoint2 : Point2 Int -> ByteString
+writePoint2 point =
+    writeInt point.x ++ writeInt point.y
 
 
 writeTile : Tile -> ByteString
 writeTile tile =
-    writeInt tile.tileId ++ writeInt2 tile.position ++ writeInt tile.rotationIndex
+    writeInt tile.tileId ++ writePoint2 tile.position ++ writeInt tile.rotationIndex
 
 
 inIntRange : Int -> Bool

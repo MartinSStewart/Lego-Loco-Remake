@@ -3,14 +3,14 @@
 
 module TileType exposing (..)
 
-import Int2 exposing (Int2)
+import Point2 exposing (Point2)
 import Sprite exposing (Sprite)
 
 
 type alias TileType =
     { sprite : RotSprite
     , name : String
-    , gridSize : Int2
+    , gridSize : Point2 Int
     , icon : Sprite
     }
 
@@ -23,22 +23,22 @@ type RotSprite
 
 sidewalk : TileType
 sidewalk =
-    TileType (Rot1 Sprite.sidewalk) "Sidewalk" (Int2 1 1) Sprite.sidewalk
+    TileType (Rot1 Sprite.sidewalk) "Sidewalk" (Point2 1 1) Sprite.sidewalk
 
 
 straightRoad : TileType
 straightRoad =
-    TileType (Rot2 Sprite.roadHorizontal Sprite.roadVertical) "Straight Road" (Int2 2 2) Sprite.roadHorizontal
+    TileType (Rot2 Sprite.roadHorizontal Sprite.roadVertical) "Straight Road" (Point2 2 2) Sprite.roadHorizontal
 
 
 roadTurn : TileType
 roadTurn =
-    TileType (Rot4 Sprite.roadTurnLeftUp Sprite.roadTurnLeftDown Sprite.roadTurnRightDown Sprite.roadTurnRightUp) "Road Turn" (Int2 2 2) Sprite.roadTurnLeftUp
+    TileType (Rot4 Sprite.roadTurnLeftUp Sprite.roadTurnLeftDown Sprite.roadTurnRightDown Sprite.roadTurnRightUp) "Road Turn" (Point2 2 2) Sprite.roadTurnLeftUp
 
 
 redHouse : TileType
 redHouse =
-    TileType (Rot1 Sprite.redHouse) "Red House" (Int2 3 3) Sprite.redHouseIcon
+    TileType (Rot1 Sprite.redHouse) "Red House" (Point2 3 3) Sprite.redHouseIcon
 
 
 sidewalkIndex : Int

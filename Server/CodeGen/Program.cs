@@ -17,6 +17,7 @@ namespace CodeGen
     {
         public static string ClientDirectory => Path.Combine("..", "..", "..", "..", "Client");
         public const string CodeHeader = "{- Auto generated code. -}\n\n";
+        public const string Point2Type = "Point2";
 
         static void Main(string[] args)
         {
@@ -33,6 +34,7 @@ namespace CodeGen
                 {
                     File.ReadAllText(Path.Combine(sourceDirectory, "Model.elm")),
                     File.ReadAllText(Path.Combine(sourceDirectory, "Toolbox.elm")),
+                    File.ReadAllText(Path.Combine(sourceDirectory, "Point2.elm")),
                     spriteCode,
                     tileTypeCode
                 }, 
@@ -69,6 +71,7 @@ namespace CodeGen
                         .Select(item => item.Split(':')[0]);
                 })
                 .Distinct()
+                .OrderBy(item => item)
                 .Select(item =>
                     $"{item} : Lens {{ b | {item} : a }} a\n" +
                     $"{item} =\n" +
@@ -105,9 +108,9 @@ import Monocle.Lens as Lens exposing (Lens)
                         sprite.CodeName,
                         "Sprite",
                         $"\"/{path}\"",
-                        $"(Int2 {spriteSize.X} {spriteSize.Y})",
-                        $"(Int2 {imageSize.X} {imageSize.Y})",
-                        $"(Int2 {sprite.Origin.X} {sprite.Origin.Y})");
+                        $"({Point2Type} {spriteSize.X} {spriteSize.Y})",
+                        $"({Point2Type} {imageSize.X} {imageSize.Y})",
+                        $"({Point2Type} {sprite.Origin.X} {sprite.Origin.Y})");
                 })
                 .ToDelimitedString("\n\n");
 
@@ -115,14 +118,14 @@ import Monocle.Lens as Lens exposing (Lens)
 $@"{CodeHeader}
 module {moduleName} exposing (..)
 
-import Int2 exposing (Int2)
+import Point2 exposing ({Point2Type})
 
 
 type alias Sprite =
     {{ filepath : String
-    , size : Int2 --Size of the sprite.
-    , imageSize : Int2 --Exact dimensions of image.
-    , origin : Int2
+    , size : {Point2Type} Int --Size of the sprite.
+    , imageSize : {Point2Type} Int --Exact dimensions of image.
+    , origin : {Point2Type} Int
     }}
 
 
@@ -138,7 +141,7 @@ type alias Sprite =
                         "TileType",
                         $"(Rot{tile.Sprites.Count} {tile.Sprites.Select(item => "Sprite." + item).ToDelimitedString(" ")})",
                         $"\"{tile.Name}\"",
-                        $"(Int2 {tile.GridSize.X} {tile.GridSize.Y})",
+                        $"({Point2Type} {tile.GridSize.X} {tile.GridSize.Y})",
                         "Sprite." + tile.ToolboxIconSprite))
                 .ToDelimitedString("\n\n");
 
@@ -146,14 +149,14 @@ type alias Sprite =
 $@"{CodeHeader}
 module {moduleName} exposing (..)
 
-import Int2 exposing (Int2)
+import Point2 exposing ({Point2Type})
 import Sprite exposing (Sprite)
 
 
 type alias TileType =
     {{ sprite : RotSprite
     , name : String
-    , gridSize : Int2
+    , gridSize : {Point2Type} Int
     , icon : Sprite
     }}
 

@@ -4,7 +4,7 @@ import Helpers exposing (..)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src, style)
 import Html.Events exposing (on)
-import Int2 exposing (Int2)
+import Point2 exposing (Point2)
 import Json.Decode
 import Keyboard
 import Lenses exposing (..)
@@ -16,7 +16,7 @@ import Sprite
 import Task
 import TileHelper exposing (..)
 import TileType
-import Toolbox exposing (Toolbox)
+import Toolbox
 import Window
 
 
@@ -26,21 +26,21 @@ import Window
 initModel : Model
 initModel =
     Model
-        (Int2 0 0)
-        (Int2 500 500)
+        (Point2 0 0)
+        (Point2 500 500)
         []
         Toolbox.default
         Nothing
         0
         Nothing
         (Position 0 0)
-        (Int2 1000 1000)
+        (Point2 1000 1000)
 
 
 init : ( Model, Cmd Msg )
 init =
     ( initModel
-    , Cmd.batch [ Task.perform WindowResize Window.size, [ Server.GetRegion (Int2 0 0) (Int2 1000 1000) ] |> Server.send ]
+    , Cmd.batch [ Task.perform WindowResize Window.size, [ Server.GetRegion (Point2 0 0) (Point2 1000 1000) ] |> Server.send ]
     )
 
 
@@ -54,20 +54,20 @@ pixelsToGrid =
     1 / (toFloat gridToPixels)
 
 
-viewToGrid : Int2 -> Model -> Int2
+viewToGrid : Point2 Int -> Model -> Point2 Int
 viewToGrid viewPoint model =
     viewPoint
-        |> Int2.add model.viewPosition
-        |> Int2.toFloat2
-        |> Int2.rmultScalar pixelsToGrid
-        |> Int2.floor
+        |> Point2.add model.viewPosition
+        |> Point2.toFloat
+        |> Point2.rmultScalar pixelsToGrid
+        |> Point2.floor
 
 
-viewToTileGrid : Int2 -> Model -> TileType.TileType -> Int2
+viewToTileGrid : Point2 Int -> Model -> TileType.TileType -> Point2 Int
 viewToTileGrid viewPoint model tile =
     tile.gridSize
-        |> Int2.rdiv 2
-        |> Int2.sub (viewToGrid viewPoint model)
+        |> Point2.rdiv 2
+        |> Point2.sub (viewToGrid viewPoint model)
 
 
 
@@ -79,7 +79,7 @@ type Msg
     | KeyMsg Keyboard.KeyCode
     | MouseDown MouseEvents.MouseEvent
     | MouseUp Position
-    | ToolboxMsg Toolbox.ToolboxMsg
+    | ToolboxMsg Model.ToolboxMsg
     | MouseMoved Position
     | RotateTile Int
     | WindowResize Window.Size
@@ -111,7 +111,7 @@ update msg model =
             ( lastTilePosition.set Nothing model, Cmd.none )
 
         WindowResize newSize ->
-            ( windowSize.set (Int2 newSize.width newSize.height) model, Cmd.none )
+            ( windowSize.set (Point2 newSize.width newSize.height) model, Cmd.none )
 
         WebSocketRecieve text ->
             ( Server.update text model, Cmd.none )
@@ -123,18 +123,18 @@ keyMsg keyCode model =
         unit =
             -- Arrow keys
             if keyCode == 37 then
-                Int2 -1 0
+                Point2 -1 0
             else if keyCode == 38 then
-                Int2 0 -1
+                Point2 0 -1
             else if keyCode == 39 then
-                Int2 1 0
+                Point2 1 0
             else if keyCode == 40 then
-                Int2 0 1
+                Point2 0 1
             else
-                Int2 0 0
+                Point2 0 0
 
         movement =
-            Int2.multScalar unit gridToPixels |> Int2.add model.viewPosition
+            Point2.multScalar unit gridToPixels |> Point2.add model.viewPosition
     in
         model
             |> viewPosition.set movement
@@ -187,7 +187,7 @@ rotateTile wheelDelta model =
         ( newModel, Cmd.none )
 
 
-mouseMove : Int2 -> Model -> ( Model, Cmd msg )
+mouseMove : Point2 Int -> Model -> ( Model, Cmd msg )
 mouseMove mousePos model =
     let
         tilePos =
@@ -213,7 +213,7 @@ mouseMove mousePos model =
                 ( newModel, cmd )
 
 
-drawTiles : Int2 -> Model -> ( List Tile, Model )
+drawTiles : Point2 Int -> Model -> ( List Tile, Model )
 drawTiles newTilePosition model =
     let
         tileSize =
@@ -230,7 +230,7 @@ drawTiles newTilePosition model =
                 ( [], model )
 
             Just pos ->
-                if Int2.rectangleCollision pos tileSize newTilePosition tileSize then
+                if Point2.rectangleCollision pos tileSize newTilePosition tileSize then
                     ( [], model )
                 else
                     model
@@ -277,7 +277,7 @@ view model =
                 [ Sprite.grid |> .filepath |> background
                 , ( "width", "100%" )
                 , ( "height", "100vh" )
-                , Int2.negate model.viewPosition |> backgroundPosition
+                , Point2.negate model.viewPosition |> backgroundPosition
                 ]
             ]
         <|
@@ -296,14 +296,14 @@ tileView model tileInstance seeThrough zIndex =
             rotSpriteGetAt tile.sprite tileInstance.rotationIndex
 
         pos =
-            Int2.multScalar tileInstance.position gridToPixels
-                |> Int2.add (Int2.negate sprite.origin)
-                |> Int2.add (Int2.negate model.viewPosition)
+            Point2.multScalar tileInstance.position gridToPixels
+                |> Point2.add (Point2.negate sprite.origin)
+                |> Point2.add (Point2.negate model.viewPosition)
 
         size =
             tile.gridSize
-                |> Int2.add (Int2 1 1)
-                |> Int2.mult (Int2 gridToPixels gridToPixels)
+                |> Point2.add (Point2 1 1)
+                |> Point2.mult (Point2 gridToPixels gridToPixels)
 
         seeThroughStyle =
             if seeThrough then

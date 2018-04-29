@@ -1,7 +1,7 @@
 module Toolbox exposing (..)
 
 import Helpers exposing (..)
-import Int2 exposing (Int2)
+import Point2 exposing (Point2)
 import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (src, style)
 import Html.Events as Events exposing (on)
@@ -12,36 +12,13 @@ import TileType
 import Sprite
 import Lenses exposing (..)
 import SpriteHelper
-
-
-type alias Toolbox =
-    { viewPosition : Int2 -- Position of toolbox in view coordinates
-    , selectedTileId : Int
-    , drag : Maybe Drag
-    }
-
-
-type ToolboxMsg
-    = NoOp
-    | DragStart Int2
-    | DragAt Mouse.Position
-    | DragEnd Int2
-    | TileSelect Int
-    | TileCategory Int
-    | EraserSelect
-    | BombSelect
-    | Undo
-
-
-type alias Drag =
-    { start : Mouse.Position
-    , current : Mouse.Position
-    }
+import Model exposing (..)
+import Color
 
 
 default : Toolbox
 default =
-    Toolbox (Int2 100 100) 0 Nothing
+    Toolbox (Point2 100 100) 0 Nothing
 
 
 toolboxTileSize : Int
@@ -54,7 +31,7 @@ toolboxTileMargin =
     3
 
 
-absoluteStyle : Int2 -> Int2 -> List ( String, String )
+absoluteStyle : Point2 number -> Point2 number -> List ( String, String )
 absoluteStyle pixelPosition pixelSize =
     [ ( "position", "absolute" )
     , ( "left", px pixelPosition.x )
@@ -65,7 +42,7 @@ absoluteStyle pixelPosition pixelSize =
     ]
 
 
-update : Int2 -> ToolboxMsg -> Toolbox -> Toolbox
+update : Point2 Int -> ToolboxMsg -> Toolbox -> Toolbox
 update windowSize msg toolbox =
     case msg of
         DragStart xy ->
@@ -122,7 +99,7 @@ update windowSize msg toolbox =
             Debug.crash "TODO"
 
 
-getPosition : Int2 -> Toolbox -> Int2
+getPosition : Point2 Int -> Toolbox -> Point2 Int
 getPosition windowSize toolbox =
     let
         position =
@@ -132,20 +109,20 @@ getPosition windowSize toolbox =
 
                 Just { start, current } ->
                     toolbox.viewPosition
-                        |> Int2.add current
-                        |> Int2.add (Int2.negate start)
+                        |> Point2.add current
+                        |> Point2.add (Point2.negate start)
 
         maxPosition =
-            Int2.sub windowSize toolboxSize
+            Point2.sub windowSize toolboxSize
     in
         position
-            |> Int2.max Int2.zero
-            |> Int2.min maxPosition
+            |> Point2.max Point2.zero
+            |> Point2.min maxPosition
 
 
 {-| Size of toolbox in view coordinates.
 -}
-toolboxSize : Int2
+toolboxSize : Point2 Int
 toolboxSize =
     let
         toolboxSize =
@@ -154,53 +131,71 @@ toolboxSize =
         toolboxLeftSize =
             Sprite.toolboxLeft |> .size
     in
-        Int2 (toolboxSize.x + toolboxLeftSize.x) toolboxSize.y
+        Point2 (toolboxSize.x + toolboxLeftSize.x) toolboxSize.y
 
 
-toolboxLeftSize : Int2
+toolboxLeftSize : Point2 Int
 toolboxLeftSize =
     Sprite.toolboxLeft |> .size
 
 
-toolboxHandleSize : Int2
+toolboxHandleSize : Point2 Int
 toolboxHandleSize =
     Sprite.toolboxHandle |> .size
 
 
-insideToolbox : Int2 -> Int2 -> Toolbox -> Bool
+insideToolbox : Point2 Int -> Point2 Int -> Toolbox -> Bool
 insideToolbox windowSize viewPoint toolbox =
-    Int2.pointInRectangle (getPosition windowSize toolbox) toolboxSize viewPoint
-        || Int2.pointInRectangle (toolboxHandlePosition windowSize toolbox) toolboxHandleSize viewPoint
+    Point2.pointInRectangle (getPosition windowSize toolbox) toolboxSize viewPoint
+        || Point2.pointInRectangle (toolboxHandlePosition windowSize toolbox) toolboxHandleSize viewPoint
 
 
-toolboxHandlePosition : Int2 -> Toolbox -> Int2
+toolboxHandlePosition : Point2 Int -> Toolbox -> Point2 Int
 toolboxHandlePosition windowSize toolbox =
-    Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) (Sprite.toolboxHandle |> .origin |> .y)
-        |> Int2.add (getPosition windowSize toolbox)
+    Point2 ((toolboxSize.x - toolboxHandleSize.x) // 2) (Sprite.toolboxHandle |> .origin |> .y)
+        |> Point2.add (getPosition windowSize toolbox)
 
 
 
 ---- VIEW ----
 
 
-toolboxView : Int -> Int2 -> Toolbox -> Html ToolboxMsg
+toolboxView : Int -> Point2 Int -> Toolbox -> Html ToolboxMsg
 toolboxView zIndex windowSize toolbox =
     let
         position =
             getPosition windowSize toolbox
 
         handleLocalPosition =
-            Int2 ((toolboxLeftSize.x - toolboxHandleSize.x) // 2) 0
+            Point2 ((toolboxLeftSize.x - toolboxHandleSize.x) // 2) 0
+
+        backgroundMargin =
+            Point2 2 2
+
+        --Used to prevent anything under the toolbox from bleeding through.
+        --This can happen if the user has DPI set to something other than 100%.
+        backgroundDiv =
+            div
+                [ style <|
+                    Helpers.backgroundColor Color.black
+                        :: absoluteStyle backgroundMargin
+                            (backgroundMargin
+                                |> Point2.rmultScalar 2
+                                |> Point2.sub toolboxLeftSize
+                            )
+                ]
+                []
     in
         div
             [ onEvent "click" NoOp --Prevents clicks from propagating to UI underneath.
             , onEvent "mousedown" NoOp
             , style <| ( "z-index", toString zIndex ) :: absoluteStyle position toolboxSize
             ]
-            [ SpriteHelper.spriteView (Int2 toolboxLeftSize.x 0) Sprite.toolbox
-            , tileView (Int2 (6 + toolboxLeftSize.x) 16) toolbox
-            , menuView (Int2 6 13) toolbox
-            , SpriteHelper.spriteView Int2.zero Sprite.toolboxLeft
+            [ SpriteHelper.spriteView (Point2 toolboxLeftSize.x 0) Sprite.toolbox
+            , backgroundDiv
+            , tileView (Point2 (6 + toolboxLeftSize.x) 16) toolbox
+            , menuView (Point2 6 13) toolbox
+            , SpriteHelper.spriteView Point2.zero Sprite.toolboxLeft
             , div
                 [ onMouseDown ]
                 [ SpriteHelper.spriteView handleLocalPosition Sprite.toolboxHandle ]
@@ -212,26 +207,26 @@ onMouseDown =
     on "mousedown" (Decode.map DragStart Mouse.position)
 
 
-indexedMap2 : Int -> (Int2 -> a -> b) -> List a -> List b
+indexedMap2 : Int -> (Point2 Int -> a -> b) -> List a -> List b
 indexedMap2 width mapper list =
     let
         getPosition index =
-            Int2 (index // width) (index % width)
+            Point2 (index // width) (index % width)
     in
         List.indexedMap (\index a -> mapper (getPosition index) a) list
 
 
-menuView : Int2 -> Toolbox -> Html ToolboxMsg
+menuView : Point2 Int -> Toolbox -> Html ToolboxMsg
 menuView pixelPosition toolbox =
     let
         tileButtonMargin =
-            Int2 3 3
+            Point2 3 3
 
         gridWidth =
             3
 
         menuButtonSize =
-            Int2.add tileButtonMargin tileButtonLocalSize
+            Point2.add tileButtonMargin tileButtonLocalSize
 
         tileButtonLocalSize =
             Sprite.toolboxMenuButtonUp |> .size
@@ -250,40 +245,41 @@ menuView pixelPosition toolbox =
                 (\index ( sprite, msg ) ->
                     let
                         position =
-                            Int2.intToInt2 gridWidth index
-                                |> Int2.mult menuButtonSize
-                                |> Int2.add pixelPosition
+                            index
+                                |> Point2.intToInt2 gridWidth
+                                |> Point2.mult menuButtonSize
+                                |> Point2.add pixelPosition
                     in
                         div []
                             [ SpriteHelper.spriteView position Sprite.toolboxMenuButtonUp
-                            , SpriteHelper.spriteViewAlign position (Float2 0.5 0.5) sprite
+                            , SpriteHelper.spriteViewAlign (menuButtonSize |> Point2.rdiv 2 |> Point2.add position) (Point2 0.5 0.5) sprite
                             ]
                 )
             |> div []
 
 
-tileView : Int2 -> Toolbox -> Html ToolboxMsg
+tileView : Point2 Int -> Toolbox -> Html ToolboxMsg
 tileView pixelPosition toolbox =
     let
         tileButtonMargin =
-            Int2 3 3
+            Point2 3 3
 
         tileButtonLocalSize =
-            Int2 54 54
+            Point2 54 54
 
         tileButtonSize =
-            Int2.add tileButtonMargin tileButtonLocalSize
+            Point2.add tileButtonMargin tileButtonLocalSize
 
         gridSize =
-            Int2 3 3
+            Point2 3 3
 
         getPosition =
-            Int2.intToInt2 gridSize.x
-                >> Int2.mult tileButtonSize
-                >> Int2.add pixelPosition
+            Point2.intToInt2 gridSize.x
+                >> Point2.mult tileButtonSize
+                >> Point2.add pixelPosition
 
         imageOffset tile =
-            Int2.div (Int2.sub tileButtonLocalSize tile.icon.size) 2
+            Point2.div (Point2.sub tileButtonLocalSize tile.icon.size) 2
     in
         TileType.tiles
             |> List.indexedMap
@@ -294,7 +290,7 @@ tileView pixelPosition toolbox =
                                 div
                                     [ style <|
                                         [ Sprite.toolboxTileButtonDown |> .filepath |> background ]
-                                            ++ absoluteStyle Int2.zero tileButtonLocalSize
+                                            ++ absoluteStyle Point2.zero tileButtonLocalSize
                                     ]
                                     []
                             else
@@ -312,7 +308,7 @@ tileView pixelPosition toolbox =
                                     , ( "background-repeat", "no-repeat" )
                                     , imageOffset a |> backgroundPosition
                                     ]
-                                        ++ absoluteStyle Int2.zero tileButtonLocalSize
+                                        ++ absoluteStyle Point2.zero tileButtonLocalSize
                                 ]
                                 []
                             ]
