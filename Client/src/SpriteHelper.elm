@@ -41,14 +41,3 @@ spriteViewAlign topLeft alignment sprite =
                     ++ absoluteStyle position sprite.size
             ]
             []
-
-
-absoluteStyle : { x : number, y : number } -> { x : number, y : number } -> List ( String, String )
-absoluteStyle pixelPosition pixelSize =
-    [ ( "position", "absolute" )
-    , ( "left", px pixelPosition.x )
-    , ( "top", px pixelPosition.y )
-    , ( "width", px pixelSize.x )
-    , ( "height", px pixelSize.y )
-    , ( "margin", "0px" )
-    ]

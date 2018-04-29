@@ -14,6 +14,7 @@ type alias Model =
     , lastTilePosition : Maybe (Point2 Int)
     , mousePosCurrent : Mouse.Position
     , windowSize : Point2 Int
+    , editMode : EditMode
     }
 
 
@@ -26,9 +27,13 @@ type alias Tile =
 
 type alias Toolbox =
     { viewPosition : Point2 Int -- Position of toolbox in view coordinates
-    , selectedTileId : Int
     , drag : Maybe Drag
     }
+
+
+type EditMode
+    = PlaceTiles Int
+    | Eraser
 
 
 type ToolboxMsg

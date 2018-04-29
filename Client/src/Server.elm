@@ -6,6 +6,8 @@ import BinaryBase64 exposing (..)
 import Point2 exposing (Point2)
 import Bitwise
 import Helpers
+import Monocle.Lens as Lens
+import Lenses
 
 
 version : number
@@ -15,14 +17,19 @@ version =
 
 send : List Action -> Cmd msg
 send actions =
-    -- let
-    --     _ =
-    --         Debug.log "Sending" actions
-    -- in
-    writeInt version
-        ++ writeList writeAction actions
-        |> encode
-        |> WebSocket.send serverUrl
+    let
+        _ =
+            Debug.log "Sending" actions
+    in
+        case actions of
+            head :: rest ->
+                writeInt version
+                    ++ writeList writeAction actions
+                    |> encode
+                    |> WebSocket.send serverUrl
+
+            _ ->
+                Cmd.none
 
 
 type Action
@@ -68,7 +75,7 @@ update data model =
                                 Helpers.modelAddTile tile model
 
                             RemovedTile tile ->
-                                model
+                                model |> Lens.modify Lenses.tiles (List.filter ((/=) tile))
 
                             GotRegion topLeft size tiles ->
                                 let

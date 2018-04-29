@@ -35,12 +35,16 @@ initModel =
         Nothing
         (Position 0 0)
         (Point2 1000 1000)
+        (PlaceTiles 0)
 
 
 init : ( Model, Cmd Msg )
 init =
     ( initModel
-    , Cmd.batch [ Task.perform WindowResize Window.size, [ Server.GetRegion (Point2 0 0) (Point2 1000 1000) ] |> Server.send ]
+    , Cmd.batch
+        [ Task.perform WindowResize Window.size
+        , [ Server.GetRegion (Point2 0 0) (Point2 1000 1000) ] |> Server.send
+        ]
     )
 
 
@@ -144,32 +148,49 @@ keyMsg keyCode model =
 mouseDown : MouseEvents.MouseEvent -> Model -> ( Model, Cmd msg )
 mouseDown mouseEvent model =
     let
-        a =
-            Debug.log "mouseDown" mouseEvent
-
-        tileId =
-            model.toolbox.selectedTileId
-
-        tile =
-            getTileOrDefault tileId
-
         position =
             (MouseEvents.relPos mouseEvent)
+    in
+        case model.editMode of
+            PlaceTiles tileId ->
+                let
+                    tile =
+                        getTileOrDefault tileId
 
-        tilePos =
-            viewToTileGrid
-                position
-                model
-                tile
+                    tilePos =
+                        viewToTileGrid
+                            position
+                            model
+                            tile
 
-        tileInstance =
-            Tile tileId tilePos model.currentRotation
+                    tileInstance =
+                        Tile tileId tilePos model.currentRotation
+
+                    newModel =
+                        model |> lastTilePosition.set (Just tilePos)
+                in
+                    ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
+
+            Eraser ->
+                erase (viewToGrid position model) model
+
+
+erase : Point2 Int -> Model -> ( Model, Cmd msg )
+erase gridPosition model =
+    let
+        command =
+            model
+                |> collisionsAt gridPosition Point2.one
+                |> List.map Server.RemoveTile
+                |> Server.send
+
+        a =
+            Debug.log "asdf" command
 
         newModel =
-            model
-                |> lastTilePosition.set (Just tilePos)
+            model |> lastTilePosition.set (Just gridPosition)
     in
-        ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
+        ( newModel, command )
 
 
 rotateTile : Int -> Model -> ( Model, Cmd msg )
@@ -189,39 +210,57 @@ rotateTile wheelDelta model =
 
 mouseMove : Point2 Int -> Model -> ( Model, Cmd msg )
 mouseMove mousePos model =
-    let
-        tilePos =
-            model.toolbox.selectedTileId
-                |> getTileOrDefault
-                |> viewToTileGrid mousePos model
-    in
-        if Toolbox.insideToolbox model.windowSize mousePos model.toolbox then
-            ( currentTile.set Nothing model, Cmd.none )
-        else
-            let
-                ( tiles, newModel ) =
-                    model |> currentTile.set (Just tilePos) |> drawTiles tilePos
+    if Toolbox.insideToolbox model.windowSize mousePos model.toolbox then
+        ( currentTile.set Nothing model, Cmd.none )
+    else
+        case model.editMode of
+            PlaceTiles tileId ->
+                let
+                    tilePos =
+                        tileId
+                            |> getTileOrDefault
+                            |> viewToTileGrid mousePos model
 
-                cmd =
-                    case tiles of
-                        a :: rest ->
-                            tiles |> List.map Server.AddTile |> Server.send
+                    ( tiles, newModel ) =
+                        model
+                            |> currentTile.set (Just tilePos)
+                            |> drawTiles tilePos tileId
 
-                        _ ->
-                            Cmd.none
-            in
-                ( newModel, cmd )
+                    cmd =
+                        case tiles of
+                            a :: rest ->
+                                tiles |> List.map Server.AddTile |> Server.send
+
+                            _ ->
+                                Cmd.none
+                in
+                    ( newModel, cmd )
+
+            Eraser ->
+                let
+                    gridPosition =
+                        viewToGrid mousePos model
+                in
+                    case model.lastTilePosition of
+                        Just lastTilePosition ->
+                            if gridPosition == lastTilePosition then
+                                ( model, Cmd.none )
+                            else
+                                erase gridPosition model
+
+                        Nothing ->
+                            ( model, Cmd.none )
 
 
-drawTiles : Point2 Int -> Model -> ( List Tile, Model )
-drawTiles newTilePosition model =
+drawTiles : Point2 Int -> Int -> Model -> ( List Tile, Model )
+drawTiles newTilePosition tileId model =
     let
         tileSize =
-            model.toolbox.selectedTileId |> getTileOrDefault |> .gridSize
+            tileId |> getTileOrDefault |> .gridSize
 
         tileInstance =
             Tile
-                model.toolbox.selectedTileId
+                tileId
                 newTilePosition
                 model.currentRotation
     in
@@ -234,7 +273,6 @@ drawTiles newTilePosition model =
                     ( [], model )
                 else
                     model
-                        --|> modelAddTile tileInstance
                         |> lastTilePosition.set (Just newTilePosition)
                         |> (,) [ tileInstance ]
 
@@ -260,7 +298,12 @@ view model =
         currentTileView =
             case model.currentTile of
                 Just a ->
-                    [ tileView model (Tile model.toolbox.selectedTileId a model.currentRotation) True 9998 ]
+                    case model.editMode of
+                        PlaceTiles tileId ->
+                            [ tileView model (Tile tileId a model.currentRotation) True 9998 ]
+
+                        Eraser ->
+                            []
 
                 Nothing ->
                     []
@@ -283,7 +326,7 @@ view model =
         <|
             tileViews
                 ++ currentTileView
-                ++ [ Toolbox.toolboxView 9999 model.windowSize toolbox |> Html.map (\a -> ToolboxMsg a) ]
+                ++ [ Toolbox.toolboxView 9999 model.windowSize model |> Html.map (\a -> ToolboxMsg a) ]
 
 
 tileView : Model -> Tile -> Bool -> Int -> Html msg
@@ -318,7 +361,7 @@ tileView model tileInstance seeThrough zIndex =
                 , ( "pointer-events", "none" )
                 , ( "z-index", toString zIndex )
                 ]
-                    ++ Toolbox.absoluteStyle pos size
+                    ++ Helpers.absoluteStyle pos size
                     ++ seeThroughStyle
             ]
             []

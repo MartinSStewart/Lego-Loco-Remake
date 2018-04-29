@@ -6,7 +6,7 @@ import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (src, style)
 import Html.Events as Events exposing (on)
 import Json.Decode as Decode
-import Helpers exposing (..)
+import Helpers
 import Mouse
 import TileType
 import Sprite
@@ -19,7 +19,7 @@ import Monocle.Lens as Lens
 
 default : Toolbox
 default =
-    Toolbox (Point2 100 100) 0 Nothing
+    Toolbox (Point2 100 100) Nothing
 
 
 toolboxTileSize : Int
@@ -30,17 +30,6 @@ toolboxTileSize =
 toolboxTileMargin : Int
 toolboxTileMargin =
     3
-
-
-absoluteStyle : Point2 number -> Point2 number -> List ( String, String )
-absoluteStyle pixelPosition pixelSize =
-    [ ( "position", "absolute" )
-    , ( "left", px pixelPosition.x )
-    , ( "top", px pixelPosition.y )
-    , ( "width", px pixelSize.x )
-    , ( "height", px pixelSize.y )
-    , ( "margin", "0px" )
-    ]
 
 
 update : Point2 Int -> ToolboxMsg -> Model -> ( Model, ToolboxCmd )
@@ -85,13 +74,13 @@ update windowSize msg model =
                 ( model, None )
 
             TileSelect tileId ->
-                ( model |> (Lens.compose toolbox selectedTileId).set tileId, None )
+                ( model |> editMode.set (PlaceTiles tileId), None )
 
             TileCategory _ ->
                 ( model, None )
 
             EraserSelect ->
-                ( model, None )
+                ( editMode.set Eraser model, None )
 
             BombSelect ->
                 ( model, None )
@@ -161,9 +150,12 @@ toolboxHandlePosition windowSize toolbox =
 ---- VIEW ----
 
 
-toolboxView : Int -> Point2 Int -> Toolbox -> Html ToolboxMsg
-toolboxView zIndex windowSize toolbox =
+toolboxView : Int -> Point2 Int -> Model -> Html ToolboxMsg
+toolboxView zIndex windowSize model =
     let
+        toolbox =
+            model.toolbox
+
         position =
             getPosition windowSize toolbox
 
@@ -196,7 +188,7 @@ toolboxView zIndex windowSize toolbox =
             ]
             [ SpriteHelper.spriteView (Point2 toolboxLeftSize.x 0) Sprite.toolbox
             , backgroundDiv
-            , tileView (Point2 (6 + toolboxLeftSize.x) 16) toolbox
+            , tileView (Point2 (6 + toolboxLeftSize.x) 16) model
             , menuView (Point2 6 13) toolbox
             , div
                 --We want to be able to click the menu buttons under this.
@@ -258,15 +250,21 @@ menuView pixelPosition toolbox =
                     in
                         div [ onEvent "click" msg ]
                             [ SpriteHelper.spriteView position Sprite.toolboxMenuButtonUp
-                            , SpriteHelper.spriteViewAlign (menuButtonSize |> Point2.rdiv 2 |> Point2.add position) (Point2 0.5 0.5) sprite
+                            , SpriteHelper.spriteViewAlign
+                                (menuButtonSize |> Point2.rdiv 2 |> Point2.add position)
+                                (Point2 0.5 0.5)
+                                sprite
                             ]
                 )
             |> div []
 
 
-tileView : Point2 Int -> Toolbox -> Html ToolboxMsg
-tileView pixelPosition toolbox =
+tileView : Point2 Int -> Model -> Html ToolboxMsg
+tileView pixelPosition model =
     let
+        toolbox =
+            model.toolbox
+
         tileButtonMargin =
             Point2 3 3
 
@@ -292,7 +290,7 @@ tileView pixelPosition toolbox =
                 (\index a ->
                     let
                         buttonDownDiv =
-                            if toolbox.selectedTileId == index then
+                            if Helpers.selectedTileId model == Just index then
                                 div
                                     [ style <|
                                         [ Sprite.toolboxTileButtonDown |> .filepath |> background ]

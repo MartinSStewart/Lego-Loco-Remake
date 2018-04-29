@@ -13,6 +13,27 @@ import Mouse exposing (Position)
 import Color exposing (Color)
 
 
+absoluteStyle : Point2 number -> Point2 number -> List ( String, String )
+absoluteStyle pixelPosition pixelSize =
+    [ ( "position", "absolute" )
+    , ( "left", px pixelPosition.x )
+    , ( "top", px pixelPosition.y )
+    , ( "width", px pixelSize.x )
+    , ( "height", px pixelSize.y )
+    , ( "margin", "0px" )
+    ]
+
+
+selectedTileId : Model -> Maybe Int
+selectedTileId model =
+    case model.editMode of
+        PlaceTiles int ->
+            Just int
+
+        Eraser ->
+            Nothing
+
+
 maybeCase : (a -> b) -> b -> Maybe a -> Maybe b
 maybeCase justCase nothingCase maybe =
     case maybe of
@@ -96,8 +117,8 @@ collidesWith tileInstance0 tileInstance1 =
             (getTileSize tileInstance1)
 
 
-collisionsAt : Model -> Point2 Int -> Point2 Int -> List Tile
-collisionsAt model gridPosition gridSize =
+collisionsAt : Point2 Int -> Point2 Int -> Model -> List Tile
+collisionsAt gridPosition gridSize model =
     let
         getTileSize tileInstance =
             getTileOrDefault tileInstance.tileId |> .gridSize

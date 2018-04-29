@@ -59,6 +59,11 @@ zero =
     { x = 0, y = 0 }
 
 
+one : Point2 number
+one =
+    { x = 1, y = 1 }
+
+
 min : Point2 number -> Point2 number -> Point2 number
 min point0 point1 =
     --Due to a compiler bug, we need to add 0. Otherwise we can't use number types in Basics.min.

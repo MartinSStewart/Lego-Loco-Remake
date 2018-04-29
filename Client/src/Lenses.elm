@@ -26,6 +26,11 @@ drag =
     Lens .drag (\value item -> { item | drag = value })
 
 
+editMode : Lens { b | editMode : a } a
+editMode =
+    Lens .editMode (\value item -> { item | editMode = value })
+
+
 filepath : Lens { b | filepath : a } a
 filepath =
     Lens .filepath (\value item -> { item | filepath = value })
@@ -74,11 +79,6 @@ position =
 rotationIndex : Lens { b | rotationIndex : a } a
 rotationIndex =
     Lens .rotationIndex (\value item -> { item | rotationIndex = value })
-
-
-selectedTileId : Lens { b | selectedTileId : a } a
-selectedTileId =
-    Lens .selectedTileId (\value item -> { item | selectedTileId = value })
 
 
 size : Lens { b | size : a } a
