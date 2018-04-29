@@ -297,7 +297,7 @@ tileView model tileInstance seeThrough zIndex =
 
         pos =
             Int2.multScalar tileInstance.position gridToPixels
-                |> Int2.add (Int2.negate sprite.pixelOffset)
+                |> Int2.add (Int2.negate sprite.origin)
                 |> Int2.add (Int2.negate model.viewPosition)
 
         size =

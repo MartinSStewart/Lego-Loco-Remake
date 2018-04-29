@@ -3,6 +3,7 @@ using Server;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,13 +15,18 @@ namespace Server
         public string CodeName { get; }
         public string ImagePath { get; }
         public Int2 Origin { get; }
+        /// <summary>
+        /// If null, the pixel dimensions of the image are used.
+        /// </summary>
+        public Int2? Size { get; }
 
-        public Sprite(string codeName, Int2 origin, string imagePaths)
+        public Sprite(string imagePath, Int2 origin = new Int2(), string codeName = null, Int2? size = null)
         {
-            DebugEx.Assert(IsValidElmFunctionName(codeName));
-            CodeName = codeName;
+            CodeName = codeName ?? Path.GetFileNameWithoutExtension(imagePath);
+            DebugEx.Assert(IsValidElmFunctionName(CodeName));
             Origin = origin;
-            ImagePath = imagePaths;
+            ImagePath = imagePath;
+            Size = size;
         }
 
         public static bool IsValidElmFunctionName(string name) =>
@@ -30,20 +36,28 @@ namespace Server
         public static ImmutableList<Sprite> GetSprites() =>
             new[]
             {
-                new Sprite("sidewalk", new Int2(0, 0),"sidewalk.png"),
-                new Sprite("grid", new Int2(0, 0),"grid.png"),
-                new Sprite("redHouse", new Int2(0, 10),"redHouse.png"),
-                new Sprite("redHouseIcon", new Int2(0, 0),"redHouseIcon.png"),
-                new Sprite("roadHorizontal", new Int2(0, 0),"roadHorizontal.png" ),
-                new Sprite("roadVertical", new Int2(0, 0),"roadVertical.png" ),
-                new Sprite("roadTurnLeftUp", new Int2(0, 0),"roadTurnLeftUp.png"),
-                new Sprite("roadTurnLeftDown", new Int2(0, 0), "roadTurnLeftDown.png"),
-                new Sprite("roadTurnRightUp", new Int2(0, 0),"roadTurnRightUp.png"),
-                new Sprite("roadTurnRightDown", new Int2(0, 0),"roadTurnRightDown.png"),
-                new Sprite("toolbox", new Int2(0, 0),"toolbox.png"),
-                new Sprite("toolboxHandle", new Int2(0, 18), "toolboxHandle.png"),
-                new Sprite("toolboxTileButtonDown", new Int2(0, 0),"toolboxTileButtonDown.png"),
-                new Sprite("toolboxLeft", new Int2(0, 0), "toolboxLeft.png")
+                new Sprite("sidewalk.png"),
+                new Sprite("grid.png"),
+                new Sprite("redHouse.png", new Int2(0, 10)),
+                new Sprite("redHouseIcon.png"),
+                new Sprite("roadHorizontal.png"),
+                new Sprite("roadVertical.png"),
+                new Sprite("roadTurnLeftUp.png"),
+                new Sprite("roadTurnLeftDown.png"),
+                new Sprite("roadTurnRightUp.png"),
+                new Sprite("roadTurnRightDown.png"),
+                new Sprite("toolbox.png"),
+                new Sprite("toolboxHandle.png", new Int2(0, 18)),
+                new Sprite("toolboxTileButtonDown.png"),
+                new Sprite("toolboxMenuButtonDown.png"),
+                new Sprite("toolboxMenuButtonUp.png"),
+                new Sprite("toolboxLeft.png"),
+                new Sprite("toolboxPlants.png"),
+                new Sprite("toolboxBomb.png"),
+                new Sprite("toolboxEraser.png"),
+                new Sprite("toolboxLeftArrow.png"),
+                new Sprite("toolboxRailroad.png"),
+                new Sprite("toolboxHouse.png")
             }.ToImmutableList();
     }
 }

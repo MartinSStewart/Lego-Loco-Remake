@@ -11,6 +11,7 @@ import Mouse
 import TileType
 import Sprite
 import Lenses exposing (..)
+import SpriteHelper
 
 
 type alias Toolbox =
@@ -26,6 +27,10 @@ type ToolboxMsg
     | DragAt Mouse.Position
     | DragEnd Int2
     | TileSelect Int
+    | TileCategory Int
+    | EraserSelect
+    | BombSelect
+    | Undo
 
 
 type alias Drag =
@@ -104,6 +109,18 @@ update windowSize msg toolbox =
         TileSelect tileId ->
             { toolbox | selectedTileId = tileId }
 
+        TileCategory _ ->
+            Debug.crash "TODO"
+
+        EraserSelect ->
+            Debug.crash "TODO"
+
+        BombSelect ->
+            Debug.crash "TODO"
+
+        Undo ->
+            Debug.crash "TODO"
+
 
 getPosition : Int2 -> Toolbox -> Int2
 getPosition windowSize toolbox =
@@ -130,12 +147,24 @@ getPosition windowSize toolbox =
 -}
 toolboxSize : Int2
 toolboxSize =
-    Sprite.toolbox |> .pixelSize
+    let
+        toolboxSize =
+            Sprite.toolbox |> .size
+
+        toolboxLeftSize =
+            Sprite.toolboxLeft |> .size
+    in
+        Int2 (toolboxSize.x + toolboxLeftSize.x) toolboxSize.y
+
+
+toolboxLeftSize : Int2
+toolboxLeftSize =
+    Sprite.toolboxLeft |> .size
 
 
 toolboxHandleSize : Int2
 toolboxHandleSize =
-    Sprite.toolboxHandle |> .pixelSize
+    Sprite.toolboxHandle |> .size
 
 
 insideToolbox : Int2 -> Int2 -> Toolbox -> Bool
@@ -146,7 +175,8 @@ insideToolbox windowSize viewPoint toolbox =
 
 toolboxHandlePosition : Int2 -> Toolbox -> Int2
 toolboxHandlePosition windowSize toolbox =
-    Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) -18 |> Int2.add (getPosition windowSize toolbox)
+    Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) (Sprite.toolboxHandle |> .origin |> .y)
+        |> Int2.add (getPosition windowSize toolbox)
 
 
 
@@ -159,30 +189,77 @@ toolboxView zIndex windowSize toolbox =
         position =
             getPosition windowSize toolbox
 
-        handlePosition =
-            Int2 ((toolboxSize.x - toolboxHandleSize.x) // 2) -18
+        handleLocalPosition =
+            Int2 ((toolboxLeftSize.x - toolboxHandleSize.x) // 2) 0
     in
         div
             [ onEvent "click" NoOp --Prevents clicks from propagating to UI underneath.
             , onEvent "mousedown" NoOp
-            , style <|
-                [ Sprite.toolbox |> .filepath |> background, ( "z-index", toString zIndex ) ]
-                    ++ absoluteStyle position toolboxSize
+            , style <| ( "z-index", toString zIndex ) :: absoluteStyle position toolboxSize
             ]
-            [ tileView (Int2 5 16) toolbox
+            [ SpriteHelper.spriteView (Int2 toolboxLeftSize.x 0) Sprite.toolbox
+            , tileView (Int2 (6 + toolboxLeftSize.x) 16) toolbox
+            , menuView (Int2 6 13) toolbox
+            , SpriteHelper.spriteView Int2.zero Sprite.toolboxLeft
             , div
-                [ onMouseDown
-                , style <|
-                    [ Sprite.toolboxHandle |> .filepath |> background ]
-                        ++ absoluteStyle handlePosition toolboxHandleSize
-                ]
-                []
+                [ onMouseDown ]
+                [ SpriteHelper.spriteView handleLocalPosition Sprite.toolboxHandle ]
             ]
 
 
 onMouseDown : Html.Attribute ToolboxMsg
 onMouseDown =
     on "mousedown" (Decode.map DragStart Mouse.position)
+
+
+indexedMap2 : Int -> (Int2 -> a -> b) -> List a -> List b
+indexedMap2 width mapper list =
+    let
+        getPosition index =
+            Int2 (index // width) (index % width)
+    in
+        List.indexedMap (\index a -> mapper (getPosition index) a) list
+
+
+menuView : Int2 -> Toolbox -> Html ToolboxMsg
+menuView pixelPosition toolbox =
+    let
+        tileButtonMargin =
+            Int2 3 3
+
+        gridWidth =
+            3
+
+        menuButtonSize =
+            Int2.add tileButtonMargin tileButtonLocalSize
+
+        tileButtonLocalSize =
+            Sprite.toolboxMenuButtonUp |> .size
+
+        buttons =
+            [ ( Sprite.toolboxRailroad, TileCategory 0 )
+            , ( Sprite.toolboxHouse, TileCategory 1 )
+            , ( Sprite.toolboxPlants, TileCategory 2 )
+            , ( Sprite.toolboxEraser, EraserSelect )
+            , ( Sprite.toolboxBomb, BombSelect )
+            , ( Sprite.toolboxLeftArrow, Undo )
+            ]
+    in
+        buttons
+            |> List.indexedMap
+                (\index ( sprite, msg ) ->
+                    let
+                        position =
+                            Int2.intToInt2 gridWidth index
+                                |> Int2.mult menuButtonSize
+                                |> Int2.add pixelPosition
+                    in
+                        div []
+                            [ SpriteHelper.spriteView position Sprite.toolboxMenuButtonUp
+                            , SpriteHelper.spriteViewAlign position (Float2 0.5 0.5) sprite
+                            ]
+                )
+            |> div []
 
 
 tileView : Int2 -> Toolbox -> Html ToolboxMsg
@@ -200,49 +277,47 @@ tileView pixelPosition toolbox =
         gridSize =
             Int2 3 3
 
-        getPosition index =
-            Int2 (index // gridSize.x) (index % gridSize.x)
-                |> Int2.mult tileButtonSize
-                |> Int2.add pixelPosition
+        getPosition =
+            Int2.intToInt2 gridSize.x
+                >> Int2.mult tileButtonSize
+                >> Int2.add pixelPosition
 
         imageOffset tile =
-            Int2.div (Int2.sub tileButtonLocalSize tile.icon.pixelSize) 2
-
-        tileDiv =
-            TileType.tiles
-                |> List.indexedMap
-                    (\index a ->
-                        let
-                            buttonDownDiv =
-                                if toolbox.selectedTileId == index then
-                                    div
-                                        [ style <|
-                                            [ Sprite.toolboxTileButtonDown |> .filepath |> background ]
-                                                ++ absoluteStyle Int2.zero tileButtonLocalSize
-                                        ]
-                                        []
-                                else
-                                    div [] []
-                        in
-                            div
-                                [ onEvent "click" (TileSelect index)
-                                , style <|
-                                    absoluteStyle (getPosition index) tileButtonLocalSize
-                                ]
-                                [ buttonDownDiv
-                                , div
+            Int2.div (Int2.sub tileButtonLocalSize tile.icon.size) 2
+    in
+        TileType.tiles
+            |> List.indexedMap
+                (\index a ->
+                    let
+                        buttonDownDiv =
+                            if toolbox.selectedTileId == index then
+                                div
                                     [ style <|
-                                        [ background a.icon.filepath
-                                        , ( "background-repeat", "no-repeat" )
-                                        , imageOffset a |> backgroundPosition
-                                        ]
+                                        [ Sprite.toolboxTileButtonDown |> .filepath |> background ]
                                             ++ absoluteStyle Int2.zero tileButtonLocalSize
                                     ]
                                     []
+                            else
+                                div [] []
+                    in
+                        div
+                            [ onEvent "click" (TileSelect index)
+                            , style <|
+                                absoluteStyle (getPosition index) tileButtonLocalSize
+                            ]
+                            [ buttonDownDiv
+                            , div
+                                [ style <|
+                                    [ background a.icon.filepath
+                                    , ( "background-repeat", "no-repeat" )
+                                    , imageOffset a |> backgroundPosition
+                                    ]
+                                        ++ absoluteStyle Int2.zero tileButtonLocalSize
                                 ]
-                    )
-    in
-        div [] tileDiv
+                                []
+                            ]
+                )
+            |> div []
 
 
 

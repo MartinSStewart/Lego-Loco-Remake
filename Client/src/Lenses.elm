@@ -91,14 +91,19 @@ filepath =
     Lens .filepath (\value item -> { item | filepath = value })
 
 
-pixelSize : Lens { b | pixelSize : a } a
-pixelSize =
-    Lens .pixelSize (\value item -> { item | pixelSize = value })
+size : Lens { b | size : a } a
+size =
+    Lens .size (\value item -> { item | size = value })
 
 
-pixelOffset : Lens { b | pixelOffset : a } a
-pixelOffset =
-    Lens .pixelOffset (\value item -> { item | pixelOffset = value })
+imageSize : Lens { b | imageSize : a } a
+imageSize =
+    Lens .imageSize (\value item -> { item | imageSize = value })
+
+
+origin : Lens { b | origin : a } a
+origin =
+    Lens .origin (\value item -> { item | origin = value })
 
 
 sprite : Lens { b | sprite : a } a

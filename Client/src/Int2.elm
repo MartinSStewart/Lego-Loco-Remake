@@ -9,6 +9,10 @@ type alias Float2 =
     { x : Float, y : Float }
 
 
+type alias Point2 number =
+    { x : number, y : number }
+
+
 add :
     { x : number, y : number }
     -> { x : number, y : number }
@@ -108,6 +112,16 @@ floor float2 =
 toFloat2 : Int2 -> Float2
 toFloat2 int2 =
     Float2 (toFloat int2.x) (toFloat int2.y)
+
+
+transpose : { x : a, y : a } -> { x : a, y : a }
+transpose point =
+    { x = point.y, y = point.x }
+
+
+intToInt2 : Int -> Int -> Int2
+intToInt2 width int =
+    Int2 (int % width) (int // width)
 
 
 rectangleCollision : Int2 -> Int2 -> Int2 -> Int2 -> Bool

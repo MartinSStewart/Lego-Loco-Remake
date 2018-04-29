@@ -25,7 +25,7 @@ namespace CodeGen
             var lensModule = "Lenses";
 
             var sourceDirectory = Path.Combine(ClientDirectory, "src");
-
+            
             var spriteCode = GetSpriteCode(Sprite.GetSprites(), spriteModule);
             var tileTypeCode = GetTileTypeCode(TileType.GetTileTypes(), tileTypeModule);
             var lensCode = GetLensCode(
@@ -97,14 +97,16 @@ import Monocle.Lens as Lens exposing (Lens)
             var spriteCode = sprites
                 .Select(sprite =>
                 {
-                    var size = ImageSize(Path.Combine(imageDirectory, sprite.ImagePath));
+                    var imageSize = ImageSize(Path.Combine(imageDirectory, sprite.ImagePath));
+                    var spriteSize = sprite.Size ?? imageSize;
 
                     var path = string.Join("/", new[] { "Images", sprite.ImagePath });
                     return GetElmFunction(
                         sprite.CodeName,
                         "Sprite",
                         $"\"/{path}\"",
-                        $"(Int2 {size.X} {size.Y})",
+                        $"(Int2 {spriteSize.X} {spriteSize.Y})",
+                        $"(Int2 {imageSize.X} {imageSize.Y})",
                         $"(Int2 {sprite.Origin.X} {sprite.Origin.Y})");
                 })
                 .ToDelimitedString("\n\n");
@@ -118,8 +120,9 @@ import Int2 exposing (Int2)
 
 type alias Sprite =
     {{ filepath : String
-    , pixelSize : Int2 --Exact dimensions of image.
-    , pixelOffset : Int2
+    , size : Int2 --Size of the sprite.
+    , imageSize : Int2 --Exact dimensions of image.
+    , origin : Int2
     }}
 
 
