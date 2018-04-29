@@ -33,7 +33,7 @@ namespace CodeGen
                 new[] 
                 {
                     File.ReadAllText(Path.Combine(sourceDirectory, "Model.elm")),
-                    File.ReadAllText(Path.Combine(sourceDirectory, "Toolbox.elm")),
+                    File.ReadAllText(Path.Combine(sourceDirectory, "Toybox.elm")),
                     File.ReadAllText(Path.Combine(sourceDirectory, "Point2.elm")),
                     spriteCode,
                     tileTypeCode
