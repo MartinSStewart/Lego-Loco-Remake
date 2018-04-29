@@ -102,7 +102,7 @@ update msg model =
             mouseMove xy model |> setMousePosCurrent xy
 
         ToolboxMsg toolboxMsg ->
-            ( model |> toolbox.set (Toolbox.update model.windowSize toolboxMsg model.toolbox), Cmd.none )
+            ( Toolbox.update model.windowSize toolboxMsg model |> Tuple.first, Cmd.none )
 
         RotateTile wheelDelta ->
             rotateTile wheelDelta model

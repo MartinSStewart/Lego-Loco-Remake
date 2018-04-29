@@ -13,6 +13,16 @@ import Mouse exposing (Position)
 import Color exposing (Color)
 
 
+maybeCase : (a -> b) -> b -> Maybe a -> Maybe b
+maybeCase justCase nothingCase maybe =
+    case maybe of
+        Just a ->
+            justCase a |> Just
+
+        Nothing ->
+            nothingCase |> Just
+
+
 px : number -> String
 px value =
     toString value ++ "px"

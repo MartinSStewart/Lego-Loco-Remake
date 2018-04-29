@@ -14,6 +14,7 @@ import Lenses exposing (..)
 import SpriteHelper
 import Model exposing (..)
 import Color
+import Monocle.Lens as Lens
 
 
 default : Toolbox
@@ -42,61 +43,61 @@ absoluteStyle pixelPosition pixelSize =
     ]
 
 
-update : Point2 Int -> ToolboxMsg -> Toolbox -> Toolbox
-update windowSize msg toolbox =
-    case msg of
-        DragStart xy ->
-            let
-                newDrag =
-                    case toolbox.drag of
-                        Nothing ->
-                            Just (Drag xy xy)
+update : Point2 Int -> ToolboxMsg -> Model -> ( Model, ToolboxCmd )
+update windowSize msg model =
+    let
+        updateViewPosition =
+            Lens.modify toolbox (\a -> viewPosition.set (getPosition windowSize a) a)
+    in
+        case msg of
+            DragStart xy ->
+                let
+                    newModel =
+                        model
+                            |> Lens.modify (Lens.compose toolbox drag) (maybeCase (\a -> a) (Drag xy xy))
+                            {- Update the toolbox position.
+                               Its visible position might not match viewPosition if the window has been resized.
+                            -}
+                            |> updateViewPosition
+                in
+                    ( newModel, None )
 
-                        -- If we were already dragging then don't do anything here.
-                        Just a ->
-                            Just a
-            in
-                toolbox
-                    {- Update the toolbox position.
-                       It's visible position might not match viewPosition if the window has been resized.
-                    -}
-                    |> viewPosition.set (getPosition windowSize toolbox)
-                    |> drag.set newDrag
+            DragAt xy ->
+                let
+                    newModel =
+                        Lens.modify
+                            (Lens.compose toolbox drag)
+                            (maybeCase (current.set xy) (Drag xy xy))
+                            model
+                in
+                    ( newModel, None )
 
-        DragAt xy ->
-            let
-                newDrag =
-                    case toolbox.drag of
-                        Just drag ->
-                            Just { drag | current = xy }
+            DragEnd xy ->
+                let
+                    newModel =
+                        model
+                            |> updateViewPosition
+                            |> Lens.modify (Lens.compose toolbox drag) (\_ -> Nothing)
+                in
+                    ( newModel, None )
 
-                        Nothing ->
-                            Just <| Drag xy xy
-            in
-                toolbox |> drag.set newDrag
+            NoOp ->
+                ( model, None )
 
-        DragEnd xy ->
-            toolbox
-                |> viewPosition.set (getPosition windowSize toolbox)
-                |> drag.set Nothing
+            TileSelect tileId ->
+                ( model |> (Lens.compose toolbox selectedTileId).set tileId, None )
 
-        NoOp ->
-            toolbox
+            TileCategory _ ->
+                ( model, None )
 
-        TileSelect tileId ->
-            { toolbox | selectedTileId = tileId }
+            EraserSelect ->
+                ( model, None )
 
-        TileCategory _ ->
-            Debug.crash "TODO"
+            BombSelect ->
+                ( model, None )
 
-        EraserSelect ->
-            Debug.crash "TODO"
-
-        BombSelect ->
-            Debug.crash "TODO"
-
-        Undo ->
-            Debug.crash "TODO"
+            Undo ->
+                ( model, None )
 
 
 getPosition : Point2 Int -> Toolbox -> Point2 Int
@@ -169,22 +170,24 @@ toolboxView zIndex windowSize toolbox =
         handleLocalPosition =
             Point2 ((toolboxLeftSize.x - toolboxHandleSize.x) // 2) 0
 
-        backgroundMargin =
-            Point2 2 2
-
         --Used to prevent anything under the toolbox from bleeding through.
         --This can happen if the user has DPI set to something other than 100%.
         backgroundDiv =
-            div
-                [ style <|
-                    Helpers.backgroundColor Color.black
-                        :: absoluteStyle backgroundMargin
-                            (backgroundMargin
-                                |> Point2.rmultScalar 2
-                                |> Point2.sub toolboxLeftSize
-                            )
-                ]
-                []
+            let
+                margin =
+                    Point2 2 2
+
+                size =
+                    margin
+                        |> Point2.rmultScalar 2
+                        |> Point2.sub toolboxLeftSize
+            in
+                div
+                    [ style <|
+                        Helpers.backgroundColor Color.black
+                            :: absoluteStyle margin size
+                    ]
+                    []
     in
         div
             [ onEvent "click" NoOp --Prevents clicks from propagating to UI underneath.
@@ -195,7 +198,10 @@ toolboxView zIndex windowSize toolbox =
             , backgroundDiv
             , tileView (Point2 (6 + toolboxLeftSize.x) 16) toolbox
             , menuView (Point2 6 13) toolbox
-            , SpriteHelper.spriteView Point2.zero Sprite.toolboxLeft
+            , div
+                --We want to be able to click the menu buttons under this.
+                [ style [ ( "pointer-events", "none" ) ] ]
+                [ SpriteHelper.spriteView Point2.zero Sprite.toolboxLeft ]
             , div
                 [ onMouseDown ]
                 [ SpriteHelper.spriteView handleLocalPosition Sprite.toolboxHandle ]
@@ -222,7 +228,7 @@ menuView pixelPosition toolbox =
         tileButtonMargin =
             Point2 3 3
 
-        gridWidth =
+        gridColumns =
             3
 
         menuButtonSize =
@@ -246,11 +252,11 @@ menuView pixelPosition toolbox =
                     let
                         position =
                             index
-                                |> Point2.intToInt2 gridWidth
+                                |> Point2.intToInt2 gridColumns
                                 |> Point2.mult menuButtonSize
                                 |> Point2.add pixelPosition
                     in
-                        div []
+                        div [ onEvent "click" msg ]
                             [ SpriteHelper.spriteView position Sprite.toolboxMenuButtonUp
                             , SpriteHelper.spriteViewAlign (menuButtonSize |> Point2.rdiv 2 |> Point2.add position) (Point2 0.5 0.5) sprite
                             ]
@@ -270,11 +276,11 @@ tileView pixelPosition toolbox =
         tileButtonSize =
             Point2.add tileButtonMargin tileButtonLocalSize
 
-        gridSize =
-            Point2 3 3
+        gridColumns =
+            3
 
         getPosition =
-            Point2.intToInt2 gridSize.x
+            Point2.intToInt2 gridColumns
                 >> Point2.mult tileButtonSize
                 >> Point2.add pixelPosition
 

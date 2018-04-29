@@ -43,6 +43,10 @@ type ToolboxMsg
     | Undo
 
 
+type ToolboxCmd
+    = None
+
+
 type alias Drag =
     { start : Mouse.Position
     , current : Mouse.Position

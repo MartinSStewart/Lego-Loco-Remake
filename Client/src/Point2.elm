@@ -25,7 +25,7 @@ multScalar point scalar =
     { x = point.x * scalar, y = point.y * scalar }
 
 
-{-| Multiplies one point by a scalar but with the order reversed.
+{-| Multiplies one point by a scalar but with the parameter order reversed.
 -}
 rmultScalar : number -> Point2 number -> Point2 number
 rmultScalar scalar point =
@@ -42,7 +42,7 @@ div point divisor =
     { x = point.x // divisor, y = point.y // divisor }
 
 
-{-| Divides one point by an integer but with the order reversed.
+{-| Divides one point by an integer but with the parameter order reversed.
 -}
 rdiv : Int -> Point2 Int -> Point2 Int
 rdiv divisor point =
