@@ -24,7 +24,7 @@ namespace BuildClient
         {
             CodeGen.CodeGen.GenerateCodeToFiles();
 
-            var result = Common.Console.Run(ClientDirectory, new[] { "elm-app build" });
+            var (result, _) = Common.Console.Run(ClientDirectory, new[] { "elm-app build" });
             Console.WriteLine(result);
             if (!result.Contains("Compiled successfully."))
             {

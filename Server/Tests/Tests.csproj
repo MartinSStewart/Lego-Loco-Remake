@@ -62,6 +62,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ElmTests.cs" />
     <Compile Include="WorldTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -70,9 +71,25 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BuildClient\BuildClient.csproj">
+      <Project>{24df5558-cbbd-4cdf-92ee-ffb93722175f}</Project>
+      <Name>BuildClient</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CodeGen\CodeGen.csproj">
+      <Project>{a14ff07d-038b-4ef6-968f-b0377f5789f7}</Project>
+      <Name>CodeGen</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{63c9aa75-7edc-48f9-89ec-c67e78416bc8}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Server\Server.csproj">
       <Project>{80D7B2C4-7408-425A-A69A-A23B99CC2E61}</Project>
       <Name>Server</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SpriteGen\SpriteGen.csproj">
+      <Project>{46460748-a4dd-40c3-8007-b24558535f67}</Project>
+      <Name>SpriteGen</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

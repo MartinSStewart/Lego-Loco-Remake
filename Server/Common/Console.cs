@@ -9,7 +9,7 @@ namespace Common
 {
     public static class Console
     {
-        public static string Run(string workingDirectory, string[] commands)
+        public static (string Output, string Error) Run(string workingDirectory, string[] commands)
         {
             var cmd = new Process
             {
@@ -18,6 +18,7 @@ namespace Common
                     FileName = "cmd.exe",
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     WorkingDirectory = workingDirectory
@@ -33,7 +34,7 @@ namespace Common
             cmd.StandardInput.Flush();
             cmd.StandardInput.Close();
             cmd.WaitForExit();
-            return cmd.StandardOutput.ReadToEnd();
+            return (cmd.StandardOutput.ReadToEnd(), cmd.StandardError.ReadToEnd());
         }
     }
 }

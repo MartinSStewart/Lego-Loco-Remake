@@ -2,14 +2,15 @@ module Tests exposing (..)
 
 import Test exposing (..)
 import Expect
-import Int2 exposing (..)
+import Point2 exposing (..)
 import Server exposing (..)
 import BinaryBase64
-import Model exposing (collidesWith, Tile)
+import Model exposing (Tile)
 import Fuzz exposing (list, int)
 import Bitwise
 import Main exposing (initModel)
 import TileType exposing (..)
+import Helpers exposing (collidesWith, modelAddTile)
 
 
 -- Check out http://package.elm-lang.org/packages/elm-community/elm-test/latest to learn more about testing in Elm!
@@ -26,27 +27,27 @@ all =
                 Expect.equal "a" (String.left 1 "abcdefg")
         , test "Tiles right on top of eachother should collide." <|
             \_ ->
-                collidesWith (Tile redHouseIndex (Int2 0 0) 0) (Tile 0 (Int2 0 0) 0)
+                collidesWith (Tile redHouseIndex (Point2 0 0) 0) (Tile 0 (Point2 0 0) 0)
                     |> Expect.equal True
         , test "Tiles next to eachother should not collide." <|
             \_ ->
-                collidesWith (Tile redHouseIndex (Int2 0 0) 0) (Tile 0 (Int2 3 0) 0)
+                collidesWith (Tile redHouseIndex (Point2 0 0) 0) (Tile 0 (Point2 3 0) 0)
                     |> Expect.equal False
         , test "Tiles overlapping should collide." <|
             \_ ->
-                collidesWith (Tile redHouseIndex (Int2 0 0) 0) (Tile redHouseIndex (Int2 2 -2) 0)
+                collidesWith (Tile redHouseIndex (Point2 0 0) 0) (Tile redHouseIndex (Point2 2 -2) 0)
                     |> Expect.equal True
         , test "Rectangles next to eachother should not collide." <|
             \_ ->
-                rectangleCollision (Int2 0 0) (Int2 3 3) (Int2 3 0) (Int2 3 3)
+                rectangleCollision (Point2 0 0) (Point2 3 3) (Point2 3 0) (Point2 3 3)
                     |> Expect.equal False
         , test "Point outside rectangle." <|
             \_ ->
-                pointInRectangle (Int2 0 0) (Int2 3 3) (Int2 3 0)
+                pointInRectangle (Point2 0 0) (Point2 3 3) (Point2 3 0)
                     |> Expect.equal False
         , test "Point inside rectangle." <|
             \_ ->
-                pointInRectangle (Int2 0 0) (Int2 3 3) (Int2 2 0)
+                pointInRectangle (Point2 0 0) (Point2 3 3) (Point2 2 0)
                     |> Expect.equal True
         , test "Decode int" <|
             \_ -> BinaryBase64.decode "HgAAAA==" |> Expect.equal (Ok [ 30, 0, 0, 0 ])
@@ -90,7 +91,7 @@ all =
             \a b c d e ->
                 let
                     input =
-                        Tile (fixInt a) (Int2 (fixInt b) (fixInt c)) (fixInt d)
+                        Tile (fixInt a) (Point2 (fixInt b) (fixInt c)) (fixInt d)
 
                     extraBytes =
                         getBytes e
@@ -102,8 +103,8 @@ all =
         , test "Placing a house to the right of a sidewalk tile does not remove the sidewalk." <|
             \_ ->
                 Main.initModel
-                    |> Model.modelAddTile (Tile sidewalkIndex Int2.zero 0)
-                    |> Model.modelAddTile (Tile redHouseIndex (Int2 1 0) 0)
+                    |> modelAddTile (Tile sidewalkIndex Point2.zero 0)
+                    |> modelAddTile (Tile redHouseIndex (Point2 1 0) 0)
                     |> .tiles
                     |> List.length
                     |> Expect.equal 2
