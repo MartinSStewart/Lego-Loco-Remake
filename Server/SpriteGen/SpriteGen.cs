@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SpriteGen
 {
-    public static class Program
+    public static class SpriteGen
     {
         static void Main(string[] args)
         {
@@ -71,26 +71,9 @@ namespace SpriteGen
                         Directory.CreateDirectory(workingDirectory);
                         File.Copy(sourceBmpPath, destinationBmpPath, true);
 
-                        var cmd = new Process
-                        {
-                            StartInfo = new ProcessStartInfo
-                            {
-                                FileName = "cmd.exe",
-                                RedirectStandardInput = true,
-                                RedirectStandardOutput = true,
-                                CreateNoWindow = true,
-                                UseShellExecute = false,
-                                WorkingDirectory = workingDirectory
-                            }
-                        };
-
-                        cmd.Start();
-
-                        cmd.StandardInput.WriteLine($"java -jar {Path.Combine(Environment.CurrentDirectory, jarFile)} {sourceBmpPath} {bmpFileName}");
-                        cmd.StandardInput.WriteLine($"y");
-                        cmd.StandardInput.Flush();
-                        cmd.StandardInput.Close();
-                        cmd.WaitForExit();
+                        Common.Console.Run(
+                            workingDirectory, 
+                            new[] { $"java -jar {Path.Combine(Environment.CurrentDirectory, jarFile)} {sourceBmpPath} {bmpFileName}", "y" });
 
                         try
                         {

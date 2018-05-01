@@ -141,7 +141,7 @@
     <Compile Include="DecodeException.cs" />
     <Compile Include="IClientMessage.cs" />
     <Compile Include="Int2.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialization.cs" />
     <Compile Include="Sprite.cs" />

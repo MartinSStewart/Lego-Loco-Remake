@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 
 namespace Server
 {
-    class Program
+    class Server
     {
         public static ConcurrentQueue<(string Id, IClientMessage Message)> MessageQueue { get; } = new ConcurrentQueue<(string, IClientMessage)>();
 

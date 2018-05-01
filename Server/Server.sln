@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeGen", "CodeGen\CodeGen.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpriteGen", "SpriteGen\SpriteGen.csproj", "{46460748-A4DD-40C3-8007-B24558535F67}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildClient", "BuildClient\BuildClient.csproj", "{24DF5558-CBBD-4CDF-92EE-FFB93722175F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{63C9AA75-7EDC-48F9-89EC-C67E78416BC8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{46460748-A4DD-40C3-8007-B24558535F67}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46460748-A4DD-40C3-8007-B24558535F67}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46460748-A4DD-40C3-8007-B24558535F67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24DF5558-CBBD-4CDF-92EE-FFB93722175F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24DF5558-CBBD-4CDF-92EE-FFB93722175F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24DF5558-CBBD-4CDF-92EE-FFB93722175F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24DF5558-CBBD-4CDF-92EE-FFB93722175F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63C9AA75-7EDC-48F9-89EC-C67E78416BC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63C9AA75-7EDC-48F9-89EC-C67E78416BC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63C9AA75-7EDC-48F9-89EC-C67E78416BC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63C9AA75-7EDC-48F9-89EC-C67E78416BC8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

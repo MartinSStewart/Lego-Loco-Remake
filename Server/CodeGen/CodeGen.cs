@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 
 namespace CodeGen
 {
-    public static class Program
+    public static class CodeGen
     {
         public static string ClientDirectory => Path.Combine("..", "..", "..", "..", "Client");
         public const string CodeHeader = "{- Auto generated code. -}\n\n";
