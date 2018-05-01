@@ -155,7 +155,7 @@ import Monocle.Lens as Lens exposing (Lens)
                     return GetElmFunction(
                         sprite.CodeName,
                         "Sprite",
-                        $"\"{path}\"",
+                        $"\"%PUBLIC_URL%/{path}\"",
                         $"({Point2Type} {spriteSize.X} {spriteSize.Y})",
                         $"({Point2Type} {imageSize.X} {imageSize.Y})",
                         $"({Point2Type} {sprite.Origin.X} {sprite.Origin.Y})");
