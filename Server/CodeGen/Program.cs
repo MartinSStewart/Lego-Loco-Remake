@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 
 namespace CodeGen
 {
-    class Program
+    public static class Program
     {
         public static string ClientDirectory => Path.Combine("..", "..", "..", "..", "Client");
         public const string CodeHeader = "{- Auto generated code. -}\n\n";
@@ -21,12 +21,14 @@ namespace CodeGen
 
         static void Main(string[] args)
         {
+            var configModule = "Config";
             var spriteModule = "Sprite";
             var tileTypeModule = "TileType";
             var lensModule = "Lenses";
 
             var sourceDirectory = Path.Combine(ClientDirectory, "src");
-            
+
+            var configCode = GetConfigCode(configModule);
             var spriteCode = GetSpriteCode(Sprite.GetSprites(), spriteModule);
             var tileTypeCode = GetTileTypeCode(TileType.GetTileTypes(), tileTypeModule);
             var lensCode = GetLensCode(
@@ -40,11 +42,52 @@ namespace CodeGen
                 }, 
                 lensModule);
 
+            File.WriteAllText(Path.Combine(sourceDirectory, $"{configModule}.elm"), configCode);
             File.WriteAllText(Path.Combine(sourceDirectory, $"{spriteModule}.elm"), spriteCode);
             File.WriteAllText(Path.Combine(sourceDirectory, $"{tileTypeModule}.elm"), tileTypeCode);
             File.WriteAllText(Path.Combine(sourceDirectory, $"{lensModule}.elm"), lensCode);
         }
 
+        public static string GetConfigCode(string moduleName)
+        {
+            string GetEnums<T>() =>
+                Enum.GetValues(typeof(T))
+                    .OfType<T>()
+                    .Select(
+                        item =>
+                        {
+                            var name = item.ToString().ToCamelCase();
+                            return 
+                                $"{name} : Int\n" +
+                                $"{name} =\n" +
+                                $"    {Convert.ToInt32(item)}\n";
+                        })
+                    .ToDelimitedString("\n\n");
+
+            return
+$@"{CodeHeader}
+module {moduleName} exposing (..)
+
+
+messageVersion : Int
+messageVersion =
+    0
+
+
+superGridSize : Int
+superGridSize =
+    64
+
+
+{GetEnums<Serialization.MessageToClient>()}
+
+{GetEnums<Serialization.MessageToServer>()}";
+        }
+
+        public static string ToCamelCase(this string text) =>
+            text.Length > 0
+                ? char.ToLower(text[0]) + text.Substring(1)
+                : text;
 
         public static string GetLensCode(IEnumerable<string> elmCode, string moduleName)
         {

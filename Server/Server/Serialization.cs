@@ -9,6 +9,9 @@ namespace Server
 {
     public static class Serialization
     {
+        public enum MessageToClient { AddedTile, RemovedTile, GotRegion }
+        public enum MessageToServer { AddTile, RemoveTile, GetRegion }
+
         public static MemoryStream GetWriteStream()
         {
             var stream = new MemoryStream();
@@ -59,15 +62,15 @@ namespace Server
             {
                 case AddedTileMessage msg:
                     return stream
-                        .WriteInt(0)
+                        .WriteInt((int)MessageToClient.AddedTile)
                         .WriteTile(msg.Tile);
                 case RemovedTileMessage msg:
                     return stream
-                        .WriteInt(1)
+                        .WriteInt((int)MessageToClient.RemovedTile)
                         .WriteTile(msg.Tile);
                 case GotRegionMessage msg:
                     return stream
-                        .WriteInt(2)
+                        .WriteInt((int)MessageToClient.GotRegion)
                         .WriteInt2(msg.TopLeft)
                         .WriteInt2(msg.GridSize)
                         .WriteList(msg.Tiles, WriteTile);
@@ -130,20 +133,20 @@ namespace Server
         public static IClientMessage ReadClientAction(this MemoryStream stream)
         {
             var actionCode = stream.ReadInt();
-            switch (actionCode)
+            switch ((MessageToServer)actionCode)
             {
-                case 0: // Add tile
+                case MessageToServer.AddTile:
                     {
                         var tile = ReadTile(stream);
                         return new AddTileMessage(tile);
                     }
 
-                case 1: // Remove tile
+                case MessageToServer.RemoveTile:
                     {
                         var tile = ReadTile(stream);
                         return new RemoveTileMessage(tile);
                     }
-                case 2: // Get region
+                case MessageToServer.GetRegion:
                     {
                         var topLeft = ReadInt2(stream);
                         var gridSize = ReadInt2(stream);

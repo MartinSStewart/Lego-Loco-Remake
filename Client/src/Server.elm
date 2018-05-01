@@ -8,6 +8,7 @@ import Bitwise
 import Helpers
 import Monocle.Lens as Lens
 import Lenses
+import Config
 
 
 version : number
@@ -48,13 +49,13 @@ writeAction : Action -> ByteString
 writeAction action =
     case action of
         AddTile tile ->
-            writeInt 0 ++ writeTile tile
+            writeInt Config.addTile ++ writeTile tile
 
         RemoveTile tile ->
-            writeInt 1 ++ writeTile tile
+            writeInt Config.removeTile ++ writeTile tile
 
         GetRegion topLeft gridSize ->
-            writeInt 2 ++ writePoint2 topLeft ++ writePoint2 gridSize
+            writeInt Config.getRegion ++ writePoint2 topLeft ++ writePoint2 gridSize
 
 
 serverUrl : String
@@ -120,11 +121,11 @@ readResponse : ByteString -> Maybe ( ByteString, Response )
 readResponse data =
     let
         a bytes responseCode =
-            if responseCode == 0 then
+            if responseCode == Config.addedTile then
                 readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, AddedTile tile ))
-            else if responseCode == 1 then
+            else if responseCode == Config.removedTile then
                 readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, RemovedTile tile ))
-            else if responseCode == 2 then
+            else if responseCode == Config.gotRegion then
                 readPoint2 bytes
                     |> Maybe.andThen
                         (\( bytesLeft, topLeft ) ->
