@@ -21,6 +21,11 @@ namespace CodeGen
 
         static void Main(string[] args)
         {
+            GenerateCodeToFiles();
+        }
+
+        public static void GenerateCodeToFiles()
+        {
             var configModule = "Config";
             var spriteModule = "Sprite";
             var tileTypeModule = "TileType";
@@ -32,14 +37,14 @@ namespace CodeGen
             var spriteCode = GetSpriteCode(Sprite.GetSprites(), spriteModule);
             var tileTypeCode = GetTileTypeCode(TileType.GetTileTypes(), tileTypeModule);
             var lensCode = GetLensCode(
-                new[] 
+                new[]
                 {
                     File.ReadAllText(Path.Combine(sourceDirectory, "Model.elm")),
                     File.ReadAllText(Path.Combine(sourceDirectory, "Toybox.elm")),
                     File.ReadAllText(Path.Combine(sourceDirectory, "Point2.elm")),
                     spriteCode,
                     tileTypeCode
-                }, 
+                },
                 lensModule);
 
             File.WriteAllText(Path.Combine(sourceDirectory, $"{configModule}.elm"), configCode);

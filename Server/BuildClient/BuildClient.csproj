@@ -49,6 +49,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CodeGen\CodeGen.csproj">
+      <Project>{a14ff07d-038b-4ef6-968f-b0377f5789f7}</Project>
+      <Name>CodeGen</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{63c9aa75-7edc-48f9-89ec-c67e78416bc8}</Project>
       <Name>Common</Name>

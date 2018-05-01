@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
-    "summary": "helpful summary of your project, less than 80 characters",
+    "summary": "An online version of the childrens game Lego Loco.",
     "repository": "https://github.com/user/project.git",
     "license": "BSD3",
     "source-directories": [
@@ -19,5 +19,6 @@
         "elm-tools/parser": "2.0.1 <= v < 3.0.0",
         "mbr/elm-mouse-events": "1.0.4 <= v < 2.0.0"
     },
-    "elm-version": "0.18.0 <= v < 0.19.0"
+    "elm-version": "0.18.0 <= v < 0.19.0",
+    "homepage": "https://martinsstewart.github.io/Lego-Loco-Remake/"
 }
