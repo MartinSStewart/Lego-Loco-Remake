@@ -11,6 +11,7 @@ import List.Extra
 import TileType
 import Mouse exposing (Position)
 import Color exposing (Color)
+import Tile
 
 
 absoluteStyle : Point2 number -> Point2 number -> List ( String, String )
@@ -114,26 +115,18 @@ setMousePosCurrent position modelCmd =
 
 collidesWith : Tile -> Tile -> Bool
 collidesWith tileInstance0 tileInstance1 =
-    let
-        getTileSize tileInstance =
-            getTileOrDefault tileInstance.tileId |> .gridSize
-    in
-        Point2.rectangleCollision
-            tileInstance0.position
-            (getTileSize tileInstance0)
-            tileInstance1.position
-            (getTileSize tileInstance1)
+    Point2.rectangleCollision
+        tileInstance0.position
+        (Tile.gridSize tileInstance0)
+        tileInstance1.position
+        (Tile.gridSize tileInstance1)
 
 
 collisionsAt : Point2 Int -> Point2 Int -> Model -> List Tile
 collisionsAt gridPosition gridSize model =
-    let
-        getTileSize tileInstance =
-            getTileOrDefault tileInstance.tileId |> .gridSize
-    in
-        List.filter
-            (\a -> Point2.rectangleCollision a.position (getTileSize a) gridPosition gridSize)
-            model.tiles
+    List.filter
+        (\a -> Point2.rectangleCollision a.position (Tile.gridSize a) gridPosition gridSize)
+        model.tiles
 
 
 getTileOrDefault : Int -> TileType.TileType

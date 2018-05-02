@@ -41,7 +41,7 @@ namespace SpriteGen
 
                 var imagesPath = Path.Combine(Environment.CurrentDirectory, "Images");
 
-                var folders = new[] { "roads", "scenery", "building", "toybox" };
+                var folders = new[] { "roads", "scenery", "building", "toybox", "track" };
 
                 Parallel.ForEach(
                     folders.SelectMany(item => Directory.EnumerateFiles(Path.Combine(resourcePath, item), "*.bmp", SearchOption.AllDirectories)), 

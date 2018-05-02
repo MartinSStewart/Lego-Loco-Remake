@@ -28,12 +28,12 @@ namespace Tests
         {
             var world = new World(_tileTypes);
 
-            world.AddTile("Red House", new Int2(tileX, tileY), 0);
+            world.AddTile("redHouse", new Int2(tileX, tileY), 0);
 
             var result = world.GetRegion(new Int2(superGridX, superGridY), new Int2(superGridWidth, SuperGridHeight));
 
             var expected = tileInRegion
-                ? new[] { new Tile(world.TileTypes.FindIndex(item => item.Name == "Red House"), new Int2(tileX, tileY), 0) }
+                ? new[] { new Tile(world.TileTypes.FindIndex(item => item.CodeName == "redHouse"), new Int2(tileX, tileY), 0) }
                 : new Tile[0];
             Assert.AreEqual(expected, result);
         }
@@ -49,7 +49,7 @@ namespace Tests
                 world.AddTile(RandomTile(random, new Int2(-100, -100), new Int2(100, 100)));
             }
 
-            world.AddTile("Red House", new Int2(World.SuperGridSize * 2, 20), 0);
+            world.AddTile("redHouse", new Int2(World.SuperGridSize * 2, 20), 0);
 
             var result = world.GetRegion(new Int2(2, 0), new Int2(1, 1));
             Assert.AreEqual(1, result.Count());
@@ -143,8 +143,8 @@ namespace Tests
         public void SidewalkTileCollisionBug()
         {
             var world = new World(_tileTypes);
-            world.AddTile("Sidewalk", new Int2());
-            world.AddTile("Red House", new Int2(1, 0));
+            world.AddTile("sidewalk", new Int2());
+            world.AddTile("redHouse", new Int2(1, 0));
 
             Assert.AreEqual(2, world.TileCount);
         }

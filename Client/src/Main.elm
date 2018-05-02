@@ -18,6 +18,7 @@ import TileHelper exposing (..)
 import TileType
 import Toybox
 import Window
+import Tile
 
 
 ---- MODEL ----
@@ -255,14 +256,14 @@ mouseMove mousePos model =
 drawTiles : Point2 Int -> Int -> Model -> ( List Tile, Model )
 drawTiles newTilePosition tileId model =
     let
-        tileSize =
-            tileId |> getTileOrDefault |> .gridSize
-
         tileInstance =
             Tile
                 tileId
                 newTilePosition
                 model.currentRotation
+
+        tileSize =
+            Tile.gridSize tileInstance
     in
         case model.lastTilePosition of
             Nothing ->

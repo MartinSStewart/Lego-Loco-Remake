@@ -15,6 +15,9 @@ namespace Server
         [JsonIgnore]
         public int Area => X * Y;
 
+        [JsonIgnore]
+        public Int2 Transpose => new Int2(Y, X);
+
         public Int2(int x, int y)
         {
             X = x;

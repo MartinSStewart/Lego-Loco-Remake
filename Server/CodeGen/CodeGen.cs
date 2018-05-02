@@ -196,7 +196,6 @@ type alias Sprite =
                         tile.CodeName,
                         "TileType",
                         $"(Rot{tile.Sprites.Count} {tile.Sprites.Select(item => "Sprite." + item).ToDelimitedString(" ")})",
-                        $"\"{tile.Name}\"",
                         $"({Point2Type} {tile.GridSize.X} {tile.GridSize.Y})",
                         "Sprite." + tile.ToolboxIconSprite,
                         tileCategoryNames[tile.Category]))
@@ -212,7 +211,6 @@ import Sprite exposing (Sprite)
 
 type alias TileType =
     {{ sprite : RotSprite
-    , name : String
     , gridSize : {Point2Type} Int
     , icon : Sprite
     , category : Category

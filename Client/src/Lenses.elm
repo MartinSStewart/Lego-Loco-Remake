@@ -66,11 +66,6 @@ mousePosCurrent =
     Lens .mousePosCurrent (\value item -> { item | mousePosCurrent = value })
 
 
-name : Lens { b | name : a } a
-name =
-    Lens .name (\value item -> { item | name = value })
-
-
 origin : Lens { b | origin : a } a
 origin =
     Lens .origin (\value item -> { item | origin = value })

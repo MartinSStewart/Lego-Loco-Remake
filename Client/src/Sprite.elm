@@ -64,6 +64,26 @@ roadTurnRightDown =
     Sprite "Images/roadTurnRightDown.png" (Point2 32 32) (Point2 32 32) (Point2 0 0)
 
 
+roadRailCrossingOpenHorizontal : Sprite
+roadRailCrossingOpenHorizontal =
+    Sprite "Images/roadRailCrossingOpenHorizontal.png" (Point2 48 32) (Point2 48 32) (Point2 0 0)
+
+
+roadRailCrossingClosedHorizontal : Sprite
+roadRailCrossingClosedHorizontal =
+    Sprite "Images/roadRailCrossingClosedHorizontal.png" (Point2 48 32) (Point2 48 32) (Point2 0 0)
+
+
+roadRailCrossingOpenVertical : Sprite
+roadRailCrossingOpenVertical =
+    Sprite "Images/roadRailCrossingOpenVertical.png" (Point2 32 48) (Point2 32 48) (Point2 0 0)
+
+
+roadRailCrossingClosedVertical : Sprite
+roadRailCrossingClosedVertical =
+    Sprite "Images/roadRailCrossingClosedVertical.png" (Point2 32 48) (Point2 32 48) (Point2 0 0)
+
+
 toyboxRight : Sprite
 toyboxRight =
     Sprite "Images/toyboxRight.png" (Point2 180 234) (Point2 180 234) (Point2 0 0)

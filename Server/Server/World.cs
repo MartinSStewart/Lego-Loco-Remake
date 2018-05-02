@@ -66,7 +66,7 @@ namespace Server
         }
 
         public void AddTile(string tileTypeName, Int2 gridPosition, int rotation = 0) =>
-            AddTile(new Tile(TileTypes.FindIndex(item => item.Name == tileTypeName), gridPosition, rotation));
+            AddTile(new Tile(TileTypes.FindIndex(item => item.CodeName == tileTypeName), gridPosition, rotation));
 
         public IEnumerable<Tile> GetRegion(Int2 superGridTopLeft, Int2 superGridSize) => 
             _superGrid
@@ -80,10 +80,18 @@ namespace Server
 
         public bool TilesOverlap(Tile tile0, Tile tile1) => 
             RectanglesOverlap(
-                tile0.GridPosition, 
-                TileTypes[tile0.TileTypeId].GridSize, 
-                tile1.GridPosition, 
-                TileTypes[tile1.TileTypeId].GridSize);
+                tile0.GridPosition,
+                GetTileSize(tile0), 
+                tile1.GridPosition,
+                GetTileSize(tile1));
+
+        public Int2 GetTileSize(Tile tile)
+        {
+            var size = TileTypes[tile.TileTypeId].GridSize;
+            return tile.Rotation % 2 == 0
+                ? size
+                : size.Transpose;
+        }
 
         public static bool RectanglesOverlap(Int2 topLeft0, Int2 size0, Int2 topLeft1, Int2 size1)
         {
