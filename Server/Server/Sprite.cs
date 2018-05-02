@@ -46,7 +46,7 @@ namespace Server
                 new Sprite("roadTurnLeftDown.png"),
                 new Sprite("roadTurnRightUp.png"),
                 new Sprite("roadTurnRightDown.png"),
-                new Sprite("toybox.png"),
+                new Sprite("toyboxRight.png"),
                 new Sprite("toyboxHandle.png", new Int2(0, 18)),
                 new Sprite("toyboxTileButtonDown.png"),
                 new Sprite("toyboxMenuButtonDown.png"),

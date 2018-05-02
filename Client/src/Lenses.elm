@@ -6,6 +6,11 @@ module Lenses exposing (..)
 import Monocle.Lens as Lens exposing (Lens)
 
 
+category : Lens { b | category : a } a
+category =
+    Lens .category (\value item -> { item | category = value })
+
+
 current : Lens { b | current : a } a
 current =
     Lens .current (\value item -> { item | current = value })
@@ -94,6 +99,11 @@ sprite =
 start : Lens { b | start : a } a
 start =
     Lens .start (\value item -> { item | start = value })
+
+
+tileCategory : Lens { b | tileCategory : a } a
+tileCategory =
+    Lens .tileCategory (\value item -> { item | tileCategory = value })
 
 
 tileId : Lens { b | tileId : a } a

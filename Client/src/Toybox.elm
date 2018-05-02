@@ -19,7 +19,7 @@ import Monocle.Lens as Lens
 
 default : Toybox
 default =
-    Toybox (Point2 100 100) Nothing
+    Toybox (Point2 100 100) Nothing Nothing
 
 
 toolboxTileSize : Int
@@ -76,8 +76,12 @@ update windowSize msg model =
             TileSelect tileId ->
                 ( model |> .set Lenses.editMode (PlaceTiles tileId), None )
 
-            TileCategory _ ->
-                ( model, None )
+            TileCategory category ->
+                let
+                    modelCategoryLens =
+                        Lens.compose Lenses.toolbox Lenses.tileCategory
+                in
+                    ( model |> .set modelCategoryLens category, None )
 
             EraserSelect ->
                 ( model |> .set Lenses.editMode Eraser, None )
@@ -90,20 +94,20 @@ update windowSize msg model =
 
 
 getPosition : Point2 Int -> Toybox -> Point2 Int
-getPosition windowSize toolbox =
+getPosition windowSize toybox =
     let
         position =
-            case toolbox.drag of
+            case toybox.drag of
                 Nothing ->
-                    toolbox.viewPosition
+                    toybox.viewPosition
 
                 Just { start, current } ->
-                    toolbox.viewPosition
+                    toybox.viewPosition
                         |> Point2.add current
                         |> Point2.add (Point2.negate start)
 
         maxPosition =
-            Point2.sub windowSize toolboxSize
+            Point2.sub windowSize (toolboxSize toybox)
     in
         position
             |> Point2.max Point2.zero
@@ -112,16 +116,19 @@ getPosition windowSize toolbox =
 
 {-| Size of toolbox in view coordinates.
 -}
-toolboxSize : Point2 Int
-toolboxSize =
+toolboxSize : Toybox -> Point2 Int
+toolboxSize toybox =
     let
-        toolboxSize =
-            Sprite.toybox |> .size
+        toyboxRightSize =
+            if toybox.tileCategory == Nothing then
+                Point2.zero
+            else
+                Sprite.toyboxRight |> .size
 
-        toolboxLeftSize =
+        toyboxLeftSize =
             Sprite.toyboxLeft |> .size
     in
-        Point2 (toolboxSize.x + toolboxLeftSize.x) toolboxSize.y
+        Point2 (toyboxRightSize.x + toyboxLeftSize.x) toyboxLeftSize.y
 
 
 toolboxLeftSize : Point2 Int
@@ -136,14 +143,18 @@ toolboxHandleSize =
 
 insideToolbox : Point2 Int -> Point2 Int -> Toybox -> Bool
 insideToolbox windowSize viewPoint toolbox =
-    Point2.pointInRectangle (getPosition windowSize toolbox) toolboxSize viewPoint
+    Point2.pointInRectangle (getPosition windowSize toolbox) (toolboxSize toolbox) viewPoint
         || Point2.pointInRectangle (toolboxHandlePosition windowSize toolbox) toolboxHandleSize viewPoint
 
 
 toolboxHandlePosition : Point2 Int -> Toybox -> Point2 Int
-toolboxHandlePosition windowSize toolbox =
-    Point2 ((toolboxSize.x - toolboxHandleSize.x) // 2) (Sprite.toyboxHandle |> .origin |> .y)
-        |> Point2.add (getPosition windowSize toolbox)
+toolboxHandlePosition windowSize toybox =
+    let
+        size =
+            toolboxSize toybox
+    in
+        Point2 ((size.x - toolboxHandleSize.x) // 2) (Sprite.toyboxHandle |> .origin |> .y)
+            |> Point2.add (getPosition windowSize toybox)
 
 
 
@@ -184,11 +195,10 @@ toolboxView zIndex windowSize model =
         div
             [ onEvent "click" NoOp --Prevents clicks from propagating to UI underneath.
             , onEvent "mousedown" NoOp
-            , style <| ( "z-index", toString zIndex ) :: absoluteStyle position toolboxSize
+            , style <| ( "z-index", toString zIndex ) :: absoluteStyle position (toolboxSize toolbox)
             ]
-            [ SpriteHelper.spriteView (Point2 toolboxLeftSize.x 0) Sprite.toybox
+            [ toyboxRightView model
             , backgroundDiv
-            , tileView (Point2 (6 + toolboxLeftSize.x) 16) model
             , menuView (Point2 6 13) model
             , div
                 --We want to be able to click the menu buttons under this.
@@ -198,6 +208,20 @@ toolboxView zIndex windowSize model =
                 [ onMouseDown ]
                 [ SpriteHelper.spriteView handleLocalPosition Sprite.toyboxHandle ]
             ]
+
+
+toyboxRightView : Model -> Html ToolboxMsg
+toyboxRightView model =
+    case model.toolbox.tileCategory of
+        Just int ->
+            div [ style <| Helpers.absoluteStyle (Point2 toolboxLeftSize.x 0) Point2.zero ]
+                [ SpriteHelper.spriteView Point2.zero Sprite.toyboxRight
+                , tileView (Point2 6 16) model
+                , div [ style <| absoluteStyle (Point2 64 190) (Point2 52 38), onEvent "click" (TileCategory Nothing) ] []
+                ]
+
+        Nothing ->
+            div [] []
 
 
 onMouseDown : Html.Attribute ToolboxMsg
@@ -229,10 +253,16 @@ menuView pixelPosition model =
         tileButtonLocalSize =
             Sprite.toyboxMenuButtonUp |> .size
 
+        category =
+            model.toolbox.tileCategory
+
+        categoryOnClick buttonsCategory =
+            TileCategory (ifThenElse (category == Just buttonsCategory) Nothing (Just buttonsCategory))
+
         buttons =
-            [ ( Sprite.toyboxRailroad, TileCategory 0, False )
-            , ( Sprite.toyboxHouse, TileCategory 1, False )
-            , ( Sprite.toyboxPlants, TileCategory 2, False )
+            [ ( Sprite.toyboxRailroad, categoryOnClick TileType.Roads, category == Just TileType.Roads )
+            , ( Sprite.toyboxHouse, categoryOnClick TileType.Buildings, category == Just TileType.Buildings )
+            , ( Sprite.toyboxPlants, categoryOnClick TileType.Nature, category == Just TileType.Nature )
             , ( Sprite.toyboxEraser, EraserSelect, model.editMode == Eraser )
             , ( Sprite.toyboxBomb, BombSelect, False )
             , ( Sprite.toyboxLeftArrow, Undo, False )
@@ -285,6 +315,7 @@ tileView pixelPosition model =
 
         getPosition =
             Point2.intToInt2 gridColumns
+                >> Point2.transpose
                 >> Point2.mult tileButtonSize
                 >> Point2.add pixelPosition
 
@@ -292,8 +323,10 @@ tileView pixelPosition model =
             Point2.div (Point2.sub tileButtonLocalSize tile.icon.size) 2
     in
         TileType.tiles
+            |> List.indexedMap (\index tile -> ( index, tile ))
+            |> List.filter (\( index, a ) -> Just a.category == model.toolbox.tileCategory)
             |> List.indexedMap
-                (\index a ->
+                (\buttonIndex ( index, a ) ->
                     let
                         buttonDownDiv =
                             if Helpers.selectedTileId model == Just index then
@@ -309,7 +342,7 @@ tileView pixelPosition model =
                         div
                             [ onEvent "click" (TileSelect index)
                             , style <|
-                                absoluteStyle (getPosition index) tileButtonLocalSize
+                                absoluteStyle (getPosition buttonIndex) tileButtonLocalSize
                             ]
                             [ buttonDownDiv
                             , div

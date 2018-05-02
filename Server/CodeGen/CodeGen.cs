@@ -182,6 +182,14 @@ type alias Sprite =
 
         public static string GetTileTypeCode(IEnumerable<TileType> tiles, string moduleName)
         {
+            var tileCategoryNames =
+                new Dictionary<TileCategory, string>
+                {
+                    [TileCategory.Buildings] = "Buildings",
+                    [TileCategory.Nature] = "Nature",
+                    [TileCategory.Roads] = "Roads"
+                };
+
             var tileCode = tiles
                 .Select(tile =>
                     GetElmFunction(
@@ -190,7 +198,8 @@ type alias Sprite =
                         $"(Rot{tile.Sprites.Count} {tile.Sprites.Select(item => "Sprite." + item).ToDelimitedString(" ")})",
                         $"\"{tile.Name}\"",
                         $"({Point2Type} {tile.GridSize.X} {tile.GridSize.Y})",
-                        "Sprite." + tile.ToolboxIconSprite))
+                        "Sprite." + tile.ToolboxIconSprite,
+                        tileCategoryNames[tile.Category]))
                 .ToDelimitedString("\n\n");
 
             return
@@ -206,6 +215,7 @@ type alias TileType =
     , name : String
     , gridSize : {Point2Type} Int
     , icon : Sprite
+    , category : Category
     }}
 
 
@@ -213,6 +223,10 @@ type RotSprite
     = Rot1 Sprite
     | Rot2 Sprite Sprite
     | Rot4 Sprite Sprite Sprite Sprite
+
+
+type Category
+    = {tileCategoryNames.Values.OrderBy(item => item).ToDelimitedString("\n    | ")}
 
 
 {tileCode}

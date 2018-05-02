@@ -2,6 +2,7 @@ module Model exposing (..)
 
 import Point2 exposing (Point2)
 import Mouse exposing (Position)
+import TileType
 
 
 type alias Model =
@@ -28,6 +29,7 @@ type alias Tile =
 type alias Toybox =
     { viewPosition : Point2 Int -- Position of toolbox in view coordinates
     , drag : Maybe Drag
+    , tileCategory : Maybe TileType.Category
     }
 
 
@@ -42,7 +44,7 @@ type ToolboxMsg
     | DragAt Mouse.Position
     | DragEnd (Point2 Int)
     | TileSelect Int
-    | TileCategory Int
+    | TileCategory (Maybe TileType.Category)
     | EraserSelect
     | BombSelect
     | Undo

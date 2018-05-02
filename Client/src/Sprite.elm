@@ -64,9 +64,9 @@ roadTurnRightDown =
     Sprite "Images/roadTurnRightDown.png" (Point2 32 32) (Point2 32 32) (Point2 0 0)
 
 
-toybox : Sprite
-toybox =
-    Sprite "Images/toybox.png" (Point2 180 234) (Point2 180 234) (Point2 0 0)
+toyboxRight : Sprite
+toyboxRight =
+    Sprite "Images/toyboxRight.png" (Point2 180 234) (Point2 180 234) (Point2 0 0)
 
 
 toyboxHandle : Sprite
