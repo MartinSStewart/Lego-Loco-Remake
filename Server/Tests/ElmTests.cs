@@ -25,7 +25,7 @@ namespace Tests
             {
                 if (attempts > 10)
                 {
-                    Assert.Inconclusive();
+                    Assert.Inconclusive("Gave up trying to build elm tests.");
                 }
                 (output, error) = Common.Console.Run(ClientDirectory, new[] { "elm-app test" });
                 attempts++;

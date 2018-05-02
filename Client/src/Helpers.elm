@@ -34,6 +34,14 @@ selectedTileId model =
             Nothing
 
 
+ifThenElse : Bool -> a -> a -> a
+ifThenElse bool ifTrue ifFalse =
+    if bool then
+        ifTrue
+    else
+        ifFalse
+
+
 maybeCase : (a -> b) -> b -> Maybe a -> Maybe b
 maybeCase justCase nothingCase maybe =
     case maybe of

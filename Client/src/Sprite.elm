@@ -64,61 +64,61 @@ roadTurnRightDown =
     Sprite "Images/roadTurnRightDown.png" (Point2 32 32) (Point2 32 32) (Point2 0 0)
 
 
-toolbox : Sprite
-toolbox =
-    Sprite "Images/toolbox.png" (Point2 180 234) (Point2 180 234) (Point2 0 0)
+toybox : Sprite
+toybox =
+    Sprite "Images/toybox.png" (Point2 180 234) (Point2 180 234) (Point2 0 0)
 
 
-toolboxHandle : Sprite
-toolboxHandle =
-    Sprite "Images/toolboxHandle.png" (Point2 70 37) (Point2 70 37) (Point2 0 18)
+toyboxHandle : Sprite
+toyboxHandle =
+    Sprite "Images/toyboxHandle.png" (Point2 70 37) (Point2 70 37) (Point2 0 18)
 
 
-toolboxTileButtonDown : Sprite
-toolboxTileButtonDown =
-    Sprite "Images/toolboxTileButtonDown.png" (Point2 54 54) (Point2 54 54) (Point2 0 0)
+toyboxTileButtonDown : Sprite
+toyboxTileButtonDown =
+    Sprite "Images/toyboxTileButtonDown.png" (Point2 54 54) (Point2 54 54) (Point2 0 0)
 
 
-toolboxMenuButtonDown : Sprite
-toolboxMenuButtonDown =
-    Sprite "Images/toolboxMenuButtonDown.png" (Point2 48 46) (Point2 48 46) (Point2 0 0)
+toyboxMenuButtonDown : Sprite
+toyboxMenuButtonDown =
+    Sprite "Images/toyboxMenuButtonDown.png" (Point2 48 46) (Point2 48 46) (Point2 0 0)
 
 
-toolboxMenuButtonUp : Sprite
-toolboxMenuButtonUp =
-    Sprite "Images/toolboxMenuButtonUp.png" (Point2 48 46) (Point2 48 46) (Point2 0 0)
+toyboxMenuButtonUp : Sprite
+toyboxMenuButtonUp =
+    Sprite "Images/toyboxMenuButtonUp.png" (Point2 48 46) (Point2 48 46) (Point2 0 0)
 
 
-toolboxLeft : Sprite
-toolboxLeft =
-    Sprite "Images/toolboxLeft.png" (Point2 165 234) (Point2 165 234) (Point2 0 0)
+toyboxLeft : Sprite
+toyboxLeft =
+    Sprite "Images/toyboxLeft.png" (Point2 165 234) (Point2 165 234) (Point2 0 0)
 
 
-toolboxPlants : Sprite
-toolboxPlants =
-    Sprite "Images/toolboxPlants.png" (Point2 28 31) (Point2 28 31) (Point2 0 0)
+toyboxPlants : Sprite
+toyboxPlants =
+    Sprite "Images/toyboxPlants.png" (Point2 28 31) (Point2 28 31) (Point2 0 0)
 
 
-toolboxBomb : Sprite
-toolboxBomb =
-    Sprite "Images/toolboxBomb.png" (Point2 25 28) (Point2 25 28) (Point2 0 0)
+toyboxBomb : Sprite
+toyboxBomb =
+    Sprite "Images/toyboxBomb.png" (Point2 25 28) (Point2 25 28) (Point2 0 0)
 
 
-toolboxEraser : Sprite
-toolboxEraser =
-    Sprite "Images/toolboxEraser.png" (Point2 31 27) (Point2 31 27) (Point2 0 0)
+toyboxEraser : Sprite
+toyboxEraser =
+    Sprite "Images/toyboxEraser.png" (Point2 31 27) (Point2 31 27) (Point2 0 0)
 
 
-toolboxLeftArrow : Sprite
-toolboxLeftArrow =
-    Sprite "Images/toolboxLeftArrow.png" (Point2 28 29) (Point2 28 29) (Point2 0 0)
+toyboxLeftArrow : Sprite
+toyboxLeftArrow =
+    Sprite "Images/toyboxLeftArrow.png" (Point2 28 29) (Point2 28 29) (Point2 0 0)
 
 
-toolboxRailroad : Sprite
-toolboxRailroad =
-    Sprite "Images/toolboxRailroad.png" (Point2 28 18) (Point2 28 18) (Point2 0 0)
+toyboxRailroad : Sprite
+toyboxRailroad =
+    Sprite "Images/toyboxRailroad.png" (Point2 28 18) (Point2 28 18) (Point2 0 0)
 
 
-toolboxHouse : Sprite
-toolboxHouse =
-    Sprite "Images/toolboxHouse.png" (Point2 28 35) (Point2 28 35) (Point2 0 0)
+toyboxHouse : Sprite
+toyboxHouse =
+    Sprite "Images/toyboxHouse.png" (Point2 28 35) (Point2 28 35) (Point2 0 0)

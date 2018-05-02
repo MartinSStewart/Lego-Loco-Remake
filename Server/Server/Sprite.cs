@@ -46,18 +46,18 @@ namespace Server
                 new Sprite("roadTurnLeftDown.png"),
                 new Sprite("roadTurnRightUp.png"),
                 new Sprite("roadTurnRightDown.png"),
-                new Sprite("toolbox.png"),
-                new Sprite("toolboxHandle.png", new Int2(0, 18)),
-                new Sprite("toolboxTileButtonDown.png"),
-                new Sprite("toolboxMenuButtonDown.png"),
-                new Sprite("toolboxMenuButtonUp.png"),
-                new Sprite("toolboxLeft.png"),
-                new Sprite("toolboxPlants.png"),
-                new Sprite("toolboxBomb.png"),
-                new Sprite("toolboxEraser.png"),
-                new Sprite("toolboxLeftArrow.png"),
-                new Sprite("toolboxRailroad.png"),
-                new Sprite("toolboxHouse.png")
+                new Sprite("toybox.png"),
+                new Sprite("toyboxHandle.png", new Int2(0, 18)),
+                new Sprite("toyboxTileButtonDown.png"),
+                new Sprite("toyboxMenuButtonDown.png"),
+                new Sprite("toyboxMenuButtonUp.png"),
+                new Sprite("toyboxLeft.png"),
+                new Sprite("toyboxPlants.png"),
+                new Sprite("toyboxBomb.png"),
+                new Sprite("toyboxEraser.png"),
+                new Sprite("toyboxLeftArrow.png"),
+                new Sprite("toyboxRailroad.png"),
+                new Sprite("toyboxHouse.png")
             }.ToImmutableList();
     }
 }

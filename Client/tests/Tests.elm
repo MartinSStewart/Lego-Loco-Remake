@@ -27,27 +27,27 @@ all =
                 Expect.equal "a" (String.left 1 "abcdefg")
         , test "Tiles right on top of eachother should collide." <|
             \_ ->
-                collidesWith (Tile redHouseIndex (Point2 0 0) 0) (Tile 0 (Point2 0 0) 0)
+                collidesWith (Tile redHouseIndex Point2.zero 0) (Tile 0 Point2.zero 0)
                     |> Expect.equal True
         , test "Tiles next to eachother should not collide." <|
             \_ ->
-                collidesWith (Tile redHouseIndex (Point2 0 0) 0) (Tile 0 (Point2 3 0) 0)
+                collidesWith (Tile redHouseIndex Point2.zero 0) (Tile 0 (Point2 3 0) 0)
                     |> Expect.equal False
         , test "Tiles overlapping should collide." <|
             \_ ->
-                collidesWith (Tile redHouseIndex (Point2 0 0) 0) (Tile redHouseIndex (Point2 2 -2) 0)
+                collidesWith (Tile redHouseIndex Point2.zero 0) (Tile redHouseIndex (Point2 2 -2) 0)
                     |> Expect.equal True
         , test "Rectangles next to eachother should not collide." <|
             \_ ->
-                rectangleCollision (Point2 0 0) (Point2 3 3) (Point2 3 0) (Point2 3 3)
+                rectangleCollision Point2.zero (Point2 3 3) (Point2 3 0) (Point2 3 3)
                     |> Expect.equal False
         , test "Point outside rectangle." <|
             \_ ->
-                pointInRectangle (Point2 0 0) (Point2 3 3) (Point2 3 0)
+                pointInRectangle Point2.zero (Point2 3 3) (Point2 3 0)
                     |> Expect.equal False
         , test "Point inside rectangle." <|
             \_ ->
-                pointInRectangle (Point2 0 0) (Point2 3 3) (Point2 2 0)
+                pointInRectangle Point2.zero (Point2 3 3) (Point2 2 0)
                     |> Expect.equal True
         , test "Decode int" <|
             \_ -> BinaryBase64.decode "HgAAAA==" |> Expect.equal (Ok [ 30, 0, 0, 0 ])
