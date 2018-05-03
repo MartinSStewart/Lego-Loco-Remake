@@ -32,8 +32,8 @@ sidewalk =
     TileType (Rot1 Sprite.sidewalk) (Point2 1 1) Sprite.sidewalk Roads
 
 
-straightRoad : TileType
-straightRoad =
+roadStraight : TileType
+roadStraight =
     TileType (Rot2 Sprite.roadHorizontal Sprite.roadVertical) (Point2 2 2) Sprite.roadHorizontal Roads
 
 
@@ -52,13 +52,33 @@ roadRailCrossing =
     TileType (Rot2 Sprite.roadRailCrossingOpenHorizontal Sprite.roadRailCrossingOpenVertical) (Point2 3 2) Sprite.roadRailCrossingOpenHorizontal Roads
 
 
+railStraight : TileType
+railStraight =
+    TileType (Rot2 Sprite.railHorizontal Sprite.railVertical) (Point2 1 1) Sprite.railHorizontal Roads
+
+
+railTurn : TileType
+railTurn =
+    TileType (Rot4 Sprite.railTurnLeftUp Sprite.railTurnLeftDown Sprite.railTurnRightDown Sprite.railTurnRightUp) (Point2 2 2) Sprite.railTurnLeftUp Roads
+
+
+railSplitRight : TileType
+railSplitRight =
+    TileType (Rot4 Sprite.railSplitVerticalLeftUpOff Sprite.railSplitHorizontalLeftDownOff Sprite.railSplitVerticalRightDownOff Sprite.railSplitHorizontalRightUpOff) (Point2 2 2) Sprite.railSplitVerticalLeftUpOff Roads
+
+
+railSplitLeft : TileType
+railSplitLeft =
+    TileType (Rot4 Sprite.railSplitHorizontalLeftUpOff Sprite.railSplitVerticalLeftDownOff Sprite.railSplitHorizontalRightDownOff Sprite.railSplitVerticalRightUpOff) (Point2 2 2) Sprite.railSplitHorizontalLeftUpOff Roads
+
+
 sidewalkIndex : Int
 sidewalkIndex =
     0
 
 
-straightRoadIndex : Int
-straightRoadIndex =
+roadStraightIndex : Int
+roadStraightIndex =
     1
 
 
@@ -77,11 +97,35 @@ roadRailCrossingIndex =
     4
 
 
+railStraightIndex : Int
+railStraightIndex =
+    5
+
+
+railTurnIndex : Int
+railTurnIndex =
+    6
+
+
+railSplitRightIndex : Int
+railSplitRightIndex =
+    7
+
+
+railSplitLeftIndex : Int
+railSplitLeftIndex =
+    8
+
+
 tiles : List TileType
 tiles = 
     [ sidewalk
-    , straightRoad
+    , roadStraight
     , roadTurn
     , redHouse
     , roadRailCrossing
+    , railStraight
+    , railTurn
+    , railSplitRight
+    , railSplitLeft
     ]

@@ -16,6 +16,7 @@ type alias Model =
     , mousePosCurrent : Mouse.Position
     , windowSize : Point2 Int
     , editMode : EditMode
+    , ctrlDown : Bool
     }
 
 

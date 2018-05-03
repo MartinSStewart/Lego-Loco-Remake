@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Server
+namespace Common
 {
     public static class DebugEx
     {

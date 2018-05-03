@@ -71,7 +71,7 @@ namespace SpriteGen
                         Directory.CreateDirectory(workingDirectory);
                         File.Copy(sourceBmpPath, destinationBmpPath, true);
 
-                        Common.Console.Run(
+                        Common.Cmd.Run(
                             workingDirectory, 
                             new[] { $"java -jar {Path.Combine(Environment.CurrentDirectory, jarFile)} {sourceBmpPath} {bmpFileName}", "y" });
 

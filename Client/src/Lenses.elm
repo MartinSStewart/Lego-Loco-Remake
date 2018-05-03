@@ -11,6 +11,11 @@ category =
     Lens .category (\value item -> { item | category = value })
 
 
+ctrlDown : Lens { b | ctrlDown : a } a
+ctrlDown =
+    Lens .ctrlDown (\value item -> { item | ctrlDown = value })
+
+
 current : Lens { b | current : a } a
 current =
     Lens .current (\value item -> { item | current = value })
@@ -49,11 +54,6 @@ gridSize =
 icon : Lens { b | icon : a } a
 icon =
     Lens .icon (\value item -> { item | icon = value })
-
-
-imageSize : Lens { b | imageSize : a } a
-imageSize =
-    Lens .imageSize (\value item -> { item | imageSize = value })
 
 
 lastTilePosition : Lens { b | lastTilePosition : a } a

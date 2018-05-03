@@ -1,4 +1,5 @@
-﻿using MoreLinq;
+﻿using Common;
+using MoreLinq;
 using Newtonsoft.Json;
 using Server;
 using System;
@@ -149,14 +150,12 @@ import Monocle.Lens as Lens exposing (Lens)
                 .Select(sprite =>
                 {
                     var imageSize = ImageSize(Path.Combine(imageDirectory, sprite.ImagePath));
-                    var spriteSize = sprite.Size ?? imageSize;
 
                     var path = string.Join("/", new[] { "Images", sprite.ImagePath });
                     return GetElmFunction(
                         sprite.CodeName,
                         "Sprite",
                         $"\"{path}\"",
-                        $"({Point2Type} {spriteSize.X} {spriteSize.Y})",
                         $"({Point2Type} {imageSize.X} {imageSize.Y})",
                         $"({Point2Type} {sprite.Origin.X} {sprite.Origin.Y})");
                 })
@@ -171,8 +170,7 @@ import Point2 exposing ({Point2Type})
 
 type alias Sprite =
     {{ filepath : String
-    , size : {Point2Type} Int --Size of the sprite.
-    , imageSize : {Point2Type} Int --Exact dimensions of image.
+    , size : {Point2Type} Int --Exact dimensions of image.
     , origin : {Point2Type} Int
     }}
 

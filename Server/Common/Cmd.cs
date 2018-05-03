@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    public static class Console
+    public static class Cmd
     {
         public static (string Output, string Error) Run(string workingDirectory, string[] commands)
         {

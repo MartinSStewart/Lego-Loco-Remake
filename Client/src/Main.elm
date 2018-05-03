@@ -37,6 +37,7 @@ initModel =
         (Position 0 0)
         (Point2 1000 1000)
         (PlaceTiles 0)
+        False
 
 
 init : ( Model, Cmd Msg )
@@ -138,6 +139,10 @@ keyMsg keyCode model =
             else
                 Point2 0 0
 
+        -- ctrlDown =
+        --     if keyCode ==  then
+        --
+        --     else
         movement =
             Point2.multScalar unit gridToPixels |> Point2.add model.viewPosition
     in
