@@ -92,6 +92,9 @@ update windowSize msg model =
             Undo ->
                 ( model, None )
 
+            HandSelect ->
+                ( model |> .set Lenses.editMode Hand, None )
+
 
 getPosition : Point2 Int -> Toybox -> Point2 Int
 getPosition windowSize toybox =
@@ -263,7 +266,7 @@ menuView pixelPosition model =
             [ ( Sprite.toyboxRailroad, categoryOnClick TileType.Roads, category == Just TileType.Roads )
             , ( Sprite.toyboxHouse, categoryOnClick TileType.Buildings, category == Just TileType.Buildings )
             , ( Sprite.toyboxPlants, categoryOnClick TileType.Nature, category == Just TileType.Nature )
-            , ( Sprite.toyboxEraser, EraserSelect, model.editMode == Eraser )
+            , ( Sprite.toyboxEraser, ifThenElse (model.editMode == Eraser) HandSelect EraserSelect, model.editMode == Eraser )
             , ( Sprite.toyboxBomb, BombSelect, False )
             , ( Sprite.toyboxLeftArrow, Undo, False )
             ]
@@ -338,9 +341,15 @@ tileView pixelPosition model =
                                     []
                             else
                                 div [] []
+
+                        event =
+                            if model.editMode == PlaceTiles index then
+                                HandSelect
+                            else
+                                TileSelect index
                     in
                         div
-                            [ onEvent "click" (TileSelect index)
+                            [ onEvent "click" event
                             , style <|
                                 absoluteStyle (getPosition buttonIndex) tileButtonLocalSize
                             ]

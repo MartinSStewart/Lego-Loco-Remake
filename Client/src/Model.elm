@@ -36,6 +36,7 @@ type alias Toybox =
 type EditMode
     = PlaceTiles Int
     | Eraser
+    | Hand
 
 
 type ToolboxMsg
@@ -47,6 +48,7 @@ type ToolboxMsg
     | TileCategory (Maybe TileType.Category)
     | EraserSelect
     | BombSelect
+    | HandSelect
     | Undo
 
 

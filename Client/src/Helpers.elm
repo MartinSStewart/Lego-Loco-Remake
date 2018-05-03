@@ -34,6 +34,9 @@ selectedTileId model =
         Eraser ->
             Nothing
 
+        Hand ->
+            Nothing
+
 
 ifThenElse : Bool -> a -> a -> a
 ifThenElse bool ifTrue ifFalse =

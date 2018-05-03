@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 
 namespace Server
 {
-    class Server
+    public static class Server
     {
         public static ConcurrentQueue<(string Id, IClientMessage Message)> MessageQueue { get; } = new ConcurrentQueue<(string, IClientMessage)>();
 
@@ -24,11 +24,16 @@ namespace Server
 
         static void Main(string[] args)
         {
+            RunServer().Wait();
+        }
+
+        public static async Task RunServer()
+        {
             var socketServer = new WebSocketServer(5523);
             socketServer.AddWebSocketService("/socketservice", () => new SocketService());
             socketServer.Start();
 
-            Task.Run(async () =>
+            await Task.Run(async () =>
             {
                 while (true)
                 {
@@ -59,9 +64,6 @@ namespace Server
                     }
                 }
             });
-
-            Console.ReadKey(true);
-            socketServer.Stop();
         }
          
         public static void SendToUser(WebSocketServer socketServer, string id, params IServerMessage[] message)

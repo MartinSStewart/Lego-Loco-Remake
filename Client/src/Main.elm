@@ -175,6 +175,9 @@ mouseDown mouseEvent model =
             Eraser ->
                 erase (viewToGrid position model) model
 
+            Hand ->
+                ( model, Cmd.none )
+
 
 erase : Point2 Int -> Model -> ( Model, Cmd msg )
 erase gridPosition model =
@@ -252,6 +255,9 @@ mouseMove mousePos model =
                         Nothing ->
                             ( model, Cmd.none )
 
+            Hand ->
+                ( model, Cmd.none )
+
 
 drawTiles : Point2 Int -> Int -> Model -> ( List Tile, Model )
 drawTiles newTilePosition tileId model =
@@ -304,6 +310,9 @@ view model =
                             [ tileView model (Tile tileId a model.currentRotation) True 9998 ]
 
                         Eraser ->
+                            []
+
+                        Hand ->
                             []
 
                 Nothing ->
