@@ -35,7 +35,7 @@ initModel =
         Nothing
         (Position 0 0)
         (Point2 1000 1000)
-        (PlaceTiles 0)
+        (PlaceTiles (Model.TileTypeId 0))
         False
 
 
@@ -263,7 +263,7 @@ mouseMove mousePos model =
                 ( model, Cmd.none )
 
 
-drawTiles : Point2 Int -> Int -> Model -> ( List Tile, Model )
+drawTiles : Point2 Int -> Model.TileTypeId -> Model -> ( List Tile, Model )
 drawTiles newTilePosition tileId model =
     let
         tileInstance =

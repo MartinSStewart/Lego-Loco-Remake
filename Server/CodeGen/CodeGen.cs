@@ -154,7 +154,7 @@ import Monocle.Lens as Lens exposing (Lens)
         public static string GetElmFunction(string name, string type, params string[] parameters)
         {
             var returnLine = $"    {type} {parameters.ToDelimitedString("\n    ")}\n";
-            var returnLineWithLineBreaks = $"    {type}\n        {parameters.ToDelimitedString("\n        ")}\n";
+            var returnLineWithLineBreaks = $"    {type}{parameters.Select(item => "\n        " + item).ToDelimitedString("")}\n";
             return
                 $"{name} : {type}\n" +
                 $"{name} =\n" +
@@ -221,9 +221,9 @@ import TileCategory exposing (..)
 {tiles
     .Index()
     .Select(item =>
-        $"{item.Value.CodeName}Index : Int\n" +
-        $"{item.Value.CodeName}Index =\n" +
-        $"    {item.Key}\n")
+        $"{item.Value.CodeName}Id : Model.TileTypeId\n" +
+        $"{item.Value.CodeName}Id =\n" +
+        $"    Model.TileTypeId {item.Key}\n")
     .ToDelimitedString("\n\n")}
 
 tiles : List TileType

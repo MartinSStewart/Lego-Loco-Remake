@@ -11,8 +11,11 @@ import Model exposing (Tile)
 gridSize : Tile -> Point2 Int
 gridSize tile =
     let
+        (Model.TileTypeId id) =
+            tile.tileId
+
         size =
-            case List.Extra.getAt tile.tileId tiles of
+            case List.Extra.getAt id tiles of
                 Just tileType ->
                     tileType.gridSize
 

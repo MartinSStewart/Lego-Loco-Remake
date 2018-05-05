@@ -327,7 +327,7 @@ tileView pixelPosition model =
             Point2.div (Point2.sub tileButtonLocalSize tile.icon.size) 2
     in
         TileType.tiles
-            |> List.indexedMap (\index tile -> ( index, tile ))
+            |> List.indexedMap (\index tile -> ( Model.TileTypeId index, tile ))
             |> List.filter (\( index, a ) -> Just a.category == model.toolbox.tileCategory)
             |> List.indexedMap
                 (\buttonIndex ( index, a ) ->

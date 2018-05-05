@@ -205,7 +205,7 @@ readTile data =
                                         readTileData bytesLeft
                                             |> Maybe.andThen
                                                 (\( bytesLeft, tileData ) ->
-                                                    Just ( bytesLeft, Tile tileId gridPos rotation tileData )
+                                                    Just ( bytesLeft, Tile (Model.TileTypeId tileId) gridPos rotation tileData )
                                                 )
                                     )
                         )
@@ -296,10 +296,14 @@ writePoint2 point =
 
 writeTile : Tile -> ByteString
 writeTile tile =
-    writeInt tile.tileId
-        ++ writePoint2 tile.position
-        ++ writeInt tile.rotationIndex
-        ++ writeTileData tile.data
+    let
+        (Model.TileTypeId id) =
+            tile.tileId
+    in
+        writeInt id
+            ++ writePoint2 tile.position
+            ++ writeInt tile.rotationIndex
+            ++ writeTileData tile.data
 
 
 writeTileData : TileData -> ByteString

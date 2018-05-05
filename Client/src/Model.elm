@@ -28,7 +28,7 @@ type alias Sprite =
 
 
 type alias Tile =
-    { tileId : Int
+    { tileId : TileTypeId
     , position : Point2 Int
     , rotationIndex : Int
     , data : TileData
@@ -62,6 +62,10 @@ type TileTypeData
     | RailFork (Float -> Point2 Float) (Float -> Point2 Float)
 
 
+type TileTypeId
+    = TileTypeId Int
+
+
 type alias Toybox =
     { viewPosition : Point2 Int -- Position of toolbox in view coordinates
     , drag : Maybe Drag
@@ -70,7 +74,7 @@ type alias Toybox =
 
 
 type EditMode
-    = PlaceTiles Int
+    = PlaceTiles TileTypeId
     | Eraser
     | Hand
 
@@ -80,7 +84,7 @@ type ToolboxMsg
     | DragStart (Point2 Int)
     | DragAt Mouse.Position
     | DragEnd (Point2 Int)
-    | TileSelect Int
+    | TileSelect TileTypeId
     | TileCategory (Maybe Category)
     | EraserSelect
     | BombSelect

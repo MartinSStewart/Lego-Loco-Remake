@@ -15,7 +15,7 @@ import Color exposing (Color)
 import Tile
 
 
-initTile : Int -> Point2 Int -> Int -> Tile
+initTile : Model.TileTypeId -> Point2 Int -> Int -> Tile
 initTile tileTypeId position rotation =
     Tile
         tileTypeId
@@ -48,11 +48,11 @@ absoluteStyle pixelPosition pixelSize =
     ]
 
 
-selectedTileId : Model -> Maybe Int
+selectedTileId : Model -> Maybe Model.TileTypeId
 selectedTileId model =
     case model.editMode of
-        PlaceTiles int ->
-            Just int
+        PlaceTiles id ->
+            Just id
 
         Eraser ->
             Nothing
@@ -155,21 +155,29 @@ collisionsAt gridPosition gridSize model =
         model.tiles
 
 
-getTileOrDefault : Int -> TileType
-getTileOrDefault tileId =
-    case List.Extra.getAt tileId TileType.tiles of
-        Just tile ->
-            tile
+getTileOrDefault : Model.TileTypeId -> TileType
+getTileOrDefault tileTypeId =
+    let
+        (Model.TileTypeId id) =
+            tileTypeId
+    in
+        case List.Extra.getAt id TileType.tiles of
+            Just tile ->
+                tile
 
-        Nothing ->
-            Debug.crash "Nonexistant tile id used." TileType.sidewalk
+            Nothing ->
+                Debug.crash "Nonexistant tile id used." TileType.sidewalk
 
 
 getTileTypeByTile : Tile -> TileType
 getTileTypeByTile tileInstance =
-    case List.Extra.getAt tileInstance.tileId TileType.tiles of
-        Just tile ->
-            tile
+    let
+        (Model.TileTypeId id) =
+            tileInstance.tileId
+    in
+        case List.Extra.getAt id TileType.tiles of
+            Just tile ->
+                tile
 
-        Nothing ->
-            TileType.sidewalk
+            Nothing ->
+                TileType.sidewalk

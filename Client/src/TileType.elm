@@ -99,53 +99,53 @@ roadRailCrossing =
         (Rail (\t -> Point2 1.5 2 |> Point2.rsub (Point2 1.5 0) |> Point2.rmultScalar t |> Point2.add (Point2 1.5 0)))
 
 
-sidewalkIndex : Int
-sidewalkIndex =
-    0
+sidewalkId : Model.TileTypeId
+sidewalkId =
+    Model.TileTypeId 0
 
 
-roadStraightIndex : Int
-roadStraightIndex =
-    1
+roadStraightId : Model.TileTypeId
+roadStraightId =
+    Model.TileTypeId 1
 
 
-roadTurnIndex : Int
-roadTurnIndex =
-    2
+roadTurnId : Model.TileTypeId
+roadTurnId =
+    Model.TileTypeId 2
 
 
-redHouseIndex : Int
-redHouseIndex =
-    3
+redHouseId : Model.TileTypeId
+redHouseId =
+    Model.TileTypeId 3
 
 
-railStraightIndex : Int
-railStraightIndex =
-    4
+railStraightId : Model.TileTypeId
+railStraightId =
+    Model.TileTypeId 4
 
 
-railTurnIndex : Int
-railTurnIndex =
-    5
+railTurnId : Model.TileTypeId
+railTurnId =
+    Model.TileTypeId 5
 
 
-railSplitRightIndex : Int
-railSplitRightIndex =
-    6
+railSplitRightId : Model.TileTypeId
+railSplitRightId =
+    Model.TileTypeId 6
 
 
-railSplitLeftIndex : Int
-railSplitLeftIndex =
-    7
+railSplitLeftId : Model.TileTypeId
+railSplitLeftId =
+    Model.TileTypeId 7
 
 
-roadRailCrossingIndex : Int
-roadRailCrossingIndex =
-    8
+roadRailCrossingId : Model.TileTypeId
+roadRailCrossingId =
+    Model.TileTypeId 8
 
 
 tiles : List TileType
-tiles =
+tiles = 
     [ sidewalk
     , roadStraight
     , roadTurn
