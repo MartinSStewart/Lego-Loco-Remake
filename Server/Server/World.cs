@@ -66,7 +66,7 @@ namespace Server
         }
 
         public void AddTile(string tileTypeName, Int2 gridPosition, int rotation = 0) =>
-            AddTile(new Tile(TileTypes.FindIndex(item => item.CodeName == tileTypeName), gridPosition, rotation));
+            AddTile(CreateFromName(tileTypeName, gridPosition, rotation));
 
         public IEnumerable<Tile> GetRegion(Int2 superGridTopLeft, Int2 superGridSize) => 
             _superGrid
@@ -91,6 +91,12 @@ namespace Server
             return tile.Rotation % 2 == 0
                 ? size
                 : size.Transpose;
+        }
+
+        public Tile CreateFromName(string tileTypeCodeName, Int2 gridPosition, int rotation)
+        {
+            var index = TileTypes.FindIndex(item => item.CodeName == tileTypeCodeName);
+            return new Tile(index, gridPosition, rotation, TileTypes[index].Data.GetDefaultTileData());
         }
 
         public static bool RectanglesOverlap(Int2 topLeft0, Int2 size0, Int2 topLeft1, Int2 size1)

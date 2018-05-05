@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Common;
+using Common.TileData;
 
 namespace Server
 {
@@ -16,14 +17,16 @@ namespace Server
         /// Number of clockwise 90 degree turns applied to this tile.
         /// </summary>
         public int Rotation { get; }
+        public ITileData Data { get; }
 
-        public Tile(int tileTypeId, Int2 gridPosition, int rotation)
+        public Tile(int tileTypeId, Int2 gridPosition, int rotation, ITileData data)
         {
             DebugEx.Assert(tileTypeId >= 0, "Tile ids must be non-negative.");
             DebugEx.Assert(rotation >= 0 && rotation < 4);
             TileTypeId = tileTypeId;
             GridPosition = gridPosition;
             Rotation = rotation;
+            Data = data;
         }
     }
 }

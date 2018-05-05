@@ -34,7 +34,7 @@ namespace Tests
             var result = world.GetRegion(new Int2(superGridX, superGridY), new Int2(superGridWidth, SuperGridHeight));
 
             var expected = tileInRegion
-                ? new[] { new Tile(world.TileTypes.FindIndex(item => item.CodeName == "redHouse"), new Int2(tileX, tileY), 0) }
+                ? new[] { world.CreateFromName("redHouse", new Int2(tileX, tileY), 0) }
                 : new Tile[0];
             Assert.AreEqual(expected, result);
         }
@@ -131,10 +131,12 @@ namespace Tests
 
         public static Tile RandomTile(Random random, Int2 min, Int2 max)
         {
+            var index = random.Next(_tileTypes.Count);
             return new Tile(
-                random.Next(_tileTypes.Count),
+                index,
                 new Int2(random.Next(min.X, max.X), random.Next(min.Y, max.Y)), 
-                random.Next(3));
+                random.Next(3),
+                _tileTypes[index].Data.GetDefaultTileData());
         }
 
         public static Int2 RandomInt2(Random random, Int2 min, Int2 max) =>

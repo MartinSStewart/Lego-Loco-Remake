@@ -18,19 +18,19 @@ version =
 
 send : List Action -> Cmd msg
 send actions =
-    let
-        _ =
-            Debug.log "Sending" actions
-    in
-        case actions of
-            head :: rest ->
-                writeInt version
-                    ++ writeList writeAction actions
-                    |> encode
-                    |> WebSocket.send serverUrl
+    -- let
+    --     _ =
+    --         Debug.log "Sending" actions
+    -- in
+    case actions of
+        head :: rest ->
+            writeInt version
+                ++ writeList writeAction actions
+                |> encode
+                |> WebSocket.send serverUrl
 
-            _ ->
-                Cmd.none
+        _ ->
+            Cmd.none
 
 
 type Action
@@ -166,6 +166,21 @@ readInt data =
             Nothing
 
 
+readBool : ByteString -> Maybe ( ByteString, Bool )
+readBool data =
+    case data of
+        a :: rest ->
+            if a == 0 then
+                Just ( rest, False )
+            else if a == 1 then
+                Just ( rest, True )
+            else
+                Nothing
+
+        _ ->
+            Nothing
+
+
 readPoint2 : ByteString -> Maybe ( ByteString, Point2 Int )
 readPoint2 data =
     readInt data
@@ -187,9 +202,33 @@ readTile data =
                             readInt bytesLeft
                                 |> Maybe.andThen
                                     (\( bytesLeft, rotation ) ->
-                                        Just ( bytesLeft, Tile tileId gridPos rotation )
+                                        readTileData bytesLeft
+                                            |> Maybe.andThen
+                                                (\( bytesLeft, tileData ) ->
+                                                    Just ( bytesLeft, Tile tileId gridPos rotation tileData )
+                                                )
                                     )
                         )
+            )
+
+
+readTileData : ByteString -> Maybe ( ByteString, TileData )
+readTileData data =
+    readInt data
+        |> Maybe.andThen
+            (\( bytesLeft, tileDataType ) ->
+                if tileDataType == 0 then
+                    Just ( bytesLeft, TileBasic )
+                else if tileDataType == 1 then
+                    Just ( bytesLeft, TileRail )
+                else if tileDataType == 2 then
+                    readBool bytesLeft
+                        |> Maybe.andThen
+                            (\( bytesLeft, bool ) ->
+                                Just ( bytesLeft, TileRailFork bool )
+                            )
+                else
+                    Nothing
             )
 
 
@@ -200,6 +239,14 @@ writeByte byte =
             inByteRange byte |> assert "Value is outside byte range"
     in
         [ Bitwise.and byte 0xFF ]
+
+
+writeBool : Bool -> ByteString
+writeBool bool =
+    if bool then
+        writeByte 1
+    else
+        writeByte 0
 
 
 writeInt : Int -> ByteString
@@ -249,7 +296,23 @@ writePoint2 point =
 
 writeTile : Tile -> ByteString
 writeTile tile =
-    writeInt tile.tileId ++ writePoint2 tile.position ++ writeInt tile.rotationIndex
+    writeInt tile.tileId
+        ++ writePoint2 tile.position
+        ++ writeInt tile.rotationIndex
+        ++ writeTileData tile.data
+
+
+writeTileData : TileData -> ByteString
+writeTileData tileData =
+    case tileData of
+        TileBasic ->
+            writeInt 0
+
+        TileRail ->
+            writeInt 1
+
+        TileRailFork isOn ->
+            writeInt 2 ++ writeBool isOn
 
 
 inIntRange : Int -> Bool

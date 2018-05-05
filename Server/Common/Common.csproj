@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Equ, Version=2.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Equ.2.0.2\lib\netstandard1.5\Equ.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -52,10 +55,14 @@
   <ItemGroup>
     <Compile Include="Cmd.cs" />
     <Compile Include="DebugEx.cs" />
+    <Compile Include="Double2.cs" />
+    <Compile Include="ElmFunc.cs" />
     <Compile Include="Int2.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sprite.cs" />
+    <Compile Include="TileData\TileData.cs" />
     <Compile Include="TileType.cs" />
+    <Compile Include="TileTypeData\TileTypeData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

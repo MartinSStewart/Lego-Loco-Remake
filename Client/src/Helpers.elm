@@ -15,6 +15,28 @@ import Color exposing (Color)
 import Tile
 
 
+initTile : Int -> Point2 Int -> Int -> Tile
+initTile tileTypeId position rotation =
+    Tile
+        tileTypeId
+        position
+        rotation
+        (getTileOrDefault tileTypeId |> .data |> initTileData)
+
+
+initTileData : TileTypeData -> TileData
+initTileData tileTypeData =
+    case tileTypeData of
+        Basic ->
+            TileBasic
+
+        Rail _ ->
+            TileRail
+
+        RailFork _ _ ->
+            TileRailFork False
+
+
 absoluteStyle : Point2 number -> Point2 number -> List ( String, String )
 absoluteStyle pixelPosition pixelSize =
     [ ( "position", "absolute" )
@@ -140,11 +162,11 @@ getTileOrDefault tileId =
             tile
 
         Nothing ->
-            TileType.sidewalk
+            Debug.crash "Nonexistant tile id used." TileType.sidewalk
 
 
-getTileByTileInstance : Tile -> TileType
-getTileByTileInstance tileInstance =
+getTileTypeByTile : Tile -> TileType
+getTileTypeByTile tileInstance =
     case List.Extra.getAt tileInstance.tileId TileType.tiles of
         Just tile ->
             tile

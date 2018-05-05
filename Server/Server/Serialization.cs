@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.TileData;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,11 +36,35 @@ namespace Server
             return stream;
         }
 
+        public static MemoryStream WriteBool(this MemoryStream stream, bool value)
+        {
+            stream.WriteByte(value ? (byte)1 : (byte)0);
+            return stream;
+        }
+
         public static MemoryStream WriteTile(this MemoryStream stream, Tile tile) => 
             stream
                 .WriteInt((int)tile.TileTypeId)
                 .WriteInt2(tile.GridPosition)
-                .WriteInt(tile.Rotation);
+                .WriteInt(tile.Rotation)
+                .WriteTileData(tile.Data);
+
+        public static MemoryStream WriteTileData(this MemoryStream stream, ITileData tileData)
+        {
+            switch (tileData)
+            {
+                case TileBasic _:
+                    return stream.WriteInt(0);
+                case TileRail _:
+                    return stream.WriteInt(1);
+                case TileRailFork fork:
+                    return stream
+                        .WriteInt(2)
+                        .WriteBool(fork.IsOn);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
 
         public static MemoryStream WriteList<T>(this MemoryStream stream, ICollection<T> list, Func<MemoryStream, T, MemoryStream> writer)
         {
@@ -105,6 +130,27 @@ namespace Server
             return BitConverter.ToInt32(buffer, 0);
         }
 
+        public static bool ReadBool(this MemoryStream stream)
+        {
+            var size = sizeof(bool);
+            var buffer = new byte[size];
+            var bytesRead = stream.Read(buffer, 0, size);
+            if (bytesRead != size)
+            {
+                throw new DecodeException();
+            }
+
+            switch (buffer[0])
+            {
+                case 0:
+                    return false;
+                case 1:
+                    return true;
+                default:
+                    throw new DecodeException();
+            }
+        }
+
         public static Int2 ReadInt2(this MemoryStream stream)
         {
             var x = stream.ReadInt();
@@ -117,7 +163,24 @@ namespace Server
             var tileId = stream.ReadInt();
             var gridPos = stream.ReadInt2();
             var rotation = stream.ReadInt();
-            return new Tile(tileId, gridPos, rotation);
+            var tileData = stream.ReadTileData();
+            return new Tile(tileId, gridPos, rotation, tileData);
+        }
+
+        public static ITileData ReadTileData(this MemoryStream stream)
+        {
+            var tileDataType = stream.ReadInt();
+            switch (tileDataType)
+            {
+                case 0:
+                    return new TileBasic();
+                case 1:
+                    return new TileRail();
+                case 2:
+                    return new TileRailFork(stream.ReadBool());
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         public static List<T> ReadList<T>(this MemoryStream stream, Func<MemoryStream, T> reader)

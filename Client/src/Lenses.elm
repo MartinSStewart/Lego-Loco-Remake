@@ -31,6 +31,11 @@ currentTile =
     Lens .currentTile (\value item -> { item | currentTile = value })
 
 
+data : Lens { b | data : a } a
+data =
+    Lens .data (\value item -> { item | data = value })
+
+
 drag : Lens { b | drag : a } a
 drag =
     Lens .drag (\value item -> { item | drag = value })
@@ -99,11 +104,6 @@ start =
 tileCategory : Lens { b | tileCategory : a } a
 tileCategory =
     Lens .tileCategory (\value item -> { item | tileCategory = value })
-
-
-tileData : Lens { b | tileData : a } a
-tileData =
-    Lens .tileData (\value item -> { item | tileData = value })
 
 
 tileId : Lens { b | tileId : a } a

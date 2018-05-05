@@ -160,7 +160,7 @@ mouseDown mouseEvent model =
             PlaceTiles tileId ->
                 let
                     tile =
-                        getTileOrDefault tileId
+                        Helpers.getTileOrDefault tileId
 
                     tilePos =
                         viewToTileGrid
@@ -169,7 +169,7 @@ mouseDown mouseEvent model =
                             tile
 
                     tileInstance =
-                        Tile tileId tilePos model.currentRotation
+                        Helpers.initTile tileId tilePos model.currentRotation
 
                     newModel =
                         model |> lastTilePosition.set (Just tilePos)
@@ -226,7 +226,7 @@ mouseMove mousePos model =
                 let
                     tilePos =
                         tileId
-                            |> getTileOrDefault
+                            |> Helpers.getTileOrDefault
                             |> viewToTileGrid mousePos model
 
                     ( tiles, newModel ) =
@@ -267,7 +267,7 @@ drawTiles : Point2 Int -> Int -> Model -> ( List Tile, Model )
 drawTiles newTilePosition tileId model =
     let
         tileInstance =
-            Tile
+            Helpers.initTile
                 tileId
                 newTilePosition
                 model.currentRotation
@@ -311,7 +311,7 @@ view model =
                 Just a ->
                     case model.editMode of
                         PlaceTiles tileId ->
-                            [ tileView model (Tile tileId a model.currentRotation) True 9998 ]
+                            [ tileView model (Helpers.initTile tileId a model.currentRotation) True 9998 ]
 
                         Eraser ->
                             []
@@ -347,7 +347,7 @@ tileView : Model -> Tile -> Bool -> Int -> Html msg
 tileView model tileInstance seeThrough zIndex =
     let
         tile =
-            getTileByTileInstance tileInstance
+            Helpers.getTileTypeByTile tileInstance
 
         sprite =
             rotSpriteGetAt tile.sprite tileInstance.rotationIndex

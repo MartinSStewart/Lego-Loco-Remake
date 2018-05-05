@@ -5,7 +5,6 @@ import Expect
 import Point2 exposing (..)
 import Server exposing (..)
 import BinaryBase64
-import Model exposing (Tile)
 import Fuzz exposing (list, int)
 import Bitwise
 import Main exposing (initModel)
@@ -27,15 +26,21 @@ all =
                 Expect.equal "a" (String.left 1 "abcdefg")
         , test "Tiles right on top of eachother should collide." <|
             \_ ->
-                collidesWith (Tile redHouseIndex Point2.zero 0) (Tile 0 Point2.zero 0)
+                collidesWith
+                    (Helpers.initTile redHouseIndex Point2.zero 0)
+                    (Helpers.initTile 0 Point2.zero 0)
                     |> Expect.equal True
         , test "Tiles next to eachother should not collide." <|
             \_ ->
-                collidesWith (Tile redHouseIndex Point2.zero 0) (Tile 0 (Point2 3 0) 0)
+                collidesWith
+                    (Helpers.initTile redHouseIndex Point2.zero 0)
+                    (Helpers.initTile 0 (Point2 3 0) 0)
                     |> Expect.equal False
         , test "Tiles overlapping should collide." <|
             \_ ->
-                collidesWith (Tile redHouseIndex Point2.zero 0) (Tile redHouseIndex (Point2 2 -2) 0)
+                collidesWith
+                    (Helpers.initTile redHouseIndex Point2.zero 0)
+                    (Helpers.initTile redHouseIndex (Point2 2 -2) 0)
                     |> Expect.equal True
         , test "Rectangles next to eachother should not collide." <|
             \_ ->
@@ -61,6 +66,16 @@ all =
             \_ -> Server.readInt [ 255, 255, 255, 255 ] |> Expect.equal (Just ( [], -1 ))
         , test "ReadInt -2" <|
             \_ -> Server.readInt [ 254, 255, 255, 255 ] |> Expect.equal (Just ( [], -2 ))
+        , fuzz2 Fuzz.bool (list int) "readBool undoes writeBool" <|
+            \a b ->
+                let
+                    extraBytes =
+                        getBytes b
+                in
+                    writeBool a
+                        ++ extraBytes
+                        |> readBool
+                        |> Expect.equal (Just ( extraBytes, a ))
         , fuzz2 int (list int) "readInt undoes writeInt" <|
             \a b ->
                 let
@@ -87,11 +102,11 @@ all =
                         ++ extraBytes
                         |> readList readInt
                         |> Expect.equal (Just ( extraBytes, input ))
-        , fuzz5 int int int int (list int) "readTile undoes writeTile" <|
+        , fuzz5 (List.length tiles - 1 |> Fuzz.intRange 0) int int int (list int) "readTile undoes writeTile" <|
             \a b c d e ->
                 let
                     input =
-                        Tile (fixInt a) (Point2 (fixInt b) (fixInt c)) (fixInt d)
+                        Helpers.initTile (fixInt a) (Point2 (fixInt b) (fixInt c)) (fixInt d)
 
                     extraBytes =
                         getBytes e
@@ -103,8 +118,8 @@ all =
         , test "Placing a house to the right of a sidewalk tile does not remove the sidewalk." <|
             \_ ->
                 Main.initModel
-                    |> modelAddTile (Tile sidewalkIndex Point2.zero 0)
-                    |> modelAddTile (Tile redHouseIndex (Point2 1 0) 0)
+                    |> modelAddTile (Helpers.initTile sidewalkIndex Point2.zero 0)
+                    |> modelAddTile (Helpers.initTile redHouseIndex (Point2 1 0) 0)
                     |> .tiles
                     |> List.length
                     |> Expect.equal 2

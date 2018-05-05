@@ -151,10 +151,18 @@ import Monocle.Lens as Lens exposing (Lens)
 {codeBody}";
         }
 
-        public static string GetElmFunction(string name, string type, params string[] parameters) =>
-            $"{name} : {type}\n" +
-            $"{name} =\n" +
-            $"    {type} {parameters.ToDelimitedString(" ")}\n";
+        public static string GetElmFunction(string name, string type, params string[] parameters)
+        {
+            var returnLine = $"    {type} {parameters.ToDelimitedString("\n    ")}\n";
+            var returnLineWithLineBreaks = $"    {type}\n        {parameters.ToDelimitedString("\n        ")}\n";
+            return
+                $"{name} : {type}\n" +
+                $"{name} =\n" +
+                (returnLine.Length <= 80 
+                    ? returnLine 
+                    : returnLineWithLineBreaks);
+        }
+            
 
         public static string GetSpriteCode(IEnumerable<Sprite> sprites, string moduleName)
         {
@@ -196,7 +204,8 @@ import Model exposing (Sprite)
                         $"(Rot{tile.Sprites.Count} {tile.Sprites.Select(item => "Sprite." + item).ToDelimitedString(" ")})",
                         $"({Point2Type} {tile.GridSize.X} {tile.GridSize.Y})",
                         "Sprite." + tile.ToolboxIconSprite,
-                        TileCategoryNames[tile.Category]))
+                        TileCategoryNames[tile.Category],
+                        tile.Data.GetElmParameter()))
                 .ToDelimitedString("\n\n");
 
             return

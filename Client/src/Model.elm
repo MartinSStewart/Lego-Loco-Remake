@@ -31,8 +31,7 @@ type alias Tile =
     { tileId : Int
     , position : Point2 Int
     , rotationIndex : Int
-
-    -- , tileData : TileData
+    , data : TileData
     }
 
 
@@ -41,6 +40,7 @@ type alias TileType =
     , gridSize : Point2 Int
     , icon : Sprite
     , category : Category
+    , data : TileTypeData
     }
 
 
@@ -51,9 +51,15 @@ type RotSprite
 
 
 type TileData
+    = TileBasic
+    | TileRail
+    | TileRailFork Bool
+
+
+type TileTypeData
     = Basic
     | Rail (Float -> Point2 Float)
-    | RailSplit (Float -> Point2 Float) (Float -> Point2 Float)
+    | RailFork (Float -> Point2 Float) (Float -> Point2 Float)
 
 
 type alias Toybox =
