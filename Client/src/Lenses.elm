@@ -101,6 +101,11 @@ tileCategory =
     Lens .tileCategory (\value item -> { item | tileCategory = value })
 
 
+tileData : Lens { b | tileData : a } a
+tileData =
+    Lens .tileData (\value item -> { item | tileData = value })
+
+
 tileId : Lens { b | tileId : a } a
 tileId =
     Lens .tileId (\value item -> { item | tileId = value })

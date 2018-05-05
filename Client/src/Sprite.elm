@@ -4,13 +4,7 @@
 module Sprite exposing (..)
 
 import Point2 exposing (Point2)
-
-
-type alias Sprite =
-    { filepath : String
-    , size : Point2 Int --Exact dimensions of image.
-    , origin : Point2 Int
-    }
+import Model exposing (Sprite)
 
 
 sidewalk : Sprite

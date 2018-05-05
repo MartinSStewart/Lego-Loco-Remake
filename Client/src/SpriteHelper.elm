@@ -1,6 +1,6 @@
 module SpriteHelper exposing (..)
 
-import Sprite exposing (Sprite)
+import Model exposing (Sprite)
 import Html exposing (Html, div)
 import Html.Attributes exposing (src, style)
 import Helpers exposing (..)

@@ -8,6 +8,7 @@ import Html.Events as Events exposing (on)
 import Json.Decode as Decode
 import Helpers
 import Mouse
+import TileCategory
 import TileType
 import Sprite
 import Lenses
@@ -263,9 +264,9 @@ menuView pixelPosition model =
             TileCategory (ifThenElse (category == Just buttonsCategory) Nothing (Just buttonsCategory))
 
         buttons =
-            [ ( Sprite.toyboxRailroad, categoryOnClick TileType.Roads, category == Just TileType.Roads )
-            , ( Sprite.toyboxHouse, categoryOnClick TileType.Buildings, category == Just TileType.Buildings )
-            , ( Sprite.toyboxPlants, categoryOnClick TileType.Nature, category == Just TileType.Nature )
+            [ ( Sprite.toyboxRailroad, categoryOnClick TileCategory.Roads, category == Just TileCategory.Roads )
+            , ( Sprite.toyboxHouse, categoryOnClick TileCategory.Buildings, category == Just TileCategory.Buildings )
+            , ( Sprite.toyboxPlants, categoryOnClick TileCategory.Nature, category == Just TileCategory.Nature )
             , ( Sprite.toyboxEraser, ifThenElse (model.editMode == Eraser) HandSelect EraserSelect, model.editMode == Eraser )
             , ( Sprite.toyboxBomb, BombSelect, False )
             , ( Sprite.toyboxLeftArrow, Undo, False )

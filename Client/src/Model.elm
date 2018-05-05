@@ -2,7 +2,7 @@ module Model exposing (..)
 
 import Point2 exposing (Point2)
 import Mouse exposing (Position)
-import TileType
+import TileCategory exposing (..)
 
 
 type alias Model =
@@ -20,17 +20,46 @@ type alias Model =
     }
 
 
+type alias Sprite =
+    { filepath : String
+    , size : Point2 Int --Exact dimensions of image.
+    , origin : Point2 Int
+    }
+
+
 type alias Tile =
     { tileId : Int
     , position : Point2 Int
     , rotationIndex : Int
+
+    -- , tileData : TileData
     }
+
+
+type alias TileType =
+    { sprite : RotSprite
+    , gridSize : Point2 Int
+    , icon : Sprite
+    , category : Category
+    }
+
+
+type RotSprite
+    = Rot1 Sprite
+    | Rot2 Sprite Sprite
+    | Rot4 Sprite Sprite Sprite Sprite
+
+
+type TileData
+    = Basic
+    | Rail (Float -> Point2 Float)
+    | RailSplit (Float -> Point2 Float) (Float -> Point2 Float)
 
 
 type alias Toybox =
     { viewPosition : Point2 Int -- Position of toolbox in view coordinates
     , drag : Maybe Drag
-    , tileCategory : Maybe TileType.Category
+    , tileCategory : Maybe Category
     }
 
 
@@ -46,7 +75,7 @@ type ToolboxMsg
     | DragAt Mouse.Position
     | DragEnd (Point2 Int)
     | TileSelect Int
-    | TileCategory (Maybe TileType.Category)
+    | TileCategory (Maybe Category)
     | EraserSelect
     | BombSelect
     | HandSelect

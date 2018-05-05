@@ -15,7 +15,6 @@ import Server
 import Sprite
 import Task
 import TileHelper exposing (..)
-import TileType
 import Toybox
 import Window
 import Tile
@@ -69,7 +68,7 @@ viewToGrid viewPoint model =
         |> Point2.floor
 
 
-viewToTileGrid : Point2 Int -> Model -> TileType.TileType -> Point2 Int
+viewToTileGrid : Point2 Int -> Model -> TileType -> Point2 Int
 viewToTileGrid viewPoint model tile =
     tile.gridSize
         |> Point2.rdiv 2

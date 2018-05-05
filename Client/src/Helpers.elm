@@ -9,6 +9,7 @@ import Lenses exposing (..)
 import Monocle.Lens as Lens
 import List.Extra
 import TileType
+import Model exposing (TileType)
 import Mouse exposing (Position)
 import Color exposing (Color)
 import Tile
@@ -132,7 +133,7 @@ collisionsAt gridPosition gridSize model =
         model.tiles
 
 
-getTileOrDefault : Int -> TileType.TileType
+getTileOrDefault : Int -> TileType
 getTileOrDefault tileId =
     case List.Extra.getAt tileId TileType.tiles of
         Just tile ->
@@ -142,7 +143,7 @@ getTileOrDefault tileId =
             TileType.sidewalk
 
 
-getTileByTileInstance : Tile -> TileType.TileType
+getTileByTileInstance : Tile -> TileType
 getTileByTileInstance tileInstance =
     case List.Extra.getAt tileInstance.tileId TileType.tiles of
         Just tile ->

@@ -17,8 +17,16 @@ namespace CodeGen
     public static class CodeGen
     {
         public static string ClientDirectory => Path.Combine("..", "..", "..", "..", "Client");
-        public const string CodeHeader = "{- Auto generated code. -}\n\n";
+        
         public const string Point2Type = "Point2";
+
+        public static ImmutableDictionary<TileCategory, string> TileCategoryNames { get; } =
+            new Dictionary<TileCategory, string>
+            {
+                [TileCategory.Buildings] = "Buildings",
+                [TileCategory.Nature] = "Nature",
+                [TileCategory.Roads] = "Roads"
+            }.ToImmutableDictionary();
 
         static void Main(string[] args)
         {
@@ -27,6 +35,7 @@ namespace CodeGen
 
         public static void GenerateCodeToFiles()
         {
+            var tileCategoryModule = "TileCategory";
             var configModule = "Config";
             var spriteModule = "Sprite";
             var tileTypeModule = "TileType";
@@ -48,11 +57,20 @@ namespace CodeGen
                 },
                 lensModule);
 
+            File.WriteAllText(Path.Combine(sourceDirectory, $"{tileCategoryModule}.elm"), GetTileCategoryCode(tileCategoryModule));
             File.WriteAllText(Path.Combine(sourceDirectory, $"{configModule}.elm"), configCode);
             File.WriteAllText(Path.Combine(sourceDirectory, $"{spriteModule}.elm"), spriteCode);
             File.WriteAllText(Path.Combine(sourceDirectory, $"{tileTypeModule}.elm"), tileTypeCode);
             File.WriteAllText(Path.Combine(sourceDirectory, $"{lensModule}.elm"), lensCode);
         }
+
+        public static string HeaderAndModule(string moduleName) => $"{{- Auto generated code. -}}\n\n\nmodule {moduleName} exposing (..)\n";
+
+        public static string GetTileCategoryCode(string moduleName) => 
+$@"{HeaderAndModule(moduleName)}
+
+type Category
+    = {TileCategoryNames.Values.OrderBy(item => item).ToDelimitedString("\n    | ")}";
 
         public static string GetConfigCode(string moduleName)
         {
@@ -71,9 +89,7 @@ namespace CodeGen
                     .ToDelimitedString("\n\n");
 
             return
-$@"{CodeHeader}
-module {moduleName} exposing (..)
-
+$@"{HeaderAndModule(moduleName)}
 
 messageVersion : Int
 messageVersion =
@@ -128,9 +144,7 @@ superGridSize =
                 .ToDelimitedString("\n\n");
 
             return
-$@"{CodeHeader}
-module {moduleName} exposing (..)
-
+$@"{HeaderAndModule(moduleName)}
 import Monocle.Lens as Lens exposing (Lens)
 
 
@@ -162,17 +176,9 @@ import Monocle.Lens as Lens exposing (Lens)
                 .ToDelimitedString("\n\n");
 
             return
-$@"{CodeHeader}
-module {moduleName} exposing (..)
-
+$@"{HeaderAndModule(moduleName)}
 import Point2 exposing ({Point2Type})
-
-
-type alias Sprite =
-    {{ filepath : String
-    , size : {Point2Type} Int --Exact dimensions of image.
-    , origin : {Point2Type} Int
-    }}
+import Model exposing (Sprite)
 
 
 {spriteCode}";
@@ -180,13 +186,7 @@ type alias Sprite =
 
         public static string GetTileTypeCode(IEnumerable<TileType> tiles, string moduleName)
         {
-            var tileCategoryNames =
-                new Dictionary<TileCategory, string>
-                {
-                    [TileCategory.Buildings] = "Buildings",
-                    [TileCategory.Nature] = "Nature",
-                    [TileCategory.Roads] = "Roads"
-                };
+            
 
             var tileCode = tiles
                 .Select(tile =>
@@ -196,33 +196,15 @@ type alias Sprite =
                         $"(Rot{tile.Sprites.Count} {tile.Sprites.Select(item => "Sprite." + item).ToDelimitedString(" ")})",
                         $"({Point2Type} {tile.GridSize.X} {tile.GridSize.Y})",
                         "Sprite." + tile.ToolboxIconSprite,
-                        tileCategoryNames[tile.Category]))
+                        TileCategoryNames[tile.Category]))
                 .ToDelimitedString("\n\n");
 
             return
-$@"{CodeHeader}
-module {moduleName} exposing (..)
-
+$@"{HeaderAndModule(moduleName)}
+import Sprite exposing (..)
 import Point2 exposing ({Point2Type})
-import Sprite exposing (Sprite)
-
-
-type alias TileType =
-    {{ sprite : RotSprite
-    , gridSize : {Point2Type} Int
-    , icon : Sprite
-    , category : Category
-    }}
-
-
-type RotSprite
-    = Rot1 Sprite
-    | Rot2 Sprite Sprite
-    | Rot4 Sprite Sprite Sprite Sprite
-
-
-type Category
-    = {tileCategoryNames.Values.OrderBy(item => item).ToDelimitedString("\n    | ")}
+import Model exposing (..)
+import TileCategory exposing (..)
 
 
 {tileCode}

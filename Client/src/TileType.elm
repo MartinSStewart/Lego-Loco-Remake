@@ -3,28 +3,10 @@
 
 module TileType exposing (..)
 
+import Sprite exposing (..)
 import Point2 exposing (Point2)
-import Sprite exposing (Sprite)
-
-
-type alias TileType =
-    { sprite : RotSprite
-    , gridSize : Point2 Int
-    , icon : Sprite
-    , category : Category
-    }
-
-
-type RotSprite
-    = Rot1 Sprite
-    | Rot2 Sprite Sprite
-    | Rot4 Sprite Sprite Sprite Sprite
-
-
-type Category
-    = Buildings
-    | Nature
-    | Roads
+import Model exposing (..)
+import TileCategory exposing (..)
 
 
 sidewalk : TileType
@@ -59,17 +41,17 @@ railStraight =
 
 railTurn : TileType
 railTurn =
-    TileType (Rot4 Sprite.railTurnLeftUp Sprite.railTurnLeftDown Sprite.railTurnRightDown Sprite.railTurnRightUp) (Point2 2 2) Sprite.railTurnLeftUp Roads
+    TileType (Rot4 Sprite.railTurnLeftUp Sprite.railTurnLeftDown Sprite.railTurnRightDown Sprite.railTurnRightUp) (Point2 3 3) Sprite.railTurnLeftUp Roads
 
 
 railSplitRight : TileType
 railSplitRight =
-    TileType (Rot4 Sprite.railSplitVerticalLeftUpOff Sprite.railSplitHorizontalLeftDownOff Sprite.railSplitVerticalRightDownOff Sprite.railSplitHorizontalRightUpOff) (Point2 2 2) Sprite.railSplitVerticalLeftUpOff Roads
+    TileType (Rot4 Sprite.railSplitVerticalLeftUpOff Sprite.railSplitHorizontalLeftDownOff Sprite.railSplitVerticalRightDownOff Sprite.railSplitHorizontalRightUpOff) (Point2 3 3) Sprite.railSplitVerticalLeftUpOff Roads
 
 
 railSplitLeft : TileType
 railSplitLeft =
-    TileType (Rot4 Sprite.railSplitHorizontalLeftUpOff Sprite.railSplitVerticalLeftDownOff Sprite.railSplitHorizontalRightDownOff Sprite.railSplitVerticalRightUpOff) (Point2 2 2) Sprite.railSplitHorizontalLeftUpOff Roads
+    TileType (Rot4 Sprite.railSplitHorizontalLeftUpOff Sprite.railSplitVerticalLeftDownOff Sprite.railSplitHorizontalRightDownOff Sprite.railSplitVerticalRightUpOff) (Point2 3 3) Sprite.railSplitHorizontalLeftUpOff Roads
 
 
 sidewalkIndex : Int

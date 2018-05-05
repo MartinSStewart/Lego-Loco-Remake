@@ -44,9 +44,9 @@ namespace Common
 
                 // Rail
                 new TileType("railStraight", new Int2(1, 1), "railHorizontal", new[] { "railHorizontal", "railVertical" }, TileCategory.Roads),
-                new TileType("railTurn", new Int2(2, 2), "railTurnLeftUp", new[] { "railTurnLeftUp", "railTurnLeftDown", "railTurnRightDown", "railTurnRightUp" }, TileCategory.Roads),
-                new TileType("railSplitRight", new Int2(2, 2), "railSplitVerticalLeftUpOff", new[] { "railSplitVerticalLeftUpOff", "railSplitHorizontalLeftDownOff", "railSplitVerticalRightDownOff", "railSplitHorizontalRightUpOff" }, TileCategory.Roads),
-                new TileType("railSplitLeft", new Int2(2, 2), "railSplitHorizontalLeftUpOff", new[] { "railSplitHorizontalLeftUpOff", "railSplitVerticalLeftDownOff", "railSplitHorizontalRightDownOff", "railSplitVerticalRightUpOff" }, TileCategory.Roads),
+                new TileType("railTurn", new Int2(3, 3), "railTurnLeftUp", new[] { "railTurnLeftUp", "railTurnLeftDown", "railTurnRightDown", "railTurnRightUp" }, TileCategory.Roads),
+                new TileType("railSplitRight", new Int2(3, 3), "railSplitVerticalLeftUpOff", new[] { "railSplitVerticalLeftUpOff", "railSplitHorizontalLeftDownOff", "railSplitVerticalRightDownOff", "railSplitHorizontalRightUpOff" }, TileCategory.Roads),
+                new TileType("railSplitLeft", new Int2(3, 3), "railSplitHorizontalLeftUpOff", new[] { "railSplitHorizontalLeftUpOff", "railSplitVerticalLeftDownOff", "railSplitHorizontalRightDownOff", "railSplitVerticalRightUpOff" }, TileCategory.Roads),
             }.ToImmutableList();
 
         public static TileType GetDefaultTile() => GetTileTypes().First();
