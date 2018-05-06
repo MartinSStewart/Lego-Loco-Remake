@@ -110,7 +110,7 @@ namespace Server
                     try
                     {
                         var messages = stream.ReadMessage();
-                        Console.WriteLine("Received: " + JToken.FromObject(messages).ToString());
+                        Console.WriteLine("Received: \n" + JToken.FromObject(messages).ToString());
                         foreach (var message in messages)
                         {
                             MessageQueue.Enqueue((ID, message));

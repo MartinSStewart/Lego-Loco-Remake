@@ -9,7 +9,7 @@ import Fuzz exposing (list, int)
 import Bitwise
 import Main exposing (initModel)
 import TileType exposing (..)
-import Helpers exposing (collidesWith, modelAddTile)
+import Helpers exposing (collidesWith, addTile)
 import Model
 
 
@@ -119,8 +119,8 @@ all =
         , test "Placing a house to the right of a sidewalk tile does not remove the sidewalk." <|
             \_ ->
                 Main.initModel
-                    |> modelAddTile (Helpers.initTile sidewalkId Point2.zero 0)
-                    |> modelAddTile (Helpers.initTile redHouseId (Point2 1 0) 0)
+                    |> addTile (Helpers.initTile sidewalkId Point2.zero 0)
+                    |> addTile (Helpers.initTile redHouseId (Point2 1 0) 0)
                     |> .tiles
                     |> List.length
                     |> Expect.equal 2

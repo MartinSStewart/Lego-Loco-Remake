@@ -32,6 +32,16 @@ namespace Server
         }
     }
 
+    public class ModifyTileMessage : IClientMessage
+    {
+        public Tile Tile { get; }
+
+        public ModifyTileMessage(Tile tile)
+        {
+            Tile = tile;
+        }
+    }
+
     public class GetRegionMessage : IClientMessage
     {
         public Int2 TopLeft { get; }
@@ -77,6 +87,16 @@ namespace Server
         public Tile Tile { get; }
 
         public RemovedTileMessage(Tile tile)
+        {
+            Tile = tile;
+        }
+    }
+
+    public class ModifiedTileMessage : IServerMessage
+    {
+        public Tile Tile { get; }
+
+        public ModifiedTileMessage(Tile tile)
         {
             Tile = tile;
         }

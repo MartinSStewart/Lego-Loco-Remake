@@ -9,6 +9,7 @@ import Helpers
 import Monocle.Lens as Lens
 import Lenses
 import Config
+import List.Extra
 
 
 version : number
@@ -36,12 +37,14 @@ send actions =
 type Action
     = AddTile Tile
     | RemoveTile Tile
+    | ModifyTile Tile
     | GetRegion (Point2 Int) (Point2 Int)
 
 
 type Response
     = AddedTile Tile
     | RemovedTile Tile
+    | ModifiedTile Tile
     | GotRegion (Point2 Int) (Point2 Int) (List Tile)
 
 
@@ -53,6 +56,9 @@ writeAction action =
 
         RemoveTile tile ->
             writeInt Config.removeTile ++ writeTile tile
+
+        ModifyTile tile ->
+            writeInt Config.modifyTile ++ writeTile tile
 
         GetRegion topLeft gridSize ->
             writeInt Config.getRegion ++ writePoint2 topLeft ++ writePoint2 gridSize
@@ -73,10 +79,13 @@ update data model =
                     (\response model ->
                         case response of
                             AddedTile tile ->
-                                Helpers.modelAddTile tile model
+                                Helpers.addTile tile model
 
                             RemovedTile tile ->
-                                model |> Lens.modify Lenses.tiles (List.filter ((/=) tile))
+                                Helpers.removeTile tile model
+
+                            ModifiedTile tile ->
+                                Helpers.modifyTile tile model
 
                             GotRegion topLeft size tiles ->
                                 let
@@ -125,6 +134,8 @@ readResponse data =
                 readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, AddedTile tile ))
             else if responseCode == Config.removedTile then
                 readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, RemovedTile tile ))
+            else if responseCode == Config.modifiedTile then
+                readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, ModifiedTile tile ))
             else if responseCode == Config.gotRegion then
                 readPoint2 bytes
                     |> Maybe.andThen

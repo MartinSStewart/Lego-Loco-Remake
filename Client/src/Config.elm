@@ -24,9 +24,14 @@ removedTile =
     1
 
 
+modifiedTile : Int
+modifiedTile =
+    2
+
+
 gotRegion : Int
 gotRegion =
-    2
+    3
 
 
 addTile : Int
@@ -39,6 +44,11 @@ removeTile =
     1
 
 
+modifyTile : Int
+modifyTile =
+    2
+
+
 getRegion : Int
 getRegion =
-    2
+    3

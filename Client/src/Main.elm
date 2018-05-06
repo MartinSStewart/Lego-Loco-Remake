@@ -155,7 +155,7 @@ mouseDown : MouseEvents.MouseEvent -> Model -> ( Model, Cmd msg )
 mouseDown mouseEvent model =
     let
         position =
-            (MouseEvents.relPos mouseEvent)
+            MouseEvents.relPos mouseEvent
     in
         case model.editMode of
             PlaceTiles tileId ->
@@ -165,6 +165,9 @@ mouseDown mouseEvent model =
                             position
                             model
                             tileId
+
+                    a =
+                        Debug.log "pos" tilePos
 
                     tileInstance =
                         Helpers.initTile tileId tilePos model.currentRotation
@@ -318,9 +321,6 @@ view model =
 
                 Hand ->
                     []
-
-        decode decoder =
-            Debug.log "asdf" NoOp
     in
         div
             [ MouseEvents.onMouseDown MouseDown

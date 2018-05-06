@@ -29,7 +29,7 @@ namespace Common.TileData
         }
     }
 
-    public class TileDepot : MemberwiseEquatable<TileRailFork>, ITileData
+    public class TileDepot : MemberwiseEquatable<TileDepot>, ITileData
     {
         public bool Occupied { get; }
 

@@ -132,9 +132,31 @@ onWheel message =
     Events.on "wheel" (Decode.map message (Decode.at [ "deltaY" ] Decode.int))
 
 
-modelAddTile : Tile -> Model -> Model
-modelAddTile tile model =
+addTile : Tile -> Model -> Model
+addTile tile model =
     model |> Lens.modify tiles (List.filter (collidesWith tile >> not) >> (::) tile)
+
+
+removeTile : Tile -> Model -> Model
+removeTile tile model =
+    model |> Lens.modify Lenses.tiles (List.filter ((/=) tile))
+
+
+modifyTile : Tile -> Model -> Model
+modifyTile tile model =
+    Lens.modify
+        Lenses.tiles
+        (List.map (\a -> ifThenElse (tilesEqualIgnoringData a tile) tile a))
+        model
+
+
+tilesEqualIgnoringData : Tile -> Tile -> Bool
+tilesEqualIgnoringData tile0 tile1 =
+    tile0.tileId == tile1.tileId && tile0.position == tile1.position && tile0.rotationIndex == tile1.rotationIndex
+
+
+
+-- model |> Lens.modify Lenses.tiles (List.)
 
 
 setMousePosCurrent : Position -> ( Model, Cmd msg ) -> ( Model, Cmd msg )

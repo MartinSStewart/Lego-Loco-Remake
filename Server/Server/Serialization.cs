@@ -11,8 +11,8 @@ namespace Server
 {
     public static class Serialization
     {
-        public enum MessageToClient { AddedTile, RemovedTile, GotRegion }
-        public enum MessageToServer { AddTile, RemoveTile, GetRegion }
+        public enum MessageToClient { AddedTile, RemovedTile, ModifiedTile, GotRegion }
+        public enum MessageToServer { AddTile, RemoveTile, ModifyTile, GetRegion }
 
         public static MemoryStream GetWriteStream()
         {
@@ -97,6 +97,10 @@ namespace Server
                 case RemovedTileMessage msg:
                     return stream
                         .WriteInt((int)MessageToClient.RemovedTile)
+                        .WriteTile(msg.Tile);
+                case ModifiedTileMessage msg:
+                    return stream
+                        .WriteInt((int)MessageToClient.ModifiedTile)
                         .WriteTile(msg.Tile);
                 case GotRegionMessage msg:
                     return stream
@@ -215,6 +219,11 @@ namespace Server
                     {
                         var tile = ReadTile(stream);
                         return new RemoveTileMessage(tile);
+                    }
+                case MessageToServer.ModifyTile:
+                    {
+                        var tile = ReadTile(stream);
+                        return new ModifyTileMessage(tile);
                     }
                 case MessageToServer.GetRegion:
                     {
