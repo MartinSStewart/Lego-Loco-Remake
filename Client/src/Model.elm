@@ -27,10 +27,15 @@ type alias Sprite =
 
 
 type alias Tile =
+    { baseData : TileBaseData
+    , data : TileData
+    }
+
+
+type alias TileBaseData =
     { tileId : TileTypeId
     , position : Point2 Int
     , rotationIndex : Int
-    , data : TileData
     }
 
 

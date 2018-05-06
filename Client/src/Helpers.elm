@@ -9,19 +9,17 @@ import Lenses exposing (..)
 import Monocle.Lens as Lens
 import List.Extra
 import TileType
-import Model exposing (TileType)
+import Model exposing (..)
 import Mouse exposing (Position)
 import Color exposing (Color)
 import Tile
 
 
-initTile : Model.TileTypeId -> Point2 Int -> Int -> Tile
-initTile tileTypeId position rotation =
+initTile : TileBaseData -> Tile
+initTile tileBaseData =
     Tile
-        tileTypeId
-        position
-        rotation
-        (getTileOrDefault tileTypeId |> .data |> initTileData)
+        tileBaseData
+        (getTileOrDefault tileBaseData.tileId |> .data |> initTileData)
 
 
 initTileData : TileTypeData -> TileData
@@ -134,7 +132,10 @@ onWheel message =
 
 addTile : Tile -> Model -> Model
 addTile tile model =
-    model |> Lens.modify tiles (List.filter (collidesWith tile >> not) >> (::) tile)
+    Lens.modify
+        tiles
+        (List.filter (.baseData >> collidesWith tile.baseData >> not) >> (::) tile)
+        model
 
 
 removeTile : Tile -> Model -> Model
@@ -146,16 +147,14 @@ modifyTile : Tile -> Model -> Model
 modifyTile tile model =
     Lens.modify
         Lenses.tiles
-        (List.map (\a -> ifThenElse (tilesEqualIgnoringData a tile) tile a))
+        (List.map (\a -> ifThenElse (a.baseData == tile.baseData) tile a))
         model
 
 
-tilesEqualIgnoringData : Tile -> Tile -> Bool
-tilesEqualIgnoringData tile0 tile1 =
-    tile0.tileId == tile1.tileId && tile0.position == tile1.position && tile0.rotationIndex == tile1.rotationIndex
 
-
-
+-- clickTile : Tile -> Model -> Model
+-- clickTile tile model =
+--
 -- model |> Lens.modify Lenses.tiles (List.)
 
 
@@ -164,19 +163,25 @@ setMousePosCurrent position modelCmd =
     ( mousePosCurrent.set position (Tuple.first modelCmd), Tuple.second modelCmd )
 
 
-collidesWith : Tile -> Tile -> Bool
-collidesWith tileInstance0 tileInstance1 =
+collidesWith : TileBaseData -> TileBaseData -> Bool
+collidesWith tileBase0 tileBase1 =
     Point2.rectangleCollision
-        tileInstance0.position
-        (Tile.gridSize tileInstance0)
-        tileInstance1.position
-        (Tile.gridSize tileInstance1)
+        tileBase0.position
+        (Tile.gridSize tileBase0)
+        tileBase1.position
+        (Tile.gridSize tileBase1)
 
 
 collisionsAt : Point2 Int -> Point2 Int -> Model -> List Tile
 collisionsAt gridPosition gridSize model =
     List.filter
-        (\a -> Point2.rectangleCollision a.position (Tile.gridSize a) gridPosition gridSize)
+        (\a ->
+            Point2.rectangleCollision
+                a.baseData.position
+                (Tile.gridSize a.baseData)
+                gridPosition
+                gridSize
+        )
         model.tiles
 
 
@@ -194,11 +199,11 @@ getTileOrDefault tileTypeId =
                 Debug.crash "Nonexistant tile id used." TileType.sidewalk
 
 
-getTileTypeByTile : Tile -> TileType
-getTileTypeByTile tileInstance =
+getTileTypeByTile : TileBaseData -> TileType
+getTileTypeByTile tileBaseData =
     let
         (Model.TileTypeId id) =
-            tileInstance.tileId
+            tileBaseData.tileId
     in
         case List.Extra.getAt id TileType.tiles of
             Just tile ->

@@ -37,14 +37,14 @@ send actions =
 type Action
     = AddTile Tile
     | RemoveTile Tile
-    | ModifyTile Tile
+    | ClickTile Tile
     | GetRegion (Point2 Int) (Point2 Int)
 
 
 type Response
     = AddedTile Tile
     | RemovedTile Tile
-    | ModifiedTile Tile
+    | ClickedTile Tile
     | GotRegion (Point2 Int) (Point2 Int) (List Tile)
 
 
@@ -57,8 +57,8 @@ writeAction action =
         RemoveTile tile ->
             writeInt Config.removeTile ++ writeTile tile
 
-        ModifyTile tile ->
-            writeInt Config.modifyTile ++ writeTile tile
+        ClickTile tile ->
+            writeInt Config.clickTile ++ writeTile tile
 
         GetRegion topLeft gridSize ->
             writeInt Config.getRegion ++ writePoint2 topLeft ++ writePoint2 gridSize
@@ -84,14 +84,14 @@ update data model =
                             RemovedTile tile ->
                                 Helpers.removeTile tile model
 
-                            ModifiedTile tile ->
+                            ClickedTile tile ->
                                 Helpers.modifyTile tile model
 
                             GotRegion topLeft size tiles ->
                                 let
                                     newTiles =
                                         model.tiles
-                                            |> List.filter (\a -> Point2.pointInRectangle topLeft size a.position |> not)
+                                            |> List.filter (\a -> Point2.pointInRectangle topLeft size a.baseData.position |> not)
                                             |> (++) tiles
                                 in
                                     { model | tiles = newTiles }
@@ -134,8 +134,8 @@ readResponse data =
                 readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, AddedTile tile ))
             else if responseCode == Config.removedTile then
                 readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, RemovedTile tile ))
-            else if responseCode == Config.modifiedTile then
-                readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, ModifiedTile tile ))
+            else if responseCode == Config.clickedTile then
+                readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, ClickedTile tile ))
             else if responseCode == Config.gotRegion then
                 readPoint2 bytes
                     |> Maybe.andThen
@@ -204,6 +204,19 @@ readPoint2 data =
 
 readTile : ByteString -> Maybe ( ByteString, Tile )
 readTile data =
+    readTileBaseData data
+        |> Maybe.andThen
+            (\( bytesLeft, tileBaseData ) ->
+                readTileData bytesLeft
+                    |> Maybe.andThen
+                        (\( bytesLeft, tileData ) ->
+                            Just ( bytesLeft, Tile tileBaseData tileData )
+                        )
+            )
+
+
+readTileBaseData : ByteString -> Maybe ( ByteString, TileBaseData )
+readTileBaseData data =
     readInt data
         |> Maybe.andThen
             (\( bytesLeft, tileId ) ->
@@ -213,11 +226,7 @@ readTile data =
                             readInt bytesLeft
                                 |> Maybe.andThen
                                     (\( bytesLeft, rotation ) ->
-                                        readTileData bytesLeft
-                                            |> Maybe.andThen
-                                                (\( bytesLeft, tileData ) ->
-                                                    Just ( bytesLeft, Tile (Model.TileTypeId tileId) gridPos rotation tileData )
-                                                )
+                                        Just ( bytesLeft, TileBaseData (Model.TileTypeId tileId) gridPos rotation )
                                     )
                         )
             )
@@ -313,14 +322,18 @@ writePoint2 point =
 
 writeTile : Tile -> ByteString
 writeTile tile =
+    writeTileBaseData tile.baseData ++ writeTileData tile.data
+
+
+writeTileBaseData : TileBaseData -> ByteString
+writeTileBaseData baseData =
     let
         (Model.TileTypeId id) =
-            tile.tileId
+            baseData.tileId
     in
         writeInt id
-            ++ writePoint2 tile.position
-            ++ writeInt tile.rotationIndex
-            ++ writeTileData tile.data
+            ++ writePoint2 baseData.position
+            ++ writeInt baseData.rotationIndex
 
 
 writeTileData : TileData -> ByteString

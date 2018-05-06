@@ -11,21 +11,12 @@ namespace Server
 {
     public class Tile : MemberwiseEquatable<Tile>
     {
-        public int TileTypeId { get; }
-        public Int2 GridPosition { get; }
-        /// <summary>
-        /// Number of clockwise 90 degree turns applied to this tile.
-        /// </summary>
-        public int Rotation { get; }
+        public TileBaseData BaseData { get; }
         public ITileData Data { get; }
 
-        public Tile(int tileTypeId, Int2 gridPosition, int rotation, ITileData data)
+        public Tile(TileBaseData baseData, ITileData data)
         {
-            DebugEx.Assert(tileTypeId >= 0, "Tile ids must be non-negative.");
-            DebugEx.Assert(rotation >= 0 && rotation < 4);
-            TileTypeId = tileTypeId;
-            GridPosition = gridPosition;
-            Rotation = rotation;
+            BaseData = baseData;
             Data = data;
         }
     }

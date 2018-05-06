@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoreLinq;
 using Common;
+using Common.TileData;
 
 namespace Server
 {
@@ -37,13 +38,13 @@ namespace Server
 
         public void AddTile(Tile tile)
         {
-            if (!PointInRectangle(MinGridPosition, MaxGridPosition - MinGridPosition, tile.GridPosition))
+            if (!PointInRectangle(MinGridPosition, MaxGridPosition - MinGridPosition, tile.BaseData.GridPosition))
             {
                 return;
             }
 
-            var tileType = TileTypes[tile.TileTypeId];
-            var gridPos = tile.GridPosition;
+            var tileType = TileTypes[tile.BaseData.TileTypeId];
+            var gridPos = tile.BaseData.GridPosition;
             var superGridPos = GridToSuperGrid(gridPos);
 
             var superGridTiles = new[]
@@ -65,8 +66,50 @@ namespace Server
             _superGrid.Add(superGridPos, tile);
         }
 
+        /// <summary>
+        /// Clicks a tile. Returns whether a tile was present to be clicked on.
+        /// </summary>
+        /// <param name="tile"></param>
+        /// <returns></returns>
+        public bool ClickTile(TileBaseData tileBaseData)
+        {
+            var tile = GetTile(tileBaseData);
+            if (tile == null)
+            {
+                return false;
+            }
+
+            switch (tile.Data)
+            {
+                case TileBasic _:
+                    break;
+                case TileRail _:
+                    break;
+                case TileRailFork fork:
+                    ReplaceTileData(tile, new TileRailFork(!fork.IsOn));
+                    break;
+                case TileDepot depot:
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            return true;
+        }
+
         public void AddTile(string tileTypeName, Int2 gridPosition, int rotation = 0) =>
             AddTile(CreateFromName(tileTypeName, gridPosition, rotation));
+
+        private bool ReplaceTileData(Tile tile, ITileData newTileData)
+        {
+            var key = GridToSuperGrid(tile.BaseData.GridPosition);
+            if (_superGrid.Remove(key, tile))
+            {
+                _superGrid.Add(key, new Tile(tile.BaseData, newTileData));
+                return true;
+            }
+            return false;
+        }
 
         public IEnumerable<Tile> GetRegion(Int2 superGridTopLeft, Int2 superGridSize) => 
             _superGrid
@@ -76,27 +119,32 @@ namespace Server
         /// <summary>
         /// Removes a tile that exactly matches the one provided.
         /// </summary>
-        public bool Remove(Tile tile) => _superGrid.Remove(GridToSuperGrid(tile.GridPosition), tile);
+        public bool Remove(Tile tile) => _superGrid.Remove(GridToSuperGrid(tile.BaseData.GridPosition), tile);
 
         public bool TilesOverlap(Tile tile0, Tile tile1) => 
             RectanglesOverlap(
-                tile0.GridPosition,
+                tile0.BaseData.GridPosition,
                 GetTileSize(tile0), 
-                tile1.GridPosition,
+                tile1.BaseData.GridPosition,
                 GetTileSize(tile1));
 
         public Int2 GetTileSize(Tile tile)
         {
-            var size = TileTypes[tile.TileTypeId].GridSize;
-            return tile.Rotation % 2 == 0
+            var size = TileTypes[tile.BaseData.TileTypeId].GridSize;
+            return tile.BaseData.Rotation % 2 == 0
                 ? size
                 : size.Transpose;
         }
 
+        public Tile GetTile(TileBaseData tileBaseData) =>
+            _superGrid.TryGetValue(GridToSuperGrid(tileBaseData.GridPosition), out IReadOnlyCollection<Tile> value)
+                ? value.SingleOrDefault(item => item.BaseData == tileBaseData)
+                : null;
+
         public Tile CreateFromName(string tileTypeCodeName, Int2 gridPosition, int rotation)
         {
             var index = TileTypes.FindIndex(item => item.CodeName == tileTypeCodeName);
-            return new Tile(index, gridPosition, rotation, TileTypes[index].Data.GetDefaultTileData());
+            return new Tile(new TileBaseData(index, gridPosition, rotation), TileTypes[index].Data.GetDefaultTileData());
         }
 
         public static bool RectanglesOverlap(Int2 topLeft0, Int2 size0, Int2 topLeft1, Int2 size1)

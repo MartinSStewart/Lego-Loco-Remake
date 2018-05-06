@@ -50,9 +50,16 @@ namespace Server
                                 SendToEveryone(socketServer, new AddedTileMessage(msg.Tile));
                                 break;
                             case RemoveTileMessage msg:
-                                World.Remove(msg.Tile);
-
-                                SendToEveryone(socketServer, new RemovedTileMessage(msg.Tile));
+                                if (World.Remove(msg.Tile))
+                                {
+                                    SendToEveryone(socketServer, new RemovedTileMessage(msg.Tile));
+                                }
+                                break;
+                            case ClickTileMessage msg:
+                                if (World.ClickTile(msg.Tile.BaseData))
+                                {
+                                    SendToEveryone(socketServer, new ClickedTileMessage(msg.Tile));
+                                }
                                 break;
                             case GetRegionMessage msg:
                                 var region = World.GetRegion(msg.TopLeft, msg.GridSize);

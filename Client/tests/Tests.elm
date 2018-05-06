@@ -10,7 +10,7 @@ import Bitwise
 import Main exposing (initModel)
 import TileType exposing (..)
 import Helpers exposing (collidesWith, addTile)
-import Model
+import Model exposing (TileBaseData)
 
 
 -- Check out http://package.elm-lang.org/packages/elm-community/elm-test/latest to learn more about testing in Elm!
@@ -28,20 +28,20 @@ all =
         , test "Tiles right on top of eachother should collide." <|
             \_ ->
                 collidesWith
-                    (Helpers.initTile redHouseId Point2.zero 0)
-                    (Helpers.initTile sidewalkId Point2.zero 0)
+                    (TileBaseData redHouseId Point2.zero 0)
+                    (TileBaseData sidewalkId Point2.zero 0)
                     |> Expect.equal True
         , test "Tiles next to eachother should not collide." <|
             \_ ->
                 collidesWith
-                    (Helpers.initTile redHouseId Point2.zero 0)
-                    (Helpers.initTile sidewalkId (Point2 3 0) 0)
+                    (TileBaseData redHouseId Point2.zero 0)
+                    (TileBaseData sidewalkId (Point2 3 0) 0)
                     |> Expect.equal False
         , test "Tiles overlapping should collide." <|
             \_ ->
                 collidesWith
-                    (Helpers.initTile redHouseId Point2.zero 0)
-                    (Helpers.initTile redHouseId (Point2 2 -2) 0)
+                    (TileBaseData redHouseId Point2.zero 0)
+                    (TileBaseData redHouseId (Point2 2 -2) 0)
                     |> Expect.equal True
         , test "Rectangles next to eachother should not collide." <|
             \_ ->
@@ -107,7 +107,11 @@ all =
             \a b c d e ->
                 let
                     input =
-                        Helpers.initTile (Model.TileTypeId a) (Point2 (fixInt b) (fixInt c)) (fixInt d)
+                        TileBaseData
+                            (Model.TileTypeId a)
+                            (Point2 (fixInt b) (fixInt c))
+                            (fixInt d)
+                            |> Helpers.initTile
 
                     extraBytes =
                         getBytes e
@@ -119,8 +123,8 @@ all =
         , test "Placing a house to the right of a sidewalk tile does not remove the sidewalk." <|
             \_ ->
                 Main.initModel
-                    |> addTile (Helpers.initTile sidewalkId Point2.zero 0)
-                    |> addTile (Helpers.initTile redHouseId (Point2 1 0) 0)
+                    |> addTile (TileBaseData sidewalkId Point2.zero 0 |> Helpers.initTile)
+                    |> addTile (TileBaseData redHouseId (Point2 1 0) 0 |> Helpers.initTile)
                     |> .tiles
                     |> List.length
                     |> Expect.equal 2

@@ -32,11 +32,11 @@ namespace Server
         }
     }
 
-    public class ModifyTileMessage : IClientMessage
+    public class ClickTileMessage : IClientMessage
     {
         public Tile Tile { get; }
 
-        public ModifyTileMessage(Tile tile)
+        public ClickTileMessage(Tile tile)
         {
             Tile = tile;
         }
@@ -92,11 +92,11 @@ namespace Server
         }
     }
 
-    public class ModifiedTileMessage : IServerMessage
+    public class ClickedTileMessage : IServerMessage
     {
         public Tile Tile { get; }
 
-        public ModifiedTileMessage(Tile tile)
+        public ClickedTileMessage(Tile tile)
         {
             Tile = tile;
         }

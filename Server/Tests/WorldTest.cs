@@ -133,9 +133,10 @@ namespace Tests
         {
             var index = random.Next(_tileTypes.Count);
             return new Tile(
-                index,
-                new Int2(random.Next(min.X, max.X), random.Next(min.Y, max.Y)), 
-                random.Next(3),
+                new TileBaseData(
+                    index,
+                    new Int2(random.Next(min.X, max.X), random.Next(min.Y, max.Y)), 
+                    random.Next(3)),
                 _tileTypes[index].Data.GetDefaultTileData());
         }
 

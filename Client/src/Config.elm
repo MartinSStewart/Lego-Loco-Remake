@@ -24,8 +24,8 @@ removedTile =
     1
 
 
-modifiedTile : Int
-modifiedTile =
+clickedTile : Int
+clickedTile =
     2
 
 
@@ -44,8 +44,8 @@ removeTile =
     1
 
 
-modifyTile : Int
-modifyTile =
+clickTile : Int
+clickTile =
     2
 
 

@@ -11,8 +11,8 @@ namespace Server
 {
     public static class Serialization
     {
-        public enum MessageToClient { AddedTile, RemovedTile, ModifiedTile, GotRegion }
-        public enum MessageToServer { AddTile, RemoveTile, ModifyTile, GetRegion }
+        public enum MessageToClient { AddedTile, RemovedTile, ClickedTile, GotRegion }
+        public enum MessageToServer { AddTile, RemoveTile, ClickTile, GetRegion }
 
         public static MemoryStream GetWriteStream()
         {
@@ -44,9 +44,9 @@ namespace Server
 
         public static MemoryStream WriteTile(this MemoryStream stream, Tile tile) => 
             stream
-                .WriteInt(tile.TileTypeId)
-                .WriteInt2(tile.GridPosition)
-                .WriteInt(tile.Rotation)
+                .WriteInt(tile.BaseData.TileTypeId)
+                .WriteInt2(tile.BaseData.GridPosition)
+                .WriteInt(tile.BaseData.Rotation)
                 .WriteTileData(tile.Data);
 
         public static MemoryStream WriteTileData(this MemoryStream stream, ITileData tileData)
@@ -98,9 +98,9 @@ namespace Server
                     return stream
                         .WriteInt((int)MessageToClient.RemovedTile)
                         .WriteTile(msg.Tile);
-                case ModifiedTileMessage msg:
+                case ClickedTileMessage msg:
                     return stream
-                        .WriteInt((int)MessageToClient.ModifiedTile)
+                        .WriteInt((int)MessageToClient.ClickedTile)
                         .WriteTile(msg.Tile);
                 case GotRegionMessage msg:
                     return stream
@@ -172,7 +172,7 @@ namespace Server
             var gridPos = stream.ReadInt2();
             var rotation = stream.ReadInt();
             var tileData = stream.ReadTileData();
-            return new Tile(tileId, gridPos, rotation, tileData);
+            return new Tile(new TileBaseData(tileId, gridPos, rotation), tileData);
         }
 
         public static ITileData ReadTileData(this MemoryStream stream)
@@ -220,10 +220,10 @@ namespace Server
                         var tile = ReadTile(stream);
                         return new RemoveTileMessage(tile);
                     }
-                case MessageToServer.ModifyTile:
+                case MessageToServer.ClickTile:
                     {
                         var tile = ReadTile(stream);
-                        return new ModifyTileMessage(tile);
+                        return new ClickTileMessage(tile);
                     }
                 case MessageToServer.GetRegion:
                     {

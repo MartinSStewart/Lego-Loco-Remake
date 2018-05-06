@@ -3,16 +3,16 @@ module Tile exposing (..)
 import Point2 exposing (Point2)
 import TileType exposing (tiles)
 import List.Extra
-import Model exposing (Tile)
+import Model exposing (TileBaseData)
 
 
 {-| Gets the size of the tile when accounting for rotation.
 -}
-gridSize : Tile -> Point2 Int
-gridSize tile =
+gridSize : TileBaseData -> Point2 Int
+gridSize tileBaseData =
     let
         (Model.TileTypeId id) =
-            tile.tileId
+            tileBaseData.tileId
 
         size =
             case List.Extra.getAt id tiles of
@@ -22,7 +22,7 @@ gridSize tile =
                 Nothing ->
                     Debug.crash "This should never happen" Point2.one
     in
-        if tile.rotationIndex % 2 == 0 then
+        if tileBaseData.rotationIndex % 2 == 0 then
             size
         else
             Point2.transpose size

@@ -170,7 +170,7 @@ mouseDown mouseEvent model =
                         Debug.log "pos" tilePos
 
                     tileInstance =
-                        Helpers.initTile tileId tilePos model.currentRotation
+                        TileBaseData tileId tilePos model.currentRotation |> Helpers.initTile
 
                     newModel =
                         model |> lastTilePosition.set (Just tilePos)
@@ -181,7 +181,17 @@ mouseDown mouseEvent model =
                 erase (viewToGrid position model) model
 
             Hand ->
-                ( model, Cmd.none )
+                let
+                    gridPos =
+                        viewToGrid position model
+
+                    cmd =
+                        model
+                            |> Helpers.collisionsAt gridPos Point2.one
+                            |> List.map Server.ClickTile
+                            |> Server.send
+                in
+                    ( model, cmd )
 
 
 erase : Point2 Int -> Model -> ( Model, Cmd msg )
@@ -265,13 +275,14 @@ drawTiles : Point2 Int -> Model.TileTypeId -> Model -> ( List Tile, Model )
 drawTiles newTilePosition tileId model =
     let
         tileInstance =
-            Helpers.initTile
+            TileBaseData
                 tileId
                 newTilePosition
                 model.currentRotation
+                |> Helpers.initTile
 
         tileSize =
-            Tile.gridSize tileInstance
+            Tile.gridSize tileInstance.baseData
     in
         case model.lastTilePosition of
             Nothing ->
@@ -299,7 +310,7 @@ view : Model -> Html Msg
 view model =
     let
         tileViews =
-            model.tiles |> List.map (\a -> tileView model a False a.position.y)
+            model.tiles |> List.map (\a -> tileView model a False a.baseData.position.y)
 
         toolbox =
             model.toolbox
@@ -314,7 +325,12 @@ view model =
                                 model
                                 tileId
                     in
-                        [ tileView model (Helpers.initTile tileId mouseTilePos model.currentRotation) True 9998 ]
+                        [ tileView
+                            model
+                            (TileBaseData tileId mouseTilePos model.currentRotation |> Helpers.initTile)
+                            True
+                            9998
+                        ]
 
                 Eraser ->
                     []
@@ -344,13 +360,13 @@ tileView : Model -> Tile -> Bool -> Int -> Html msg
 tileView model tile seeThrough zIndex =
     let
         tileType =
-            Helpers.getTileTypeByTile tile
+            Helpers.getTileTypeByTile tile.baseData
 
         sprite =
-            rotSpriteGetAt tileType.sprite tile.rotationIndex
+            rotSpriteGetAt tileType.sprite tile.baseData.rotationIndex
 
         pos =
-            Point2.multScalar tile.position gridToPixels
+            Point2.multScalar tile.baseData.position gridToPixels
                 |> Point2.rsub model.viewPosition
 
         size =
