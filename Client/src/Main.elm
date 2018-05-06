@@ -8,6 +8,7 @@ import Point2 exposing (Point2)
 import Json.Decode
 import Keyboard
 import Lenses exposing (..)
+import Monocle.Lens as Lens
 import Model exposing (..)
 import Mouse exposing (Position)
 import MouseEvents
@@ -18,6 +19,7 @@ import TileHelper exposing (..)
 import Toybox
 import Window
 import Tile
+import SpriteHelper
 
 
 ---- MODEL ----
@@ -30,12 +32,11 @@ initModel =
         (Point2 500 500)
         []
         Toybox.default
-        Nothing
         0
         Nothing
         (Position 0 0)
         (Point2 1000 1000)
-        (PlaceTiles (Model.TileTypeId 0))
+        Hand
         False
 
 
@@ -68,9 +69,9 @@ viewToGrid viewPoint model =
         |> Point2.floor
 
 
-viewToTileGrid : Point2 Int -> Model -> TileType -> Point2 Int
-viewToTileGrid viewPoint model tile =
-    tile.gridSize
+viewToTileGrid : Point2 Int -> Model -> TileTypeId -> Point2 Int
+viewToTileGrid viewPoint model tileTypeId =
+    Tile.tileTypeGridSize model.currentRotation (getTileOrDefault tileTypeId)
         |> Point2.rdiv 2
         |> Point2.sub (viewToGrid viewPoint model)
 
@@ -159,14 +160,11 @@ mouseDown mouseEvent model =
         case model.editMode of
             PlaceTiles tileId ->
                 let
-                    tile =
-                        Helpers.getTileOrDefault tileId
-
                     tilePos =
                         viewToTileGrid
                             position
                             model
-                            tile
+                            tileId
 
                     tileInstance =
                         Helpers.initTile tileId tilePos model.currentRotation
@@ -211,7 +209,7 @@ rotateTile wheelDelta model =
                 -1
 
         newModel =
-            { model | currentRotation = (model.currentRotation + rotateBy) % directions }
+            model |> Lens.modify Lenses.currentRotation (\a -> (a + rotateBy) % directions)
     in
         ( newModel, Cmd.none )
 
@@ -219,19 +217,16 @@ rotateTile wheelDelta model =
 mouseMove : Point2 Int -> Model -> ( Model, Cmd msg )
 mouseMove mousePos model =
     if Toybox.insideToolbox model.windowSize mousePos model.toolbox then
-        ( currentTile.set Nothing model, Cmd.none )
+        ( model, Cmd.none )
     else
         case model.editMode of
             PlaceTiles tileId ->
                 let
                     tilePos =
-                        tileId
-                            |> Helpers.getTileOrDefault
-                            |> viewToTileGrid mousePos model
+                        viewToTileGrid mousePos model tileId
 
                     ( tiles, newModel ) =
                         model
-                            |> currentTile.set (Just tilePos)
                             |> drawTiles tilePos tileId
 
                     cmd =
@@ -307,19 +302,21 @@ view model =
             model.toolbox
 
         currentTileView =
-            case model.currentTile of
-                Just a ->
-                    case model.editMode of
-                        PlaceTiles tileId ->
-                            [ tileView model (Helpers.initTile tileId a model.currentRotation) True 9998 ]
+            case model.editMode of
+                PlaceTiles tileId ->
+                    let
+                        mouseTilePos =
+                            viewToTileGrid
+                                model.mousePosCurrent
+                                model
+                                tileId
+                    in
+                        [ tileView model (Helpers.initTile tileId mouseTilePos model.currentRotation) True 9998 ]
 
-                        Eraser ->
-                            []
+                Eraser ->
+                    []
 
-                        Hand ->
-                            []
-
-                Nothing ->
+                Hand ->
                     []
 
         decode decoder =
@@ -344,41 +341,30 @@ view model =
 
 
 tileView : Model -> Tile -> Bool -> Int -> Html msg
-tileView model tileInstance seeThrough zIndex =
+tileView model tile seeThrough zIndex =
     let
-        tile =
-            Helpers.getTileTypeByTile tileInstance
+        tileType =
+            Helpers.getTileTypeByTile tile
 
         sprite =
-            rotSpriteGetAt tile.sprite tileInstance.rotationIndex
+            rotSpriteGetAt tileType.sprite tile.rotationIndex
 
         pos =
-            Point2.multScalar tileInstance.position gridToPixels
-                |> Point2.add (Point2.negate sprite.origin)
-                |> Point2.add (Point2.negate model.viewPosition)
+            Point2.multScalar tile.position gridToPixels
+                |> Point2.rsub model.viewPosition
 
         size =
-            tile.gridSize
-                |> Point2.add (Point2 1 1)
+            tileType.gridSize
                 |> Point2.mult (Point2 gridToPixels gridToPixels)
 
-        seeThroughStyle =
-            if seeThrough then
-                [ ( "opacity", "0.5" ) ]
-            else
-                []
+        styleTuples =
+            [ ( "z-index", toString zIndex ) ]
+                ++ if seeThrough then
+                    [ ( "opacity", "0.5" ) ]
+                   else
+                    []
     in
-        div
-            [ style <|
-                [ background sprite.filepath
-                , ( "background-repeat", "no-repeat" )
-                , ( "pointer-events", "none" )
-                , ( "z-index", toString zIndex )
-                ]
-                    ++ Helpers.absoluteStyle pos size
-                    ++ seeThroughStyle
-            ]
-            []
+        SpriteHelper.spriteViewWithStyle pos sprite styleTuples
 
 
 

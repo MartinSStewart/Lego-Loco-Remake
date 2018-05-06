@@ -87,9 +87,6 @@ update windowSize msg model =
             EraserSelect ->
                 ( model |> .set Lenses.editMode Eraser, None )
 
-            BombSelect ->
-                ( model, None )
-
             Undo ->
                 ( model, None )
 
@@ -267,8 +264,8 @@ menuView pixelPosition model =
             [ ( Sprite.toyboxRailroad, categoryOnClick TileCategory.Roads, category == Just TileCategory.Roads )
             , ( Sprite.toyboxHouse, categoryOnClick TileCategory.Buildings, category == Just TileCategory.Buildings )
             , ( Sprite.toyboxPlants, categoryOnClick TileCategory.Nature, category == Just TileCategory.Nature )
-            , ( Sprite.toyboxEraser, ifThenElse (model.editMode == Eraser) HandSelect EraserSelect, model.editMode == Eraser )
-            , ( Sprite.toyboxBomb, BombSelect, False )
+            , ( Sprite.toyboxEraser, EraserSelect, model.editMode == Eraser )
+            , ( Sprite.toyboxBomb, HandSelect, model.editMode == Hand )
             , ( Sprite.toyboxLeftArrow, Undo, False )
             ]
     in

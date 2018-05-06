@@ -134,6 +134,13 @@ namespace Common
                     new[] { "roadRailCrossingOpenHorizontal", "roadRailCrossingOpenVertical" },
                     TileCategory.Roads,
                     new Rail(RailLinearPath(new Double2(1.5, 0), new Double2(1.5, 2)))),
+                new TileType(
+                    "depot", 
+                    new Int2(5, 3), 
+                    "depotLeftOccupied", 
+                    new[] { "depotLeftOccupied", "depotDownOccupied", "depotRightOccupied", "depotUpOccupied"}, 
+                    TileCategory.Roads, 
+                    new Basic())
             }.ToImmutableList();
         }
 

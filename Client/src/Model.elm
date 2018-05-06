@@ -10,9 +10,8 @@ type alias Model =
     , viewSize : Point2 Int -- Size of view in pixel coordinates.
     , tiles : List Tile
     , toolbox : Toybox
-    , currentTile : Maybe (Point2 Int)
     , currentRotation : Int
-    , lastTilePosition : Maybe (Point2 Int)
+    , lastTilePosition : Maybe (Point2 Int) -- Position of the last place tile.
     , mousePosCurrent : Mouse.Position
     , windowSize : Point2 Int
     , editMode : EditMode
@@ -87,7 +86,6 @@ type ToolboxMsg
     | TileSelect TileTypeId
     | TileCategory (Maybe Category)
     | EraserSelect
-    | BombSelect
     | HandSelect
     | Undo
 

@@ -363,3 +363,87 @@ railSplitVerticalLeftDownOff =
         "Images/railSplitVerticalLeftDownOff.png"
         (Point2 48 48)
         (Point2 0 0)
+
+
+depotUpOpen : Sprite
+depotUpOpen =
+    Sprite "Images/depotUpOpen.png"
+    (Point2 48 80)
+    (Point2 0 0)
+
+
+depotUpOccupied : Sprite
+depotUpOccupied =
+    Sprite "Images/depotUpOccupied.png"
+    (Point2 48 80)
+    (Point2 0 0)
+
+
+depotUpClosed : Sprite
+depotUpClosed =
+    Sprite "Images/depotUpClosed.png"
+    (Point2 48 80)
+    (Point2 0 0)
+
+
+depotDownOpen : Sprite
+depotDownOpen =
+    Sprite "Images/depotDownOpen.png"
+    (Point2 48 90)
+    (Point2 0 10)
+
+
+depotDownOccupied : Sprite
+depotDownOccupied =
+    Sprite "Images/depotDownOccupied.png"
+    (Point2 48 90)
+    (Point2 0 10)
+
+
+depotDownClosed : Sprite
+depotDownClosed =
+    Sprite "Images/depotDownClosed.png"
+    (Point2 48 90)
+    (Point2 0 10)
+
+
+depotLeftOpen : Sprite
+depotLeftOpen =
+    Sprite "Images/depotLeftOpen.png"
+    (Point2 80 58)
+    (Point2 0 10)
+
+
+depotLeftOccupied : Sprite
+depotLeftOccupied =
+    Sprite "Images/depotLeftOccupied.png"
+    (Point2 80 57)
+    (Point2 0 9)
+
+
+depotLeftClosed : Sprite
+depotLeftClosed =
+    Sprite "Images/depotLeftClosed.png"
+    (Point2 80 57)
+    (Point2 0 9)
+
+
+depotRightOpen : Sprite
+depotRightOpen =
+    Sprite "Images/depotRightOpen.png"
+    (Point2 80 58)
+    (Point2 0 10)
+
+
+depotRightOccupied : Sprite
+depotRightOccupied =
+    Sprite "Images/depotRightOccupied.png"
+    (Point2 80 57)
+    (Point2 0 9)
+
+
+depotRightClosed : Sprite
+depotRightClosed =
+    Sprite "Images/depotRightClosed.png"
+    (Point2 80 57)
+    (Point2 0 9)

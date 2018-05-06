@@ -26,3 +26,10 @@ gridSize tile =
             size
         else
             Point2.transpose size
+
+
+tileTypeGridSize rotation tileType =
+    if rotation % 2 == 0 then
+        tileType.gridSize
+    else
+        Point2.transpose tileType.gridSize

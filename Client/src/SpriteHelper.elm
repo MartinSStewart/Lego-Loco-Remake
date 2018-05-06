@@ -9,12 +9,19 @@ import Point2 exposing (Point2)
 
 spriteView : Point2 Int -> Sprite -> Html msg
 spriteView topLeft sprite =
+    spriteViewWithStyle topLeft sprite []
+
+
+spriteViewWithStyle : Point2 Int -> Sprite -> List ( String, String ) -> Html msg
+spriteViewWithStyle topLeft sprite styleTuples =
     div
         [ style <|
             [ background sprite.filepath
             , ( "background-repeat", "no-repeat" )
+            , ( "pointer-events", "none" )
             ]
                 ++ absoluteStyle (Point2.sub topLeft sprite.origin) sprite.size
+                ++ styleTuples
         ]
         []
 

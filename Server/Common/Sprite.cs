@@ -83,6 +83,18 @@ namespace Common
                 new Sprite("railSplitVerticalLeftUpOff.png"),
                 new Sprite("railSplitVerticalLeftDownOn.png"),
                 new Sprite("railSplitVerticalLeftDownOff.png"),
+                new Sprite("depotUpOpen.png"),
+                new Sprite("depotUpOccupied.png"),
+                new Sprite("depotUpClosed.png"),
+                new Sprite("depotDownOpen.png", new Int2(0, 10)),
+                new Sprite("depotDownOccupied.png", new Int2(0, 10)),
+                new Sprite("depotDownClosed.png", new Int2(0, 10)),
+                new Sprite("depotLeftOpen.png", new Int2(0, 10)),
+                new Sprite("depotLeftOccupied.png", new Int2(0, 9)),
+                new Sprite("depotLeftClosed.png", new Int2(0, 9)),
+                new Sprite("depotRightOpen.png", new Int2(0, 10)),
+                new Sprite("depotRightOccupied.png", new Int2(0, 9)),
+                new Sprite("depotRightClosed.png", new Int2(0, 9)),
             }.ToImmutableList();
     }
 }

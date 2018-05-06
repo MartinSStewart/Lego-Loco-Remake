@@ -194,8 +194,6 @@ import Model exposing (Sprite)
 
         public static string GetTileTypeCode(IEnumerable<TileType> tiles, string moduleName)
         {
-            
-
             var tileCode = tiles
                 .Select(tile =>
                     GetElmFunction(

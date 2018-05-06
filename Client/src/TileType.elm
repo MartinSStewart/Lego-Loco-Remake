@@ -99,6 +99,16 @@ roadRailCrossing =
         (Rail (\t -> Point2 1.5 2 |> Point2.rsub (Point2 1.5 0) |> Point2.rmultScalar t |> Point2.add (Point2 1.5 0)))
 
 
+depot : TileType
+depot =
+    TileType
+        (Rot4 Sprite.depotLeftOccupied Sprite.depotDownOccupied Sprite.depotRightOccupied Sprite.depotUpOccupied)
+        (Point2 5 3)
+        Sprite.depotLeftOccupied
+        Roads
+        Basic
+
+
 sidewalkId : Model.TileTypeId
 sidewalkId =
     Model.TileTypeId 0
@@ -144,6 +154,11 @@ roadRailCrossingId =
     Model.TileTypeId 8
 
 
+depotId : Model.TileTypeId
+depotId =
+    Model.TileTypeId 9
+
+
 tiles : List TileType
 tiles = 
     [ sidewalk
@@ -155,4 +170,5 @@ tiles =
     , railSplitRight
     , railSplitLeft
     , roadRailCrossing
+    , depot
     ]
