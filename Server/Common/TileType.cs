@@ -14,23 +14,16 @@ namespace Common
     {
         public string CodeName { get; }
         public Int2 GridSize { get; }
-        /// <summary>
-        /// Sprites used for this <see cref="TileType"/>'s orientations. Array length must be 1, 2, or 4.
-        /// </summary>
-        public ImmutableList<string> Sprites { get; }
         public string ToolboxIconSprite { get; }
         public TileCategory Category { get; }
         public ITileTypeData Data { get; }
 
 
-        public TileType(string codeName, Int2 gridSize, string toolboxIconSprite, string[] sprites, TileCategory category, ITileTypeData data)
+        public TileType(string codeName, Int2 gridSize, string toolboxIconSprite, TileCategory category, ITileTypeData data)
         {
-            DebugEx.Assert(sprites.Length == 1 || sprites.Length == 2 || sprites.Length == 4);
-            DebugEx.Assert(sprites.All(Sprite.IsValidElmFunctionName));
             DebugEx.Assert(Sprite.IsValidElmFunctionName(codeName));
             CodeName = codeName;
             GridSize = gridSize;
-            Sprites = sprites.ToImmutableList();
             ToolboxIconSprite = toolboxIconSprite;
             Category = category;
             Data = data;
@@ -98,55 +91,77 @@ namespace Common
 
             return new[]
             {
-                new TileType("sidewalk", new Int2(1, 1), "sidewalk", new[] { "sidewalk" }, TileCategory.Roads, new Basic()),
-                new TileType("roadStraight", new Int2(2, 2), "roadHorizontal", new[] { "roadHorizontal", "roadVertical" }, TileCategory.Roads, new Basic()),
-                new TileType("roadTurn", new Int2(2, 2), "roadTurnLeftUp", new[] { "roadTurnLeftUp", "roadTurnLeftDown", "roadTurnRightDown", "roadTurnRightUp" }, TileCategory.Roads, new Basic()),
+                new TileType("sidewalk", new Int2(1, 1), "sidewalk", TileCategory.Roads, new Basic(new[] { "sidewalk" })),
+                new TileType("roadStraight", new Int2(2, 2), "roadHorizontal", TileCategory.Roads, new Basic(new[] { "roadHorizontal", "roadVertical" })),
+                new TileType("roadTurn", new Int2(2, 2), "roadTurnLeftUp", TileCategory.Roads, new Basic(new[] { "roadTurnLeftUp", "roadTurnLeftDown", "roadTurnRightDown", "roadTurnRightUp" })),
 
                 // Buildings
-                new TileType("redHouse", new Int2(3, 3), "redHouseIcon", new[] { "redHouse" }, TileCategory.Buildings, new Basic()),
+                new TileType("redHouse", new Int2(3, 3), "redHouseIcon", TileCategory.Buildings, new Basic(new[] { "redHouse" })),
                 
                 // Rail
                 new TileType(
                     "railStraight",
                     new Int2(1, 1), "railHorizontal",
-                    new[] { "railHorizontal", "railVertical" },
                     TileCategory.Roads,
-                    new Rail(RailLinearPath(new Double2(0, 0.5), new Double2(1, 0.5)))),
+                    new Rail(new[] { "railHorizontal", "railVertical" }, RailLinearPath(new Double2(0, 0.5), new Double2(1, 0.5)))),
                 new TileType(
                     "railTurn",
                     new Int2(3, 3),
                     "railTurnLeftUp",
-                    new[] { "railTurnLeftUp", "railTurnLeftDown", "railTurnRightDown", "railTurnRightUp" },
                     TileCategory.Roads,
-                    new Rail(railTurnLeftUp)),
+                    new Rail(new[] { "railTurnLeftUp", "railTurnLeftDown", "railTurnRightDown", "railTurnRightUp" }, railTurnLeftUp)),
                 new TileType(
                     "railSplitRight",
                     new Int2(3, 3),
                     "railSplitVerticalLeftUpOff",
-                    new[] { "railSplitHorizontalRightUpOff", "railSplitVerticalLeftUpOff", "railSplitHorizontalLeftDownOff", "railSplitVerticalRightDownOff" },
                     TileCategory.Roads,
-                    new RailFork(railTurnRightUp, RailLinearPath(new Double2(0, 2.5), new Double2(3, 2.5)))),
+                    new RailFork(
+                        new[] 
+                        {
+                            ("railSplitHorizontalRightUpOn", "railSplitHorizontalRightUpOff"),
+                            ("railSplitVerticalLeftUpOn", "railSplitVerticalLeftUpOff"),
+                            ("railSplitHorizontalLeftDownOn", "railSplitHorizontalLeftDownOff"),
+                            ("railSplitVerticalRightDownOn", "railSplitVerticalRightDownOff")
+                        }, 
+                        railTurnRightUp, 
+                        RailLinearPath(new Double2(0, 2.5), new Double2(3, 2.5)))),
                 new TileType(
                     "railSplitLeft",
                     new Int2(3, 3),
                     "railSplitHorizontalLeftUpOff",
-                    new[] { "railSplitHorizontalLeftUpOff", "railSplitVerticalLeftDownOff", "railSplitHorizontalRightDownOff", "railSplitVerticalRightUpOff" },
                     TileCategory.Roads,
-                    new RailFork(railTurnLeftUp, RailLinearPath(new Double2(0, 2.5), new Double2(3, 2.5)))),
+                    new RailFork(
+                        new[] 
+                        {
+                            ("railSplitHorizontalLeftUpOn", "railSplitHorizontalLeftUpOff"),
+                            ("railSplitVerticalLeftDownOn", "railSplitVerticalLeftDownOff"),
+                            ("railSplitHorizontalRightDownOn", "railSplitHorizontalRightDownOff"),
+                            ("railSplitVerticalRightUpOn", "railSplitVerticalRightUpOff")
+                        }, 
+                        railTurnLeftUp, 
+                        RailLinearPath(new Double2(0, 2.5), new Double2(3, 2.5)))),
                 new TileType(
                     "roadRailCrossing",
                     new Int2(3, 2),
                     "roadRailCrossingOpenHorizontal",
-                    new[] { "roadRailCrossingOpenHorizontal", "roadRailCrossingOpenVertical" },
                     TileCategory.Roads,
-                    new Rail(RailLinearPath(new Double2(1.5, 0), new Double2(1.5, 2)))),
+                    new Rail(
+                        new[] { "roadRailCrossingOpenHorizontal", "roadRailCrossingOpenVertical" }, 
+                        RailLinearPath(new Double2(1.5, 0), new Double2(1.5, 2)))),
                 new TileType(
                     "depot",
                     new Int2(5, 3),
                     "depotLeftOccupied",
-                    new[] { "depotLeftOccupied", "depotDownOccupied", "depotRightOccupied", "depotUpOccupied"},
                     TileCategory.Roads,
-                    new Depot(RailLinearPath(new Double2(0, 1.5), new Double2(4, 1.5))))
+                    new Depot(
+                        new[] 
+                        {
+                            ("depotLeftOccupied", "depotLeftOccupied", "depotLeftOccupied"),
+                            ("depotDownOccupied", "depotDownOpen", "depotDownClosed"),
+                            ("depotRightOccupied", "depotRightOpen", "depotRightClosed"),
+                            ("depotUpOccupied", "depotUpOpen", "depotUpClosed")
+                        }, 
+                        RailLinearPath(new Double2(0, 1.5), new Double2(4, 1.5))))
             }.ToImmutableList();
         }
 

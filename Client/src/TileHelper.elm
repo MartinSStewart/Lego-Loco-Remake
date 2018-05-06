@@ -9,11 +9,11 @@ directions =
     4
 
 
-rotSpriteToList : RotSprite -> List Sprite
-rotSpriteToList rotSprite =
+rotToList : Rot a -> List a
+rotToList rotSprite =
     case rotSprite of
-        Rot1 sprite ->
-            [ sprite ]
+        Rot1 single ->
+            [ single ]
 
         Rot2 horizontal vertical ->
             [ horizontal, vertical ]
@@ -22,11 +22,11 @@ rotSpriteToList rotSprite =
             [ right, up, left, down ]
 
 
-rotSpriteGetAt : RotSprite -> Int -> Sprite
-rotSpriteGetAt rotSprite index =
+rotGetAt : Rot a -> Int -> a
+rotGetAt rotSprite index =
     let
         spriteList =
-            rotSpriteToList rotSprite
+            rotToList rotSprite
 
         sprite =
             List.Extra.getAt (index % List.length spriteList) spriteList

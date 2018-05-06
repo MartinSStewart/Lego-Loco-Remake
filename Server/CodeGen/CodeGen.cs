@@ -195,7 +195,6 @@ import Model exposing (Sprite)
                     GetElmFunction(
                         tile.CodeName,
                         "TileType",
-                        $"(Rot{tile.Sprites.Count} {tile.Sprites.Select(item => "Sprite." + item).ToDelimitedString(" ")})",
                         $"({Point2Type} {tile.GridSize.X} {tile.GridSize.Y})",
                         "Sprite." + tile.ToolboxIconSprite,
                         TileCategoryNames[tile.Category],

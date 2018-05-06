@@ -40,18 +40,17 @@ type alias TileBaseData =
 
 
 type alias TileType =
-    { sprite : RotSprite
-    , gridSize : Point2 Int
+    { gridSize : Point2 Int
     , icon : Sprite
     , category : Category
     , data : TileTypeData
     }
 
 
-type RotSprite
-    = Rot1 Sprite
-    | Rot2 Sprite Sprite
-    | Rot4 Sprite Sprite Sprite Sprite
+type Rot a
+    = Rot1 a
+    | Rot2 a a
+    | Rot4 a a a a
 
 
 type TileData
@@ -62,10 +61,10 @@ type TileData
 
 
 type TileTypeData
-    = Basic
-    | Rail (Float -> Point2 Float)
-    | RailFork (Float -> Point2 Float) (Float -> Point2 Float)
-    | Depot
+    = Basic (Rot Sprite)
+    | Rail (Rot Sprite) (Float -> Point2 Float)
+    | RailFork (Rot ( Sprite, Sprite )) (Float -> Point2 Float) (Float -> Point2 Float)
+    | Depot (Rot ( Sprite, Sprite, Sprite ))
 
 
 type TileTypeId

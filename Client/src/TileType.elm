@@ -11,97 +11,107 @@ import TileCategory exposing (..)
 
 sidewalk : TileType
 sidewalk =
-    TileType (Rot1 Sprite.sidewalk) (Point2 1 1) Sprite.sidewalk Roads Basic
+    TileType (Point2 1 1) Sprite.sidewalk Roads (Basic (Rot1 Sprite.sidewalk))
 
 
 roadStraight : TileType
 roadStraight =
     TileType 
-        (Rot2 Sprite.roadHorizontal Sprite.roadVertical)
         (Point2 2 2)
         Sprite.roadHorizontal
         Roads
-        Basic
+        (Basic (Rot2 Sprite.roadHorizontal Sprite.roadVertical))
 
 
 roadTurn : TileType
 roadTurn =
     TileType 
-        (Rot4 Sprite.roadTurnLeftUp Sprite.roadTurnLeftDown Sprite.roadTurnRightDown Sprite.roadTurnRightUp)
         (Point2 2 2)
         Sprite.roadTurnLeftUp
         Roads
-        Basic
+        (Basic (Rot4 Sprite.roadTurnLeftUp Sprite.roadTurnLeftDown Sprite.roadTurnRightDown Sprite.roadTurnRightUp))
 
 
 redHouse : TileType
 redHouse =
     TileType 
-        (Rot1 Sprite.redHouse)
         (Point2 3 3)
         Sprite.redHouseIcon
         Buildings
-        Basic
+        (Basic (Rot1 Sprite.redHouse))
 
 
 railStraight : TileType
 railStraight =
     TileType 
-        (Rot2 Sprite.railHorizontal Sprite.railVertical)
         (Point2 1 1)
         Sprite.railHorizontal
         Roads
-        (Rail (\t -> Point2 1 0.5 |> Point2.rsub (Point2 0 0.5) |> Point2.rmultScalar t |> Point2.add (Point2 0 0.5)))
+        (Rail
+            (Rot2 Sprite.railHorizontal Sprite.railVertical)
+            (\t -> Point2 1 0.5 |> Point2.rsub (Point2 0 0.5) |> Point2.rmultScalar t |> Point2.add (Point2 0 0.5))
+        )
 
 
 railTurn : TileType
 railTurn =
     TileType 
-        (Rot4 Sprite.railTurnLeftUp Sprite.railTurnLeftDown Sprite.railTurnRightDown Sprite.railTurnRightUp)
         (Point2 3 3)
         Sprite.railTurnLeftUp
         Roads
-        (Rail (\t -> Point2 (sin t) (cos t) |> Point2.rmultScalar 2.5))
+        (Rail
+            (Rot4 Sprite.railTurnLeftUp Sprite.railTurnLeftDown Sprite.railTurnRightDown Sprite.railTurnRightUp)
+            (\t -> Point2 (sin t) (cos t) |> Point2.rmultScalar 2.5)
+        )
 
 
 railSplitRight : TileType
 railSplitRight =
     TileType 
-        (Rot4 Sprite.railSplitHorizontalRightUpOff Sprite.railSplitVerticalLeftUpOff Sprite.railSplitHorizontalLeftDownOff Sprite.railSplitVerticalRightDownOff)
         (Point2 3 3)
         Sprite.railSplitVerticalLeftUpOff
         Roads
-        (RailFork (\t -> Point2 -(sin t) (cos t) |> Point2.rmultScalar 2.5 |> Point2.add (Point2 3 0)) (\t -> Point2 3 2.5 |> Point2.rsub (Point2 0 2.5) |> Point2.rmultScalar t |> Point2.add (Point2 0 2.5)))
+        (RailFork
+            (Rot4 ( Sprite.railSplitHorizontalRightUpOn, Sprite.railSplitHorizontalRightUpOff ) ( Sprite.railSplitVerticalLeftUpOn, Sprite.railSplitVerticalLeftUpOff ) ( Sprite.railSplitHorizontalLeftDownOn, Sprite.railSplitHorizontalLeftDownOff ) ( Sprite.railSplitVerticalRightDownOn, Sprite.railSplitVerticalRightDownOff ))
+            (\t -> Point2 -(sin t) (cos t) |> Point2.rmultScalar 2.5 |> Point2.add (Point2 3 0))
+            (\t -> Point2 3 2.5 |> Point2.rsub (Point2 0 2.5) |> Point2.rmultScalar t |> Point2.add (Point2 0 2.5))
+        )
 
 
 railSplitLeft : TileType
 railSplitLeft =
     TileType 
-        (Rot4 Sprite.railSplitHorizontalLeftUpOff Sprite.railSplitVerticalLeftDownOff Sprite.railSplitHorizontalRightDownOff Sprite.railSplitVerticalRightUpOff)
         (Point2 3 3)
         Sprite.railSplitHorizontalLeftUpOff
         Roads
-        (RailFork (\t -> Point2 (sin t) (cos t) |> Point2.rmultScalar 2.5) (\t -> Point2 3 2.5 |> Point2.rsub (Point2 0 2.5) |> Point2.rmultScalar t |> Point2.add (Point2 0 2.5)))
+        (RailFork
+            (Rot4 ( Sprite.railSplitHorizontalLeftUpOn, Sprite.railSplitHorizontalLeftUpOff ) ( Sprite.railSplitVerticalLeftDownOn, Sprite.railSplitVerticalLeftDownOff ) ( Sprite.railSplitHorizontalRightDownOn, Sprite.railSplitHorizontalRightDownOff ) ( Sprite.railSplitVerticalRightUpOn, Sprite.railSplitVerticalRightUpOff ))
+            (\t -> Point2 (sin t) (cos t) |> Point2.rmultScalar 2.5)
+            (\t -> Point2 3 2.5 |> Point2.rsub (Point2 0 2.5) |> Point2.rmultScalar t |> Point2.add (Point2 0 2.5))
+        )
 
 
 roadRailCrossing : TileType
 roadRailCrossing =
     TileType 
-        (Rot2 Sprite.roadRailCrossingOpenHorizontal Sprite.roadRailCrossingOpenVertical)
         (Point2 3 2)
         Sprite.roadRailCrossingOpenHorizontal
         Roads
-        (Rail (\t -> Point2 1.5 2 |> Point2.rsub (Point2 1.5 0) |> Point2.rmultScalar t |> Point2.add (Point2 1.5 0)))
+        (Rail
+            (Rot2 Sprite.roadRailCrossingOpenHorizontal Sprite.roadRailCrossingOpenVertical)
+            (\t -> Point2 1.5 2 |> Point2.rsub (Point2 1.5 0) |> Point2.rmultScalar t |> Point2.add (Point2 1.5 0))
+        )
 
 
 depot : TileType
 depot =
     TileType 
-        (Rot4 Sprite.depotLeftOccupied Sprite.depotDownOccupied Sprite.depotRightOccupied Sprite.depotUpOccupied)
         (Point2 5 3)
         Sprite.depotLeftOccupied
         Roads
-        Depot
+        (Depot
+            (Rot4 ( Sprite.depotLeftOccupied, Sprite.depotLeftOccupied, Sprite.depotLeftOccupied ) ( Sprite.depotDownOccupied, Sprite.depotDownOpen, Sprite.depotDownClosed ) ( Sprite.depotRightOccupied, Sprite.depotRightOpen, Sprite.depotRightClosed ) ( Sprite.depotUpOccupied, Sprite.depotUpOpen, Sprite.depotUpClosed ))
+        )
 
 
 sidewalkId : Model.TileTypeId

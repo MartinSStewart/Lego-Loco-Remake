@@ -167,9 +167,6 @@ mouseDown mouseEvent model =
                             model
                             tileId
 
-                    a =
-                        Debug.log "pos" tilePos
-
                     tileInstance =
                         TileBaseData tileId tilePos model.currentRotation |> Helpers.initTile
 
@@ -203,9 +200,6 @@ erase gridPosition model =
                 |> collisionsAt gridPosition Point2.one
                 |> List.map (.baseData >> Server.RemoveTile)
                 |> Server.send
-
-        a =
-            Debug.log "asdf" command
 
         newModel =
             model |> lastTilePosition.set (Just gridPosition)
@@ -370,18 +364,71 @@ tileView model tile seeThrough zIndex =
         tileType =
             Helpers.getTileTypeByTile tile.baseData
 
-        sprite =
-            rotSpriteGetAt tileType.sprite tile.baseData.rotationIndex
+        getSprite rotSprite =
+            rotGetAt rotSprite tile.baseData.rotationIndex
+
+        tileDataAssert expected tile sprite =
+            Debug.crash
+                (expected
+                    ++ " data was expected. Got "
+                    ++ toString tile.data
+                    ++ " instead."
+                )
+                sprite
+
+        tileSprite =
+            case tileType.data of
+                Basic rotSprite ->
+                    let
+                        sprite =
+                            getSprite rotSprite
+                    in
+                        case tile.data of
+                            TileBasic ->
+                                sprite
+
+                            _ ->
+                                tileDataAssert "TileBasic" tile sprite
+
+                Rail rotSprite _ ->
+                    let
+                        sprite =
+                            getSprite rotSprite
+                    in
+                        case tile.data of
+                            TileRail ->
+                                sprite
+
+                            _ ->
+                                tileDataAssert "TileRail" tile sprite
+
+                RailFork rotSprite _ _ ->
+                    let
+                        ( spriteOn, spriteOff ) =
+                            getSprite rotSprite
+                    in
+                        case tile.data of
+                            TileRailFork isOn ->
+                                ifThenElse isOn spriteOn spriteOff
+
+                            _ ->
+                                tileDataAssert "TileRailFork" tile spriteOff
+
+                Depot rotSprite ->
+                    let
+                        ( spriteOccupied, spriteOpen, spriteClosed ) =
+                            getSprite rotSprite
+                    in
+                        case tile.data of
+                            TileDepot isOn ->
+                                spriteOccupied
+
+                            _ ->
+                                tileDataAssert "TileDepot" tile spriteOccupied
 
         pos =
             Point2.multScalar tile.baseData.position gridToPixels
                 |> Point2.rsub model.viewPosition
-
-        a =
-            if seeThrough then
-                pos
-            else
-                Debug.log "pos" pos
 
         size =
             tileType.gridSize
@@ -394,7 +441,7 @@ tileView model tile seeThrough zIndex =
                    else
                     []
     in
-        SpriteHelper.spriteViewWithStyle pos sprite styleTuples
+        SpriteHelper.spriteViewWithStyle pos tileSprite styleTuples
 
 
 

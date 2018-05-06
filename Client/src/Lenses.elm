@@ -91,11 +91,6 @@ size =
     Lens .size (\value item -> { item | size = value })
 
 
-sprite : Lens { b | sprite : a } a
-sprite =
-    Lens .sprite (\value item -> { item | sprite = value })
-
-
 start : Lens { b | start : a } a
 start =
     Lens .start (\value item -> { item | start = value })

@@ -25,16 +25,16 @@ initTile tileBaseData =
 initTileData : TileTypeData -> TileData
 initTileData tileTypeData =
     case tileTypeData of
-        Basic ->
+        Basic _ ->
             TileBasic
 
-        Rail _ ->
+        Rail _ _ ->
             TileRail
 
-        RailFork _ _ ->
+        RailFork _ _ _ ->
             TileRailFork False
 
-        Depot ->
+        Depot _ ->
             TileDepot True
 
 
@@ -152,12 +152,29 @@ modifyTile tile model =
 
 
 clickTile : TileBaseData -> Model -> Model
-clickTile baseData model =
-    model
+clickTile tileBaseData model =
+    Lens.modify
+        Lenses.tiles
+        (List.map
+            (\a ->
+                if (a.baseData == tileBaseData) then
+                    case a.data of
+                        TileBasic ->
+                            a
 
+                        Model.TileRail ->
+                            a
 
+                        Model.TileRailFork isOn ->
+                            a |> Lens.modify Lenses.data (\_ -> not isOn |> Model.TileRailFork)
 
--- |> Lens.modify Lenses.tiles (List.)
+                        Model.TileDepot _ ->
+                            a
+                else
+                    a
+            )
+        )
+        model
 
 
 setMousePosCurrent : Position -> ( Model, Cmd msg ) -> ( Model, Cmd msg )

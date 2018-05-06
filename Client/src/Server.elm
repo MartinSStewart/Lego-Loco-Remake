@@ -6,10 +6,7 @@ import BinaryBase64 exposing (..)
 import Point2 exposing (Point2)
 import Bitwise
 import Helpers
-import Monocle.Lens as Lens
-import Lenses
 import Config
-import List.Extra
 
 
 version : number
