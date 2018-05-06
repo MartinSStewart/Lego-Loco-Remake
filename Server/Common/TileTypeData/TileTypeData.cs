@@ -61,4 +61,17 @@ namespace Common.TileTypeData
         public string GetElmParameter() => $"(RailFork ({PathOn.ElmCode}) ({PathOff.ElmCode}))";
         public ITileData GetDefaultTileData() => new TileRailFork(false);
     }
+
+    public class Depot : ITileTypeData
+    {
+        public ElmFunc<double, Double2> Path { get; }
+
+        public Depot(ElmFunc<double, Double2> path)
+        {
+            Path = path;
+        }
+
+        public string GetElmParameter() => "Depot";
+        public ITileData GetDefaultTileData() => new TileDepot(true);
+    }
 }

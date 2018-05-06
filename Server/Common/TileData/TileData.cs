@@ -28,4 +28,14 @@ namespace Common.TileData
             IsOn = isOn;
         }
     }
+
+    public class TileDepot : MemberwiseEquatable<TileRailFork>, ITileData
+    {
+        public bool Occupied { get; }
+
+        public TileDepot(bool occupied)
+        {
+            Occupied = occupied;
+        }
+    }
 }

@@ -36,6 +36,9 @@ initTileData tileTypeData =
         RailFork _ _ ->
             TileRailFork False
 
+        Depot ->
+            TileDepot True
+
 
 absoluteStyle : Point2 number -> Point2 number -> List ( String, String )
 absoluteStyle pixelPosition pixelSize =

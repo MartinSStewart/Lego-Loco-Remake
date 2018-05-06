@@ -52,13 +52,15 @@ type RotSprite
 type TileData
     = TileBasic
     | TileRail
-    | TileRailFork Bool
+    | TileRailFork Bool -- Is on
+    | TileDepot Bool -- Is occupied
 
 
 type TileTypeData
     = Basic
     | Rail (Float -> Point2 Float)
     | RailFork (Float -> Point2 Float) (Float -> Point2 Float)
+    | Depot
 
 
 type TileTypeId

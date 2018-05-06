@@ -227,6 +227,12 @@ readTileData data =
                             (\( bytesLeft, bool ) ->
                                 Just ( bytesLeft, TileRailFork bool )
                             )
+                else if tileDataType == 3 then
+                    readBool bytesLeft
+                        |> Maybe.andThen
+                            (\( bytesLeft, bool ) ->
+                                Just ( bytesLeft, TileDepot bool )
+                            )
                 else
                     Nothing
             )
@@ -317,6 +323,9 @@ writeTileData tileData =
 
         TileRailFork isOn ->
             writeInt 2 ++ writeBool isOn
+
+        TileDepot occupied ->
+            writeInt 3 ++ writeBool occupied
 
 
 inIntRange : Int -> Bool

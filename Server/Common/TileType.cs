@@ -41,7 +41,7 @@ namespace Common
             var margin = 0.01;
             bool ValueClose(double value0, double value1) => Math.Abs(value0 - value1) < margin;
 
-            bool PointOnTileEdge(Double2 point) =>
+            bool OnTileEdge(Double2 point) =>
                 (ValueClose(point.X, 0) || ValueClose(point.X, GridSize.X)) &&
                 (ValueClose(point.Y, 0) || ValueClose(point.Y, GridSize.Y));
 
@@ -49,7 +49,7 @@ namespace Common
                 (ValueClose(point.X % 1, 0) && ValueClose(point.Y % 1, 0.5)) ||
                 (ValueClose(point.Y % 1, 0) && ValueClose(point.X % 1, 0.5));
 
-            bool PathValid(Double2 start, Double2 end) => PointOnTileEdge(start) && OnGridEdge(start) && PointOnTileEdge(end) && OnGridEdge(end);
+            bool PathValid(Double2 start, Double2 end) => OnTileEdge(start) && OnGridEdge(start) && OnTileEdge(end) && OnGridEdge(end);
 
             switch (data)
             {
@@ -62,14 +62,20 @@ namespace Common
                     var pathOnStart = rail.PathOn.Func(0);
                     var pathOffStart = rail.PathOn.Func(0);
                     DebugEx.Assert(
-                        PathValid(pathOnStart, rail.PathOn.Func(1)), 
+                        PathValid(pathOnStart, rail.PathOn.Func(1)),
                         "On path must start and end on different grid edges that are also on the edge of the tile.");
                     DebugEx.Assert(
                         PathValid(pathOffStart, rail.PathOff.Func(1)),
                         "Off path must start and end on different grid edges that are also on the edge of the tile.");
                     DebugEx.Assert(
-                        !ValueClose(pathOnStart.X, pathOffStart.X) || !ValueClose(pathOnStart.Y, pathOffStart.Y), 
+                        !ValueClose(pathOnStart.X, pathOffStart.X) || !ValueClose(pathOnStart.Y, pathOffStart.Y),
                         "On and off path must start at the same place.");
+                    break;
+                case Depot depot:
+                    var pathStart = depot.Path.Func(0);
+                    DebugEx.Assert(
+                        OnGridEdge(pathStart) && OnTileEdge(pathStart) && !OnTileEdge(depot.Path.Func(1)),
+                        "Path should start at the edge of the tile and end inside it");
                     break;
                 default:
                     throw new NotImplementedException();
@@ -79,7 +85,7 @@ namespace Common
         public static ImmutableList<TileType> GetTileTypes()
         {
             var railTurnLeftUp = new ElmFunc<double, Double2>(
-                "\\t -> Point2 (sin t) (cos t) |> Point2.rmultScalar 2.5", 
+                "\\t -> Point2 (sin t) (cos t) |> Point2.rmultScalar 2.5",
                 t => new Double2(Math.Sin(t), Math.Cos(t)) * 2.5);
 
             var railTurnRightUp = new ElmFunc<double, Double2>(
@@ -87,7 +93,7 @@ namespace Common
                 t => new Double2(-Math.Sin(t) + 3, Math.Cos(t)) * 2.5);
 
             ElmFunc<double, Double2> RailLinearPath(Double2 start, Double2 end) => new ElmFunc<double, Double2>(
-                $"\\t -> Point2 {end.X} {end.Y} |> Point2.rsub (Point2 {start.X} {start.Y}) |> Point2.rmultScalar t |> Point2.add (Point2 {start.X} {start.Y})", 
+                $"\\t -> Point2 {end.X} {end.Y} |> Point2.rsub (Point2 {start.X} {start.Y}) |> Point2.rmultScalar t |> Point2.add (Point2 {start.X} {start.Y})",
                 t => (end - start) * t + start);
 
             return new[]
@@ -135,12 +141,12 @@ namespace Common
                     TileCategory.Roads,
                     new Rail(RailLinearPath(new Double2(1.5, 0), new Double2(1.5, 2)))),
                 new TileType(
-                    "depot", 
-                    new Int2(5, 3), 
-                    "depotLeftOccupied", 
-                    new[] { "depotLeftOccupied", "depotDownOccupied", "depotRightOccupied", "depotUpOccupied"}, 
-                    TileCategory.Roads, 
-                    new Basic())
+                    "depot",
+                    new Int2(5, 3),
+                    "depotLeftOccupied",
+                    new[] { "depotLeftOccupied", "depotDownOccupied", "depotRightOccupied", "depotUpOccupied"},
+                    TileCategory.Roads,
+                    new Depot(RailLinearPath(new Double2(0, 1.5), new Double2(4, 1.5))))
             }.ToImmutableList();
         }
 

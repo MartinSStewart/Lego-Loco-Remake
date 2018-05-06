@@ -26,11 +26,6 @@ currentRotation =
     Lens .currentRotation (\value item -> { item | currentRotation = value })
 
 
-currentTile : Lens { b | currentTile : a } a
-currentTile =
-    Lens .currentTile (\value item -> { item | currentTile = value })
-
-
 data : Lens { b | data : a } a
 data =
     Lens .data (\value item -> { item | data = value })

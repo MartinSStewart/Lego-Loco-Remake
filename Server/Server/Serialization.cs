@@ -44,7 +44,7 @@ namespace Server
 
         public static MemoryStream WriteTile(this MemoryStream stream, Tile tile) => 
             stream
-                .WriteInt((int)tile.TileTypeId)
+                .WriteInt(tile.TileTypeId)
                 .WriteInt2(tile.GridPosition)
                 .WriteInt(tile.Rotation)
                 .WriteTileData(tile.Data);
@@ -61,6 +61,10 @@ namespace Server
                     return stream
                         .WriteInt(2)
                         .WriteBool(fork.IsOn);
+                case TileDepot depot:
+                    return stream
+                        .WriteInt(3)
+                        .WriteBool(depot.Occupied);
                 default:
                     throw new NotImplementedException();
             }
@@ -178,6 +182,8 @@ namespace Server
                     return new TileRail();
                 case 2:
                     return new TileRailFork(stream.ReadBool());
+                case 3:
+                    return new TileDepot(stream.ReadBool());
                 default:
                     throw new NotImplementedException();
             }

@@ -106,7 +106,7 @@ depot =
         (Point2 5 3)
         Sprite.depotLeftOccupied
         Roads
-        Basic
+        Depot
 
 
 sidewalkId : Model.TileTypeId

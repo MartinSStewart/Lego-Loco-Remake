@@ -28,6 +28,7 @@ gridSize tile =
             Point2.transpose size
 
 
+tileTypeGridSize : Int -> Model.TileType -> Point2 Int
 tileTypeGridSize rotation tileType =
     if rotation % 2 == 0 then
         tileType.gridSize
