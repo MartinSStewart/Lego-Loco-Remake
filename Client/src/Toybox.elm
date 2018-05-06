@@ -154,8 +154,14 @@ toolboxHandlePosition windowSize toybox =
         size =
             toolboxSize toybox
     in
-        Point2 ((size.x - toolboxHandleSize.x) // 2) (Sprite.toyboxHandle |> .origin |> .y)
+        toolboxHandlePositionLocal
+            |> Point2.rsub (.origin Sprite.toyboxHandle)
             |> Point2.add (getPosition windowSize toybox)
+
+
+toolboxHandlePositionLocal : Point2 Int
+toolboxHandlePositionLocal =
+    Point2 ((toolboxLeftSize.x - toolboxHandleSize.x) // 2) 0
 
 
 
@@ -170,9 +176,6 @@ toolboxView zIndex windowSize model =
 
         position =
             getPosition windowSize toolbox
-
-        handleLocalPosition =
-            Point2 ((toolboxLeftSize.x - toolboxHandleSize.x) // 2) 0
 
         --Used to prevent anything under the toolbox from bleeding through.
         --This can happen if the user has DPI set to something other than 100%.
@@ -207,7 +210,7 @@ toolboxView zIndex windowSize model =
                 [ SpriteHelper.spriteView Point2.zero Sprite.toyboxLeft ]
             , div
                 [ onMouseDown ]
-                [ SpriteHelper.spriteView handleLocalPosition Sprite.toyboxHandle ]
+                [ SpriteHelper.spriteView toolboxHandlePositionLocal Sprite.toyboxHandle ]
             ]
 
 

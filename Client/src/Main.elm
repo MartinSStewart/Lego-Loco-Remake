@@ -296,11 +296,6 @@ drawTiles newTilePosition tileId model =
 ---- VIEW ----
 
 
-onMouseDown : (String -> msg) -> Html.Attribute msg
-onMouseDown tagger =
-    on "mousedown" (Json.Decode.map tagger Html.Events.targetValue)
-
-
 view : Model -> Html Msg
 view model =
     let
@@ -329,12 +324,15 @@ view model =
                                 model
                                 tileId
                     in
-                        [ tileView
-                            model
-                            (TileBaseData tileId mouseTilePos model.currentRotation |> Helpers.initTile)
-                            True
-                            currentTileZIndex
-                        ]
+                        if Toybox.insideToolbox model.windowSize model.mousePosCurrent model.toolbox then
+                            []
+                        else
+                            [ tileView
+                                model
+                                (TileBaseData tileId mouseTilePos model.currentRotation |> Helpers.initTile)
+                                True
+                                currentTileZIndex
+                            ]
 
                 Eraser ->
                     []
