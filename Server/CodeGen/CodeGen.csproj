@@ -70,7 +70,7 @@
       <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\Server\Server.csproj">
-      <Project>{80D7B2C4-7408-425A-A69A-A23B99CC2E61}</Project>
+      <Project>{80d7b2c4-7408-425a-a69a-a23b99cc2e61}</Project>
       <Name>Server</Name>
     </ProjectReference>
   </ItemGroup>

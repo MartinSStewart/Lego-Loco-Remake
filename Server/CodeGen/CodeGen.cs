@@ -77,29 +77,24 @@ type Category
             string GetEnums<T>() =>
                 Enum.GetValues(typeof(T))
                     .OfType<T>()
-                    .Select(
-                        item =>
-                        {
-                            var name = item.ToString().ToCamelCase();
-                            return 
-                                $"{name} : Int\n" +
-                                $"{name} =\n" +
-                                $"    {Convert.ToInt32(item)}\n";
-                        })
+                    .Select(item => GetElmFunction(item.ToString().ToCamelCase(), "Int", Convert.ToInt32(item).ToString()))
                     .ToDelimitedString("\n\n");
 
             return
 $@"{HeaderAndModule(moduleName)}
+import Point2 exposing (Point2)
+
 
 messageVersion : Int
 messageVersion =
     0
 
 
-superGridSize : Int
-superGridSize =
-    64
+{GetElmFunction(nameof(World.SuperGridSize).ToCamelCase(), "Int", World.SuperGridSize.ToString())}
 
+{GetElmFunction(nameof(World.MinGridPosition).ToCamelCase(), $"{Point2Type} Int", World.MinGridPosition.X.ToString(), World.MinGridPosition.Y.ToString())}
+
+{GetElmFunction(nameof(World.MaxGridPosition).ToCamelCase(), $"{Point2Type} Int", World.MaxGridPosition.X.ToString(), World.MaxGridPosition.Y.ToString())}
 
 {GetEnums<Serialization.MessageToClient>()}
 
@@ -153,8 +148,10 @@ import Monocle.Lens as Lens exposing (Lens)
 
         public static string GetElmFunction(string name, string type, params string[] parameters)
         {
-            var returnLine = $"    {type} {parameters.ToDelimitedString("\n    ")}\n";
-            var returnLineWithLineBreaks = $"    {type}{parameters.Select(item => "\n        " + item).ToDelimitedString("")}\n";
+            var isPrimitive = type == "Int" || type == "String" || type == "Float";
+            var constructor = isPrimitive ? "" : type.Split(' ')[0] + " ";
+            var returnLine = $"    {constructor}{parameters.ToDelimitedString(" ")}\n";
+            var returnLineWithLineBreaks = $"    {constructor}{parameters.Select(item => "\n        " + item).ToDelimitedString("")}\n";
             return
                 $"{name} : {type}\n" +
                 $"{name} =\n" +
@@ -162,7 +159,6 @@ import Monocle.Lens as Lens exposing (Lens)
                     ? returnLine 
                     : returnLineWithLineBreaks);
         }
-            
 
         public static string GetSpriteCode(IEnumerable<Sprite> sprites, string moduleName)
         {

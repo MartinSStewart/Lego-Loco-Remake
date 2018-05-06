@@ -6,6 +6,11 @@ module Lenses exposing (..)
 import Monocle.Lens as Lens exposing (Lens)
 
 
+baseData : Lens { b | baseData : a } a
+baseData =
+    Lens .baseData (\value item -> { item | baseData = value })
+
+
 category : Lens { b | category : a } a
 category =
     Lens .category (\value item -> { item | category = value })

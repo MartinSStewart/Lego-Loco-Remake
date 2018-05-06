@@ -20,6 +20,7 @@ import Toybox
 import Window
 import Tile
 import SpriteHelper
+import Config exposing (minGridPosition, maxGridPosition)
 
 
 ---- MODEL ----
@@ -309,8 +310,17 @@ onMouseDown tagger =
 view : Model -> Html Msg
 view model =
     let
+        tileZIndex =
+            -minGridPosition.y
+
+        currentTileZIndex =
+            maxGridPosition.y - minGridPosition.y + 1
+
+        toyboxZIndex =
+            currentTileZIndex + 1
+
         tileViews =
-            model.tiles |> List.map (\a -> tileView model a False a.baseData.position.y)
+            model.tiles |> List.map (\a -> tileView model a False (tileZIndex + a.baseData.position.y))
 
         toolbox =
             model.toolbox
@@ -329,7 +339,7 @@ view model =
                             model
                             (TileBaseData tileId mouseTilePos model.currentRotation |> Helpers.initTile)
                             True
-                            9998
+                            currentTileZIndex
                         ]
 
                 Eraser ->
@@ -340,8 +350,6 @@ view model =
     in
         div
             [ MouseEvents.onMouseDown MouseDown
-
-            --onChange decode
             , onWheel RotateTile
             , style
                 [ Sprite.grid |> .filepath |> background
@@ -353,7 +361,7 @@ view model =
         <|
             tileViews
                 ++ currentTileView
-                ++ [ Toybox.toolboxView 9999 model.windowSize model |> Html.map (\a -> ToolboxMsg a) ]
+                ++ [ Toybox.toolboxView toyboxZIndex model.windowSize model |> Html.map (\a -> ToolboxMsg a) ]
 
 
 tileView : Model -> Tile -> Bool -> Int -> Html msg
@@ -368,6 +376,12 @@ tileView model tile seeThrough zIndex =
         pos =
             Point2.multScalar tile.baseData.position gridToPixels
                 |> Point2.rsub model.viewPosition
+
+        a =
+            if seeThrough then
+                pos
+            else
+                Debug.log "pos" pos
 
         size =
             tileType.gridSize

@@ -3,6 +3,8 @@
 
 module Config exposing (..)
 
+import Point2 exposing (Point2)
+
 
 messageVersion : Int
 messageVersion =
@@ -12,6 +14,16 @@ messageVersion =
 superGridSize : Int
 superGridSize =
     64
+
+
+minGridPosition : Point2 Int
+minGridPosition =
+    Point2 -1000000 -1000000
+
+
+maxGridPosition : Point2 Int
+maxGridPosition =
+    Point2 1000000 1000000
 
 
 addedTile : Int

@@ -11,17 +11,12 @@ import TileCategory exposing (..)
 
 sidewalk : TileType
 sidewalk =
-    TileType
-        (Rot1 Sprite.sidewalk)
-        (Point2 1 1)
-        Sprite.sidewalk
-        Roads
-        Basic
+    TileType (Rot1 Sprite.sidewalk) (Point2 1 1) Sprite.sidewalk Roads Basic
 
 
 roadStraight : TileType
 roadStraight =
-    TileType
+    TileType 
         (Rot2 Sprite.roadHorizontal Sprite.roadVertical)
         (Point2 2 2)
         Sprite.roadHorizontal
@@ -31,7 +26,7 @@ roadStraight =
 
 roadTurn : TileType
 roadTurn =
-    TileType
+    TileType 
         (Rot4 Sprite.roadTurnLeftUp Sprite.roadTurnLeftDown Sprite.roadTurnRightDown Sprite.roadTurnRightUp)
         (Point2 2 2)
         Sprite.roadTurnLeftUp
@@ -41,7 +36,7 @@ roadTurn =
 
 redHouse : TileType
 redHouse =
-    TileType
+    TileType 
         (Rot1 Sprite.redHouse)
         (Point2 3 3)
         Sprite.redHouseIcon
@@ -51,7 +46,7 @@ redHouse =
 
 railStraight : TileType
 railStraight =
-    TileType
+    TileType 
         (Rot2 Sprite.railHorizontal Sprite.railVertical)
         (Point2 1 1)
         Sprite.railHorizontal
@@ -61,7 +56,7 @@ railStraight =
 
 railTurn : TileType
 railTurn =
-    TileType
+    TileType 
         (Rot4 Sprite.railTurnLeftUp Sprite.railTurnLeftDown Sprite.railTurnRightDown Sprite.railTurnRightUp)
         (Point2 3 3)
         Sprite.railTurnLeftUp
@@ -71,7 +66,7 @@ railTurn =
 
 railSplitRight : TileType
 railSplitRight =
-    TileType
+    TileType 
         (Rot4 Sprite.railSplitHorizontalRightUpOff Sprite.railSplitVerticalLeftUpOff Sprite.railSplitHorizontalLeftDownOff Sprite.railSplitVerticalRightDownOff)
         (Point2 3 3)
         Sprite.railSplitVerticalLeftUpOff
@@ -81,7 +76,7 @@ railSplitRight =
 
 railSplitLeft : TileType
 railSplitLeft =
-    TileType
+    TileType 
         (Rot4 Sprite.railSplitHorizontalLeftUpOff Sprite.railSplitVerticalLeftDownOff Sprite.railSplitHorizontalRightDownOff Sprite.railSplitVerticalRightUpOff)
         (Point2 3 3)
         Sprite.railSplitHorizontalLeftUpOff
@@ -91,7 +86,7 @@ railSplitLeft =
 
 roadRailCrossing : TileType
 roadRailCrossing =
-    TileType
+    TileType 
         (Rot2 Sprite.roadRailCrossingOpenHorizontal Sprite.roadRailCrossingOpenVertical)
         (Point2 3 2)
         Sprite.roadRailCrossingOpenHorizontal
@@ -101,7 +96,7 @@ roadRailCrossing =
 
 depot : TileType
 depot =
-    TileType
+    TileType 
         (Rot4 Sprite.depotLeftOccupied Sprite.depotDownOccupied Sprite.depotRightOccupied Sprite.depotUpOccupied)
         (Point2 5 3)
         Sprite.depotLeftOccupied
