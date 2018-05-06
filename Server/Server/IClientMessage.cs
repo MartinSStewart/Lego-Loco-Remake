@@ -24,21 +24,21 @@ namespace Server
 
     public class RemoveTileMessage : IClientMessage
     {
-        public Tile Tile { get; }
+        public TileBaseData BaseData { get; }
 
-        public RemoveTileMessage(Tile tile)
+        public RemoveTileMessage(TileBaseData baseData)
         {
-            Tile = tile;
+            BaseData = baseData;
         }
     }
 
     public class ClickTileMessage : IClientMessage
     {
-        public Tile Tile { get; }
+        public TileBaseData BaseData { get; }
 
-        public ClickTileMessage(Tile tile)
+        public ClickTileMessage(TileBaseData baseData)
         {
-            Tile = tile;
+            BaseData = baseData;
         }
     }
 
@@ -84,21 +84,21 @@ namespace Server
 
     public class RemovedTileMessage : IServerMessage
     {
-        public Tile Tile { get; }
+        public TileBaseData BaseData { get; }
 
-        public RemovedTileMessage(Tile tile)
+        public RemovedTileMessage(TileBaseData baseData)
         {
-            Tile = tile;
+            BaseData = baseData;
         }
     }
 
     public class ClickedTileMessage : IServerMessage
     {
-        public Tile Tile { get; }
+        public TileBaseData BaseData { get; }
 
-        public ClickedTileMessage(Tile tile)
+        public ClickedTileMessage(TileBaseData baseData)
         {
-            Tile = tile;
+            BaseData = baseData;
         }
     }
 }

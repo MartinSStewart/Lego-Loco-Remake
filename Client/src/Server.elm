@@ -36,15 +36,15 @@ send actions =
 
 type Action
     = AddTile Tile
-    | RemoveTile Tile
-    | ClickTile Tile
+    | RemoveTile TileBaseData
+    | ClickTile TileBaseData
     | GetRegion (Point2 Int) (Point2 Int)
 
 
 type Response
     = AddedTile Tile
-    | RemovedTile Tile
-    | ClickedTile Tile
+    | RemovedTile TileBaseData
+    | ClickedTile TileBaseData
     | GotRegion (Point2 Int) (Point2 Int) (List Tile)
 
 
@@ -54,11 +54,11 @@ writeAction action =
         AddTile tile ->
             writeInt Config.addTile ++ writeTile tile
 
-        RemoveTile tile ->
-            writeInt Config.removeTile ++ writeTile tile
+        RemoveTile baseData ->
+            writeInt Config.removeTile ++ writeTileBaseData baseData
 
-        ClickTile tile ->
-            writeInt Config.clickTile ++ writeTile tile
+        ClickTile baseData ->
+            writeInt Config.clickTile ++ writeTileBaseData baseData
 
         GetRegion topLeft gridSize ->
             writeInt Config.getRegion ++ writePoint2 topLeft ++ writePoint2 gridSize
@@ -81,11 +81,11 @@ update data model =
                             AddedTile tile ->
                                 Helpers.addTile tile model
 
-                            RemovedTile tile ->
-                                Helpers.removeTile tile model
+                            RemovedTile baseData ->
+                                Helpers.removeTile baseData model
 
-                            ClickedTile tile ->
-                                Helpers.modifyTile tile model
+                            ClickedTile baseData ->
+                                Helpers.clickTile baseData model
 
                             GotRegion topLeft size tiles ->
                                 let
@@ -133,9 +133,11 @@ readResponse data =
             if responseCode == Config.addedTile then
                 readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, AddedTile tile ))
             else if responseCode == Config.removedTile then
-                readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, RemovedTile tile ))
+                readTileBaseData bytes
+                    |> Maybe.andThen (\( bytesLeft, baseData ) -> Just ( bytesLeft, RemovedTile baseData ))
             else if responseCode == Config.clickedTile then
-                readTile bytes |> Maybe.andThen (\( bytesLeft, tile ) -> Just ( bytesLeft, ClickedTile tile ))
+                readTileBaseData bytes
+                    |> Maybe.andThen (\( bytesLeft, baseData ) -> Just ( bytesLeft, ClickedTile baseData ))
             else if responseCode == Config.gotRegion then
                 readPoint2 bytes
                     |> Maybe.andThen

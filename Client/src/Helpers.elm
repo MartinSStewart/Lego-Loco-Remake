@@ -138,9 +138,9 @@ addTile tile model =
         model
 
 
-removeTile : Tile -> Model -> Model
-removeTile tile model =
-    model |> Lens.modify Lenses.tiles (List.filter ((/=) tile))
+removeTile : TileBaseData -> Model -> Model
+removeTile baseData model =
+    model |> Lens.modify Lenses.tiles (List.filter (.baseData >> (/=) baseData))
 
 
 modifyTile : Tile -> Model -> Model
@@ -151,11 +151,13 @@ modifyTile tile model =
         model
 
 
+clickTile : TileBaseData -> Model -> Model
+clickTile baseData model =
+    model
 
--- clickTile : Tile -> Model -> Model
--- clickTile tile model =
---
--- model |> Lens.modify Lenses.tiles (List.)
+
+
+-- |> Lens.modify Lenses.tiles (List.)
 
 
 setMousePosCurrent : Position -> ( Model, Cmd msg ) -> ( Model, Cmd msg )

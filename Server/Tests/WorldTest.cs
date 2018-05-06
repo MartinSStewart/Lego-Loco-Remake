@@ -123,7 +123,7 @@ namespace Tests
             for (int i = 0; i < 10000; i++)
             {
                 var tile = RandomTile(random1, World.MinGridPosition, World.MaxGridPosition);
-                world.Remove(tile);
+                world.Remove(tile.BaseData);
             }
 
             Assert.AreEqual(0, world.TileCount);

@@ -188,7 +188,7 @@ mouseDown mouseEvent model =
                     cmd =
                         model
                             |> Helpers.collisionsAt gridPos Point2.one
-                            |> List.map Server.ClickTile
+                            |> List.map (.baseData >> Server.ClickTile)
                             |> Server.send
                 in
                     ( model, cmd )
@@ -200,7 +200,7 @@ erase gridPosition model =
         command =
             model
                 |> collisionsAt gridPosition Point2.one
-                |> List.map Server.RemoveTile
+                |> List.map (.baseData >> Server.RemoveTile)
                 |> Server.send
 
         a =

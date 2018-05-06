@@ -119,7 +119,8 @@ namespace Server
         /// <summary>
         /// Removes a tile that exactly matches the one provided.
         /// </summary>
-        public bool Remove(Tile tile) => _superGrid.Remove(GridToSuperGrid(tile.BaseData.GridPosition), tile);
+        public bool Remove(TileBaseData baseData) => 
+            _superGrid.Remove(GridToSuperGrid(baseData.GridPosition), GetTile(baseData));
 
         public bool TilesOverlap(Tile tile0, Tile tile1) => 
             RectanglesOverlap(

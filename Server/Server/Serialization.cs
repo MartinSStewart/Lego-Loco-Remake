@@ -44,10 +44,14 @@ namespace Server
 
         public static MemoryStream WriteTile(this MemoryStream stream, Tile tile) => 
             stream
-                .WriteInt(tile.BaseData.TileTypeId)
-                .WriteInt2(tile.BaseData.GridPosition)
-                .WriteInt(tile.BaseData.Rotation)
+                .WriteTileBaseData(tile.BaseData)
                 .WriteTileData(tile.Data);
+
+        public static MemoryStream WriteTileBaseData(this MemoryStream stream, TileBaseData tile) =>
+            stream
+                .WriteInt(tile.TileTypeId)
+                .WriteInt2(tile.GridPosition)
+                .WriteInt(tile.Rotation);
 
         public static MemoryStream WriteTileData(this MemoryStream stream, ITileData tileData)
         {
@@ -97,11 +101,11 @@ namespace Server
                 case RemovedTileMessage msg:
                     return stream
                         .WriteInt((int)MessageToClient.RemovedTile)
-                        .WriteTile(msg.Tile);
+                        .WriteTileBaseData(msg.BaseData);
                 case ClickedTileMessage msg:
                     return stream
                         .WriteInt((int)MessageToClient.ClickedTile)
-                        .WriteTile(msg.Tile);
+                        .WriteTileBaseData(msg.BaseData);
                 case GotRegionMessage msg:
                     return stream
                         .WriteInt((int)MessageToClient.GotRegion)
@@ -168,11 +172,17 @@ namespace Server
 
         public static Tile ReadTile(this MemoryStream stream)
         {
+            var baseData = stream.ReadTileBaseData();
+            var tileData = stream.ReadTileData();
+            return new Tile(baseData, tileData);
+        }
+
+        public static TileBaseData ReadTileBaseData(this MemoryStream stream)
+        {
             var tileId = stream.ReadInt();
             var gridPos = stream.ReadInt2();
             var rotation = stream.ReadInt();
-            var tileData = stream.ReadTileData();
-            return new Tile(new TileBaseData(tileId, gridPos, rotation), tileData);
+            return new TileBaseData(tileId, gridPos, rotation);
         }
 
         public static ITileData ReadTileData(this MemoryStream stream)
@@ -214,17 +224,10 @@ namespace Server
                         var tile = ReadTile(stream);
                         return new AddTileMessage(tile);
                     }
-
                 case MessageToServer.RemoveTile:
-                    {
-                        var tile = ReadTile(stream);
-                        return new RemoveTileMessage(tile);
-                    }
+                    return new RemoveTileMessage(ReadTileBaseData(stream));
                 case MessageToServer.ClickTile:
-                    {
-                        var tile = ReadTile(stream);
-                        return new ClickTileMessage(tile);
-                    }
+                    return new ClickTileMessage(ReadTileBaseData(stream));
                 case MessageToServer.GetRegion:
                     {
                         var topLeft = ReadInt2(stream);
