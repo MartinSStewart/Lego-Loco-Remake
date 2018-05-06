@@ -18,7 +18,6 @@ spriteViewWithStyle topLeft sprite styleTuples =
         [ style <|
             [ background sprite.filepath
             , ( "background-repeat", "no-repeat" )
-            , ( "pointer-events", "none" )
             ]
                 ++ absoluteStyle (Point2.sub topLeft sprite.origin) sprite.size
                 ++ styleTuples

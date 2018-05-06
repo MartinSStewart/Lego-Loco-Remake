@@ -374,7 +374,7 @@ tileView model tile seeThrough zIndex =
                 |> Point2.mult (Point2 gridToPixels gridToPixels)
 
         styleTuples =
-            [ ( "z-index", toString zIndex ) ]
+            [ ( "z-index", toString zIndex ), ( "pointer-events", "none" ) ]
                 ++ if seeThrough then
                     [ ( "opacity", "0.5" ) ]
                    else
