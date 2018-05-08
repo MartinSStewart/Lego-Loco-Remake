@@ -2,6 +2,7 @@
 using Common.TileData;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -42,6 +43,15 @@ namespace Server
             return stream;
         }
 
+        public static MemoryStream WriteElmFloat(this MemoryStream stream, double value)
+        {
+            var integerPart = (int)value;
+            var fractionalPart = (int)((value - integerPart) * int.MaxValue);
+            return stream
+                .WriteInt(integerPart)
+                .WriteInt(fractionalPart);
+        }
+
         public static MemoryStream WriteTile(this MemoryStream stream, Tile tile) => 
             stream
                 .WriteTileBaseData(tile.BaseData)
@@ -59,20 +69,28 @@ namespace Server
             {
                 case TileBasic _:
                     return stream.WriteInt(0);
-                case TileRail _:
-                    return stream.WriteInt(1);
+                case TileRail rail:
+                    return stream.WriteInt(1)
+                        .WriteList(rail.Trains, WriteTrain);
                 case TileRailFork fork:
                     return stream
                         .WriteInt(2)
+                        .WriteList(fork.Trains, WriteTrain)
                         .WriteBool(fork.IsOn);
                 case TileDepot depot:
                     return stream
                         .WriteInt(3)
+                        .WriteList(depot.Trains, WriteTrain)
                         .WriteBool(depot.Occupied);
                 default:
                     throw new NotImplementedException();
             }
         }
+
+        public static MemoryStream WriteTrain(this MemoryStream stream, Train train) =>
+            stream
+                .WriteElmFloat(train.T)
+                .WriteElmFloat(train.Speed);
 
         public static MemoryStream WriteList<T>(this MemoryStream stream, ICollection<T> list, Func<MemoryStream, T, MemoryStream> writer)
         {
@@ -170,6 +188,13 @@ namespace Server
             return new Int2(x, y);
         }
 
+        public static double ReadElmFloat(this MemoryStream stream)
+        {
+            var integerPart = stream.ReadInt();
+            var fractionalPart = stream.ReadInt();
+            return integerPart + fractionalPart / (double)int.MaxValue;
+        }
+
         public static Tile ReadTile(this MemoryStream stream)
         {
             var baseData = stream.ReadTileBaseData();
@@ -193,14 +218,27 @@ namespace Server
                 case 0:
                     return new TileBasic();
                 case 1:
-                    return new TileRail();
+                    return new TileRail(stream.ReadList(ReadTrain).ToImmutableList());
                 case 2:
-                    return new TileRailFork(stream.ReadBool());
+                    {
+                        var trains = stream.ReadList(ReadTrain).ToImmutableList();
+                        return new TileRailFork(trains, stream.ReadBool());
+                    }
                 case 3:
-                    return new TileDepot(stream.ReadBool());
+                    {
+                        var trains = stream.ReadList(ReadTrain).ToImmutableList();
+                        return new TileDepot(trains, stream.ReadBool());
+                    }
                 default:
                     throw new NotImplementedException();
             }
+        }
+
+        public static Train ReadTrain(this MemoryStream stream)
+        {
+            var t = stream.ReadElmFloat();
+            var speed = stream.ReadElmFloat();
+            return new Train(t, speed);
         }
 
         public static List<T> ReadList<T>(this MemoryStream stream, Func<MemoryStream, T> reader)

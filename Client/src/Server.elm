@@ -176,6 +176,19 @@ readInt data =
             Nothing
 
 
+readFloat : ByteString -> Maybe ( ByteString, Float )
+readFloat data =
+    readInt data
+        |> Maybe.andThen
+            (\( bytesLeft, integerPart ) ->
+                readInt bytesLeft
+                    |> Maybe.andThen
+                        (\( bytesLeft, fractionalPart ) ->
+                            Just ( bytesLeft, toFloat integerPart + (toFloat fractionalPart) / (toFloat Helpers.intMax) )
+                        )
+            )
+
+
 readBool : ByteString -> Maybe ( ByteString, Bool )
 readBool data =
     case data of
@@ -239,21 +252,46 @@ readTileData data =
                 if tileDataType == 0 then
                     Just ( bytesLeft, TileBasic )
                 else if tileDataType == 1 then
-                    Just ( bytesLeft, TileRail )
-                else if tileDataType == 2 then
-                    readBool bytesLeft
+                    readList readTrain bytesLeft
                         |> Maybe.andThen
-                            (\( bytesLeft, bool ) ->
-                                Just ( bytesLeft, TileRailFork bool )
+                            (\( bytesLeft, trains ) ->
+                                Just ( bytesLeft, TileRail trains )
+                            )
+                else if tileDataType == 2 then
+                    readList readTrain bytesLeft
+                        |> Maybe.andThen
+                            (\( bytesLeft, trains ) ->
+                                readBool bytesLeft
+                                    |> Maybe.andThen
+                                        (\( bytesLeft, bool ) ->
+                                            Just ( bytesLeft, TileRailFork trains bool )
+                                        )
                             )
                 else if tileDataType == 3 then
-                    readBool bytesLeft
+                    readList readTrain bytesLeft
                         |> Maybe.andThen
-                            (\( bytesLeft, bool ) ->
-                                Just ( bytesLeft, TileDepot bool )
+                            (\( bytesLeft, trains ) ->
+                                readBool bytesLeft
+                                    |> Maybe.andThen
+                                        (\( bytesLeft, bool ) ->
+                                            Just ( bytesLeft, TileDepot trains bool )
+                                        )
                             )
                 else
                     Nothing
+            )
+
+
+readTrain : ByteString -> Maybe ( ByteString, Train )
+readTrain data =
+    readFloat data
+        |> Maybe.andThen
+            (\( bytesLeft, t ) ->
+                readFloat bytesLeft
+                    |> Maybe.andThen
+                        (\( bytesLeft, speed ) ->
+                            Just ( bytesLeft, Train t speed )
+                        )
             )
 
 
@@ -285,6 +323,18 @@ writeInt int =
         , int |> Bitwise.and 0x00FF0000 |> Bitwise.shiftRightZfBy 16
         , int |> Bitwise.and 0xFF000000 |> Bitwise.shiftRightZfBy 24
         ]
+
+
+writeFloat : Float -> ByteString
+writeFloat float =
+    let
+        integerPart =
+            floor float
+
+        fractionalPart =
+            (float - toFloat integerPart) * toFloat Helpers.intMax |> floor
+    in
+        writeInt integerPart ++ writeInt fractionalPart
 
 
 writeList : (a -> ByteString) -> List a -> ByteString
@@ -341,19 +391,24 @@ writeTileData tileData =
         TileBasic ->
             writeInt 0
 
-        TileRail ->
-            writeInt 1
+        TileRail trains ->
+            writeInt 1 ++ writeList writeTrain trains
 
-        TileRailFork isOn ->
-            writeInt 2 ++ writeBool isOn
+        TileRailFork trains isOn ->
+            writeInt 2 ++ writeList writeTrain trains ++ writeBool isOn
 
-        TileDepot occupied ->
-            writeInt 3 ++ writeBool occupied
+        TileDepot trains occupied ->
+            writeInt 3 ++ writeList writeTrain trains ++ writeBool occupied
+
+
+writeTrain : Train -> ByteString
+writeTrain train =
+    writeFloat train.t ++ writeFloat train.speed
 
 
 inIntRange : Int -> Bool
 inIntRange int =
-    int <= 2147483647 || int >= -2147483648
+    int <= Helpers.intMax || int >= Helpers.intMin
 
 
 inByteRange : Int -> Bool

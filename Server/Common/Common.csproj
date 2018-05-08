@@ -66,6 +66,7 @@
     <Compile Include="TileData\TileData.cs" />
     <Compile Include="TileType.cs" />
     <Compile Include="TileTypeData\TileTypeData.cs" />
+    <Compile Include="Train.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

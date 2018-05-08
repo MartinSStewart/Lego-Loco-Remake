@@ -6,10 +6,9 @@ import Point2 exposing (..)
 import Server exposing (..)
 import BinaryBase64
 import Fuzz exposing (list, int)
-import Bitwise
 import Main exposing (initModel)
 import TileType exposing (..)
-import Helpers exposing (collidesWith, addTile)
+import Helpers exposing (collidesWith, addTile, intMin, intMax)
 import Model exposing (TileBaseData)
 
 
@@ -19,13 +18,7 @@ import Model exposing (TileBaseData)
 all : Test
 all =
     describe "A Test Suite"
-        [ test "Addition" <|
-            \_ ->
-                Expect.equal 10 (3 + 7)
-        , test "String.left" <|
-            \_ ->
-                Expect.equal "a" (String.left 1 "abcdefg")
-        , test "Tiles right on top of eachother should collide." <|
+        [ test "Tiles right on top of eachother should collide." <|
             \_ ->
                 collidesWith
                     (TileBaseData redHouseId Point2.zero 0)
@@ -67,54 +60,68 @@ all =
             \_ -> Server.readInt [ 255, 255, 255, 255 ] |> Expect.equal (Just ( [], -1 ))
         , test "ReadInt -2" <|
             \_ -> Server.readInt [ 254, 255, 255, 255 ] |> Expect.equal (Just ( [], -2 ))
-        , fuzz2 Fuzz.bool (list int) "readBool undoes writeBool" <|
-            \a b ->
+        , fuzz2 Fuzz.bool (list (Fuzz.intRange 0 255)) "readBool undoes writeBool" <|
+            \a extraBytes ->
+                writeBool a
+                    ++ extraBytes
+                    |> readBool
+                    |> Expect.equal (Just ( extraBytes, a ))
+        , fuzz2 (Fuzz.intRange intMin intMax) (list (Fuzz.intRange 0 255)) "readInt undoes writeInt" <|
+            \a extraBytes ->
+                writeInt a
+                    ++ extraBytes
+                    |> readInt
+                    |> Expect.equal (Just ( extraBytes, a ))
+        , test "ReadFloat 0" <|
+            \_ -> Server.readFloat [ 0, 0, 0, 0, 0, 0, 0, 0 ] |> Expect.equal (Just ( [], 0 ))
+        , test "ReadFloat 1" <|
+            \_ -> Server.readFloat [ 1, 0, 0, 0, 0, 0, 0, 0 ] |> Expect.equal (Just ( [], 1 ))
+        , test "ReadFloat -1" <|
+            \_ -> Server.readFloat [ 255, 255, 255, 255, 0, 0, 0, 0 ] |> Expect.equal (Just ( [], -1 ))
+        , fuzz2
+            (Fuzz.floatRange (Basics.toFloat intMin) (Basics.toFloat intMax))
+            (list (Fuzz.intRange 0 255))
+            "readFloat undoes writeFloat"
+          <|
+            \a extraBytes ->
                 let
-                    extraBytes =
-                        getBytes b
+                    result =
+                        writeFloat a
+                            ++ extraBytes
+                            |> readFloat
                 in
-                    writeBool a
-                        ++ extraBytes
-                        |> readBool
-                        |> Expect.equal (Just ( extraBytes, a ))
-        , fuzz2 int (list int) "readInt undoes writeInt" <|
-            \a b ->
-                let
-                    input =
-                        fixInt a
+                    case result of
+                        Just tuple ->
+                            Expect.all
+                                [ Tuple.first >> Expect.equal extraBytes
+                                , Tuple.second >> Expect.within (Expect.Relative 0.0001) a
+                                ]
+                                tuple
 
-                    extraBytes =
-                        getBytes b
-                in
-                    writeInt input
-                        ++ extraBytes
-                        |> readInt
-                        |> Expect.equal (Just ( extraBytes, input ))
-        , fuzz2 (list int) (list int) "readList undoes writeList" <|
+                        Nothing ->
+                            Expect.fail "readFloat shouldn't have failed."
+        , fuzz2 (list (Fuzz.intRange intMin intMax)) (list (Fuzz.intRange 0 255)) "readList undoes writeList" <|
             \a b ->
-                let
-                    input =
-                        List.map fixInt a
-
-                    extraBytes =
-                        getBytes b
-                in
-                    writeList writeInt input
-                        ++ extraBytes
-                        |> readList readInt
-                        |> Expect.equal (Just ( extraBytes, input ))
-        , fuzz5 (List.length tiles - 1 |> Fuzz.intRange 0) int int int (list int) "readTile undoes writeTile" <|
-            \a b c d e ->
+                writeList writeInt a
+                    ++ b
+                    |> readList readInt
+                    |> Expect.equal (Just ( b, a ))
+        , fuzz5
+            (List.length tiles - 1 |> Fuzz.intRange 0)
+            (Fuzz.intRange intMin intMax)
+            (Fuzz.intRange intMin intMax)
+            (Fuzz.intRange intMin intMax)
+            (list (Fuzz.intRange 0 255))
+            "readTile undoes writeTile"
+          <|
+            \a b c d extraBytes ->
                 let
                     input =
                         TileBaseData
                             (Model.TileTypeId a)
-                            (Point2 (fixInt b) (fixInt c))
-                            (fixInt d)
+                            (Point2 b c)
+                            d
                             |> Helpers.initTile
-
-                    extraBytes =
-                        getBytes e
                 in
                     writeTile input
                         ++ extraBytes
@@ -129,15 +136,3 @@ all =
                     |> List.length
                     |> Expect.equal 2
         ]
-
-
-{-| Make sure the integer we are using don't exceed the range of 32 bit integers.
--}
-fixInt : Int -> Int
-fixInt int =
-    Bitwise.and 0xFFFFFFFF int
-
-
-getBytes : List Int -> BinaryBase64.ByteString
-getBytes ints =
-    List.map (\a -> a % 256) ints

@@ -86,7 +86,7 @@ namespace Server
                 case TileRail _:
                     break;
                 case TileRailFork fork:
-                    ReplaceTileData(tile, new TileRailFork(!fork.IsOn));
+                    ReplaceTileData(tile, new TileRailFork(fork.Trains, !fork.IsOn));
                     break;
                 case TileDepot depot:
                     break;

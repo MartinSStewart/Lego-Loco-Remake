@@ -17,12 +17,6 @@ namespace Common.TileTypeData
 
     public static class TileTypeData
     {
-        //public static ImmutableDictionary<ITileTypeData, ITileData> TileDataMap =>
-        //    new Dictionary<ITileTypeData, ITileData>
-        //    {
-        //        [typeof(Basic)]
-        //    }.ToImmutableDictionary();
-
         public static string SpritesToParams(ImmutableList<string> sprites) => 
             $"(Rot{sprites.Count} {sprites.Select(item => "Sprite." + item).ToDelimitedString(" ")})";
         public static string SpritesToParams(ImmutableList<(string, string)> sprites) => 
@@ -69,7 +63,7 @@ namespace Common.TileTypeData
         }
 
         public string GetElmParameter() => $"(Rail\n            {TileTypeData.SpritesToParams(Sprites)}\n            ({Path.ElmCode})\n        )";
-        public ITileData GetDefaultTileData() => new TileRail();
+        public ITileData GetDefaultTileData() => new TileRail(ImmutableList<Train>.Empty);
     }
 
     public class RailFork : ITileTypeData
@@ -88,7 +82,7 @@ namespace Common.TileTypeData
         }
 
         public string GetElmParameter() => $"(RailFork\n            {TileTypeData.SpritesToParams(Sprites)}\n            ({PathOn.ElmCode})\n            ({PathOff.ElmCode})\n        )";
-        public ITileData GetDefaultTileData() => new TileRailFork(false);
+        public ITileData GetDefaultTileData() => new TileRailFork(ImmutableList<Train>.Empty, false);
     }
 
     public class Depot : ITileTypeData
@@ -105,6 +99,6 @@ namespace Common.TileTypeData
         }
 
         public string GetElmParameter() => $"(Depot\n            {TileTypeData.SpritesToParams(Sprites)}\n        )";
-        public ITileData GetDefaultTileData() => new TileDepot(true);
+        public ITileData GetDefaultTileData() => new TileDepot(ImmutableList<Train>.Empty, true);
     }
 }

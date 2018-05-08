@@ -55,9 +55,9 @@ type Rot a
 
 type TileData
     = TileBasic
-    | TileRail
-    | TileRailFork Bool -- Is on
-    | TileDepot Bool -- Is occupied
+    | TileRail (List Train)
+    | TileRailFork (List Train) Bool -- Is on
+    | TileDepot (List Train) Bool -- Is occupied
 
 
 type TileTypeData
@@ -69,6 +69,12 @@ type TileTypeData
 
 type TileTypeId
     = TileTypeId Int
+
+
+type alias Train =
+    { t : Float -- The distance along the current rail path where 0 == start and 1 == end.
+    , speed : Float -- In grid units per second. Positive means towards path end, negative means towards path start.
+    }
 
 
 type alias Toybox =

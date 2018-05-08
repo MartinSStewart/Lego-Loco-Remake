@@ -29,13 +29,13 @@ initTileData tileTypeData =
             TileBasic
 
         Rail _ _ ->
-            TileRail
+            TileRail []
 
         RailFork _ _ _ ->
-            TileRailFork False
+            TileRailFork [] False
 
         Depot _ ->
-            TileDepot True
+            TileDepot [] True
 
 
 absoluteStyle : Point2 number -> Point2 number -> List ( String, String )
@@ -107,6 +107,16 @@ backgroundColor color =
         ( "background-color", "rgb(" ++ text ++ ")" )
 
 
+intMax : Int
+intMax =
+    2147483647
+
+
+intMin : Int
+intMin =
+    -2147483648
+
+
 stylePosition : Point2 number -> String
 stylePosition point =
     px point.x ++ " " ++ px point.y
@@ -158,18 +168,22 @@ clickTile tileBaseData model =
         (List.map
             (\a ->
                 if (a.baseData == tileBaseData) then
-                    case a.data of
-                        TileBasic ->
-                            a
+                    Lens.modify Lenses.data
+                        (\data ->
+                            case data of
+                                TileBasic ->
+                                    data
 
-                        Model.TileRail ->
-                            a
+                                TileRail _ ->
+                                    data
 
-                        Model.TileRailFork isOn ->
-                            a |> Lens.modify Lenses.data (\_ -> not isOn |> Model.TileRailFork)
+                                TileRailFork trains isOn ->
+                                    TileRailFork trains (not isOn)
 
-                        Model.TileDepot _ ->
-                            a
+                                TileDepot trains occupied ->
+                                    TileDepot (ifThenElse occupied (Train 0 0 :: trains) trains) False
+                        )
+                        a
                 else
                     a
             )
@@ -230,3 +244,38 @@ getTileTypeByTile tileBaseData =
 
             Nothing ->
                 TileType.sidewalk
+
+
+directions : number
+directions =
+    4
+
+
+rotToList : Rot a -> List a
+rotToList rotSprite =
+    case rotSprite of
+        Rot1 single ->
+            [ single ]
+
+        Rot2 horizontal vertical ->
+            [ horizontal, vertical ]
+
+        Rot4 right up left down ->
+            [ right, up, left, down ]
+
+
+rotGetAt : Rot a -> Int -> a
+rotGetAt rotSprite index =
+    let
+        spriteList =
+            rotToList rotSprite
+
+        sprite =
+            List.Extra.getAt (index % List.length spriteList) spriteList
+    in
+        case sprite of
+            Just a ->
+                a
+
+            Nothing ->
+                Debug.crash "There is no way this can happen."

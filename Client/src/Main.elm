@@ -3,9 +3,7 @@ module Main exposing (..)
 import Helpers exposing (..)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src, style)
-import Html.Events exposing (on)
 import Point2 exposing (Point2)
-import Json.Decode
 import Keyboard
 import Lenses exposing (..)
 import Monocle.Lens as Lens
@@ -15,7 +13,6 @@ import MouseEvents
 import Server
 import Sprite
 import Task
-import TileHelper exposing (..)
 import Toybox
 import Window
 import Tile
@@ -394,7 +391,7 @@ tileView model tile seeThrough zIndex =
                             getSprite rotSprite
                     in
                         case tile.data of
-                            TileRail ->
+                            TileRail _ ->
                                 sprite
 
                             _ ->
@@ -406,7 +403,7 @@ tileView model tile seeThrough zIndex =
                             getSprite rotSprite
                     in
                         case tile.data of
-                            TileRailFork isOn ->
+                            TileRailFork _ isOn ->
                                 ifThenElse isOn spriteOn spriteOff
 
                             _ ->
@@ -418,7 +415,7 @@ tileView model tile seeThrough zIndex =
                             getSprite rotSprite
                     in
                         case tile.data of
-                            TileDepot isOn ->
+                            TileDepot _ isOn ->
                                 spriteOccupied
 
                             _ ->
