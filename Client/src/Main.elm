@@ -1,23 +1,26 @@
 module Main exposing (..)
 
+import Config exposing (maxGridPosition, minGridPosition)
+import Css
+import Css.Foreign exposing (Snippet, global)
 import Helpers exposing (..)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src, style)
-import Point2 exposing (Point2)
+import Html.Styled exposing (toUnstyled)
 import Keyboard
 import Lenses exposing (..)
-import Monocle.Lens as Lens
 import Model exposing (..)
+import Monocle.Lens as Lens
 import Mouse exposing (Position)
 import MouseEvents
+import Point2 exposing (Point2)
 import Server
 import Sprite
+import SpriteHelper
 import Task
+import Tile
 import Toybox
 import Window
-import Tile
-import SpriteHelper
-import Config exposing (minGridPosition, maxGridPosition)
 
 
 ---- MODEL ----
@@ -350,7 +353,55 @@ view model =
         <|
             tileViews
                 ++ currentTileView
-                ++ [ Toybox.toolboxView toyboxZIndex model.windowSize model |> Html.map (\a -> ToolboxMsg a) ]
+                ++ [ Toybox.toolboxView toyboxZIndex model.windowSize model |> Html.map (\a -> ToolboxMsg a)
+                   , cursorView model
+                   ]
+
+
+cursorView : Model -> Html msg
+cursorView model =
+    let
+        gridPosition =
+            viewToGrid model.mousePosCurrent model
+
+        cursor =
+            if model.toolbox.drag /= Nothing then
+                Css.grabbing
+            else if Toybox.insideHandle model.windowSize model.mousePosCurrent model.toolbox then
+                Css.grab
+            else
+                case model.editMode of
+                    PlaceTiles tileTypeId ->
+                        Css.default
+
+                    Eraser ->
+                        Css.default
+
+                    Hand ->
+                        collisionsAt gridPosition Point2.one model
+                            |> List.head
+                            |> Maybe.map
+                                (\tile ->
+                                    case tile.data of
+                                        TileBasic ->
+                                            Css.default
+
+                                        Model.TileRail _ ->
+                                            Css.default
+
+                                        Model.TileRailFork _ _ ->
+                                            Css.pointer
+
+                                        Model.TileDepot _ _ ->
+                                            Css.pointer
+                                )
+                            |> Maybe.withDefault Css.default
+    in
+        Css.Foreign.global
+            [ Css.Foreign.html
+                [ Css.cursor cursor ]
+            ]
+            |> toUnstyled
 
 
 tileView : Model -> Tile -> Bool -> Int -> Html msg
@@ -371,7 +422,7 @@ tileView model tile seeThrough zIndex =
                 )
                 sprite
 
-        tileSprite =
+        ( clickable, tileSprite ) =
             case tileType.data of
                 Basic rotSprite ->
                     let
@@ -380,10 +431,10 @@ tileView model tile seeThrough zIndex =
                     in
                         case tile.data of
                             TileBasic ->
-                                sprite
+                                sprite |> (,) False
 
                             _ ->
-                                tileDataAssert "TileBasic" tile sprite
+                                tileDataAssert "TileBasic" tile sprite |> (,) False
 
                 Rail rotSprite _ ->
                     let
@@ -392,10 +443,10 @@ tileView model tile seeThrough zIndex =
                     in
                         case tile.data of
                             TileRail _ ->
-                                sprite
+                                sprite |> (,) False
 
                             _ ->
-                                tileDataAssert "TileRail" tile sprite
+                                tileDataAssert "TileRail" tile sprite |> (,) False
 
                 RailFork rotSprite _ _ ->
                     let
@@ -404,10 +455,10 @@ tileView model tile seeThrough zIndex =
                     in
                         case tile.data of
                             TileRailFork _ isOn ->
-                                ifThenElse isOn spriteOn spriteOff
+                                ifThenElse isOn spriteOn spriteOff |> (,) True
 
                             _ ->
-                                tileDataAssert "TileRailFork" tile spriteOff
+                                tileDataAssert "TileRailFork" tile spriteOff |> (,) False
 
                 Depot rotSprite ->
                     let
@@ -416,10 +467,10 @@ tileView model tile seeThrough zIndex =
                     in
                         case tile.data of
                             TileDepot _ isOn ->
-                                spriteOccupied
+                                spriteOccupied |> (,) True
 
                             _ ->
-                                tileDataAssert "TileDepot" tile spriteOccupied
+                                tileDataAssert "TileDepot" tile spriteOccupied |> (,) False
 
         pos =
             Point2.multScalar tile.baseData.position gridToPixels
@@ -431,10 +482,7 @@ tileView model tile seeThrough zIndex =
 
         styleTuples =
             [ ( "z-index", toString zIndex ), ( "pointer-events", "none" ) ]
-                ++ if seeThrough then
-                    [ ( "opacity", "0.5" ) ]
-                   else
-                    []
+                ++ ifThenElse seeThrough [ ( "opacity", "0.5" ) ] []
     in
         SpriteHelper.spriteViewWithStyle pos tileSprite styleTuples
 

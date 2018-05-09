@@ -142,10 +142,15 @@ toolboxHandleSize =
     Sprite.toyboxHandle |> .size
 
 
+insideHandle : Point2 Int -> Point2 Int -> Toybox -> Bool
+insideHandle windowSize viewPoint toolbox =
+    Point2.pointInRectangle (toolboxHandlePosition windowSize toolbox) toolboxHandleSize viewPoint
+
+
 insideToolbox : Point2 Int -> Point2 Int -> Toybox -> Bool
 insideToolbox windowSize viewPoint toolbox =
     Point2.pointInRectangle (getPosition windowSize toolbox) (toolboxSize toolbox) viewPoint
-        || Point2.pointInRectangle (toolboxHandlePosition windowSize toolbox) toolboxHandleSize viewPoint
+        || insideHandle windowSize viewPoint toolbox
 
 
 toolboxHandlePosition : Point2 Int -> Toybox -> Point2 Int
