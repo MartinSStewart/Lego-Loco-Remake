@@ -1,12 +1,9 @@
 module Main exposing (..)
 
 import Config exposing (maxGridPosition, minGridPosition)
-import Css
-import Css.Foreign exposing (Snippet, global)
 import Helpers exposing (..)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src, style)
-import Html.Styled exposing (toUnstyled)
 import Keyboard
 import Lenses exposing (..)
 import Model exposing (..)
@@ -21,6 +18,7 @@ import Task
 import Tile
 import Toybox
 import Window
+import Cursor
 
 
 ---- MODEL ----
@@ -49,32 +47,6 @@ init =
         , [ Server.GetRegion (Point2 0 0) (Point2 1000 1000) ] |> Server.send
         ]
     )
-
-
-gridToPixels : Int
-gridToPixels =
-    16
-
-
-pixelsToGrid : Float
-pixelsToGrid =
-    1 / (toFloat gridToPixels)
-
-
-viewToGrid : Point2 Int -> Model -> Point2 Int
-viewToGrid viewPoint model =
-    viewPoint
-        |> Point2.add model.viewPosition
-        |> Point2.toFloat
-        |> Point2.rmultScalar pixelsToGrid
-        |> Point2.floor
-
-
-viewToTileGrid : Point2 Int -> Model -> TileTypeId -> Point2 Int
-viewToTileGrid viewPoint model tileTypeId =
-    Tile.tileTypeGridSize model.currentRotation (getTileOrDefault tileTypeId)
-        |> Point2.rdiv 2
-        |> Point2.sub (viewToGrid viewPoint model)
 
 
 
@@ -354,54 +326,8 @@ view model =
             tileViews
                 ++ currentTileView
                 ++ [ Toybox.toolboxView toyboxZIndex model.windowSize model |> Html.map (\a -> ToolboxMsg a)
-                   , cursorView model
+                   , Cursor.cursorView model
                    ]
-
-
-cursorView : Model -> Html msg
-cursorView model =
-    let
-        gridPosition =
-            viewToGrid model.mousePosCurrent model
-
-        cursor =
-            if model.toolbox.drag /= Nothing then
-                Css.grabbing
-            else if Toybox.insideHandle model.windowSize model.mousePosCurrent model.toolbox then
-                Css.grab
-            else
-                case model.editMode of
-                    PlaceTiles tileTypeId ->
-                        Css.default
-
-                    Eraser ->
-                        Css.default
-
-                    Hand ->
-                        collisionsAt gridPosition Point2.one model
-                            |> List.head
-                            |> Maybe.map
-                                (\tile ->
-                                    case tile.data of
-                                        TileBasic ->
-                                            Css.default
-
-                                        Model.TileRail _ ->
-                                            Css.default
-
-                                        Model.TileRailFork _ _ ->
-                                            Css.pointer
-
-                                        Model.TileDepot _ _ ->
-                                            Css.pointer
-                                )
-                            |> Maybe.withDefault Css.default
-    in
-        Css.Foreign.global
-            [ Css.Foreign.html
-                [ Css.cursor cursor ]
-            ]
-            |> toUnstyled
 
 
 tileView : Model -> Tile -> Bool -> Int -> Html msg

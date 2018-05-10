@@ -94,7 +94,7 @@ all =
                         Just tuple ->
                             Expect.all
                                 [ Tuple.first >> Expect.equal extraBytes
-                                , Tuple.second >> Expect.within (Expect.Relative 0.0001) a
+                                , Tuple.second >> Expect.within (Expect.AbsoluteOrRelative 0.0001 0.0001) a
                                 ]
                                 tuple
 

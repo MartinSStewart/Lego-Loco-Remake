@@ -20,8 +20,13 @@ namespace Server
     {
         public static ConcurrentQueue<(string Id, IClientMessage Message)> MessageQueue { get; } = new ConcurrentQueue<(string, IClientMessage)>();
 
-        public static World World { get; } = 
+        public static World World { get; private set; } = 
             new World(TileType.GetTileTypes());
+
+        /// <summary>
+        /// Stands for Lego Loco Save.
+        /// </summary>
+        public const string SaveFileExtension = "lls";
 
         static void Main(string[] args)
         {
@@ -34,8 +39,24 @@ namespace Server
             socketServer.AddWebSocketService("/socketservice", () => new SocketService());
             socketServer.Start();
 
+            var autosavePath = "autosave." + SaveFileExtension;
+            if (File.Exists(autosavePath))
+            {
+                var json = File.ReadAllText(autosavePath);
+                try
+                {
+                    World = World.Load(TileType.GetTileTypes(), json);
+                    Console.WriteLine("Autosave loaded.");
+                }
+                catch (JsonSerializationException)
+                {
+                    Console.WriteLine("Failed to load autosave.");
+                }
+            }
+
             await Task.Run(async () =>
             {
+                var lastSave = DateTime.UtcNow;
                 while (true)
                 {
                     await Task.Delay(10);
@@ -69,6 +90,14 @@ namespace Server
                             default:
                                 throw new NotImplementedException();
                         }
+                    }
+
+                    if (DateTime.UtcNow - lastSave > TimeSpan.FromMinutes(10))
+                    {
+                        File.Copy(autosavePath, "autosave_backup." + SaveFileExtension, true);
+                        File.WriteAllText(autosavePath, World.Save());
+                        Console.WriteLine("World autosaved.");
+                        lastSave = DateTime.UtcNow;
                     }
                 }
             });

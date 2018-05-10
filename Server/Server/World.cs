@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MoreLinq;
 using Common;
 using Common.TileData;
+using Newtonsoft.Json;
 
 namespace Server
 {
@@ -21,20 +22,45 @@ namespace Server
         public ImmutableList<TileType> TileTypes { get; }
 
         private readonly MultiValueDictionary<Int2, Tile> _superGrid = new MultiValueDictionary<Int2, Tile>();
-        private IEnumerable<Tile> GetTiles(Int2 superGridPosition) =>
-            _superGrid.TryGetValue(superGridPosition, out IReadOnlyCollection<Tile> value)
-                ? value
-                : new Tile[0];
-
-        private Int2 GridToSuperGrid(Int2 gridPosition) =>
-            new Int2(
-                gridPosition.X / SuperGridSize - (gridPosition.X < 0 ? 1 : 0),
-                gridPosition.Y / SuperGridSize - (gridPosition.Y < 0 ? 1 : 0));
 
         public World(ImmutableList<TileType> tileTypes)
         {
             TileTypes = tileTypes;
         }
+
+        public static World Load(ImmutableList<TileType> tileTypes, string json)
+        {
+            var world = new World(tileTypes);
+            var tiles = JsonConvert.DeserializeObject<Tile[]>(
+                json, 
+                new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto
+                });
+            foreach (var tile in tiles)
+            {
+                world._superGrid.Add(GridToSuperGrid(tile.BaseData.GridPosition), tile);
+            }
+            return world;
+        }
+
+        public string Save() => 
+            JsonConvert.SerializeObject(
+                _superGrid.Values.SelectMany(item => item).ToArray(), 
+                new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto
+                });
+
+        private IEnumerable<Tile> GetTiles(Int2 superGridPosition) =>
+            _superGrid.TryGetValue(superGridPosition, out IReadOnlyCollection<Tile> value)
+                ? value
+                : new Tile[0];
+
+        private static Int2 GridToSuperGrid(Int2 gridPosition) =>
+            new Int2(
+                gridPosition.X / SuperGridSize - (gridPosition.X < 0 ? 1 : 0),
+                gridPosition.Y / SuperGridSize - (gridPosition.Y < 0 ? 1 : 0));
 
         public void AddTile(Tile tile)
         {

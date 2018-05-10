@@ -107,6 +107,32 @@ backgroundColor color =
         ( "background-color", "rgb(" ++ text ++ ")" )
 
 
+gridToPixels : Int
+gridToPixels =
+    16
+
+
+pixelsToGrid : Float
+pixelsToGrid =
+    1 / (toFloat gridToPixels)
+
+
+viewToGrid : Point2 Int -> Model -> Point2 Int
+viewToGrid viewPoint model =
+    viewPoint
+        |> Point2.add model.viewPosition
+        |> Point2.toFloat
+        |> Point2.rmultScalar pixelsToGrid
+        |> Point2.floor
+
+
+viewToTileGrid : Point2 Int -> Model -> TileTypeId -> Point2 Int
+viewToTileGrid viewPoint model tileTypeId =
+    Tile.tileTypeGridSize model.currentRotation (getTileOrDefault tileTypeId)
+        |> Point2.rdiv 2
+        |> Point2.sub (viewToGrid viewPoint model)
+
+
 intMax : Int
 intMax =
     2147483647

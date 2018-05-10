@@ -27,7 +27,7 @@ namespace Tests
                 {
                     Assert.Inconclusive("Gave up trying to build elm tests.");
                 }
-                (output, error) = Common.Cmd.Run(ClientDirectory, new[] { "elm-app test" });
+                (output, error) = Common.Cmd.Run(ClientDirectory, new[] { "elm-app test --fuzz 500 --seed 1684318369" });
                 attempts++;
             } while (error.Contains("MoveFileEx"));
             
