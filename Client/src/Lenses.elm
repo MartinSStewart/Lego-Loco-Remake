@@ -91,9 +91,19 @@ size =
     Lens .size (\value item -> { item | size = value })
 
 
+speed : Lens { b | speed : a } a
+speed =
+    Lens .speed (\value item -> { item | speed = value })
+
+
 start : Lens { b | start : a } a
 start =
     Lens .start (\value item -> { item | start = value })
+
+
+t : Lens { b | t : a } a
+t =
+    Lens .t (\value item -> { item | t = value })
 
 
 tileCategory : Lens { b | tileCategory : a } a

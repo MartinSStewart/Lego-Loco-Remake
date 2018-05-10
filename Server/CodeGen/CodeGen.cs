@@ -109,6 +109,8 @@ messageVersion =
         public static string GetLensCode(IEnumerable<string> elmCode, string moduleName)
         {
             var text = elmCode
+                .ToDelimitedString("\n")
+                .SkipSections(a => a == '-', a => a == '\n')
                 .ToDelimitedString("")
                 .Replace("\n", "")
                 .Replace("\r", "")
