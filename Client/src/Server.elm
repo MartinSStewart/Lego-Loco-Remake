@@ -63,7 +63,11 @@ writeAction action =
 
 serverUrl : String
 serverUrl =
-    "ws://40.114.70.41:5523/socketservice"
+    "wss://40.114.70.41:5523/socketservice"
+
+
+
+--"wss://localhost:5523/socketservice"
 
 
 update : String -> Model -> Model
