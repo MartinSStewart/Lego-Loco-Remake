@@ -35,16 +35,7 @@ namespace Server
 
         public static async Task RunServer()
         {
-            var socketServer = new WebSocketServer(5523, true)
-            {
-                SslConfiguration =
-                {
-                    ServerCertificate = new X509Certificate2Builder { SubjectName = "CN=Subject"}.Build(),
-                    ClientCertificateRequired = false,
-                    CheckCertificateRevocation = false,
-                    ClientCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true
-                }
-            };
+            var socketServer = new WebSocketServer(5523);
             socketServer.AddWebSocketService("/socketservice", () => new SocketService());
             socketServer.Start();
 
@@ -134,11 +125,6 @@ namespace Server
 
         public class SocketService : WebSocketBehavior
         {
-            public SocketService()
-            {
-                IgnoreExtensions = true;
-            }
-
             protected override void OnOpen()
             {
                 base.OnOpen();

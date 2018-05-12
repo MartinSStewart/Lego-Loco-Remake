@@ -63,7 +63,7 @@ writeAction action =
 
 serverUrl : String
 serverUrl =
-    "wss://40.114.70.41:5523/socketservice"
+    "ws://40.114.70.41:5523/socketservice"
 
 
 
