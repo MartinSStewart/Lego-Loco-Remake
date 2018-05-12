@@ -12,30 +12,6 @@ import TileType
 import Model exposing (..)
 import Mouse exposing (Position)
 import Color exposing (Color)
-import Tile
-
-
-initTile : TileBaseData -> Tile
-initTile tileBaseData =
-    Tile
-        tileBaseData
-        (getTileOrDefault tileBaseData.tileId |> .data |> initTileData)
-
-
-initTileData : TileTypeData -> TileData
-initTileData tileTypeData =
-    case tileTypeData of
-        Basic _ ->
-            TileBasic
-
-        Rail _ _ ->
-            TileRail []
-
-        RailFork _ _ _ ->
-            TileRailFork [] False
-
-        Depot _ ->
-            TileDepot [] True
 
 
 absoluteStyle : Point2 number -> Point2 number -> List ( String, String )
@@ -107,32 +83,6 @@ backgroundColor color =
         ( "background-color", "rgb(" ++ text ++ ")" )
 
 
-gridToPixels : Int
-gridToPixels =
-    16
-
-
-pixelsToGrid : Float
-pixelsToGrid =
-    1 / (toFloat gridToPixels)
-
-
-viewToGrid : Point2 Int -> Model -> Point2 Int
-viewToGrid viewPoint model =
-    viewPoint
-        |> Point2.add model.viewPosition
-        |> Point2.toFloat
-        |> Point2.rmultScalar pixelsToGrid
-        |> Point2.floor
-
-
-viewToTileGrid : Point2 Int -> Model -> TileTypeId -> Point2 Int
-viewToTileGrid viewPoint model tileTypeId =
-    Tile.tileTypeGridSize model.currentRotation (getTileOrDefault tileTypeId)
-        |> Point2.rdiv 2
-        |> Point2.sub (viewToGrid viewPoint model)
-
-
 intMax : Int
 intMax =
     2147483647
@@ -166,110 +116,9 @@ onWheel message =
     Events.on "wheel" (Decode.map message (Decode.at [ "deltaY" ] Decode.int))
 
 
-addTile : Tile -> Model -> Model
-addTile tile model =
-    Lens.modify
-        tiles
-        (List.filter (.baseData >> collidesWith tile.baseData >> not) >> (::) tile)
-        model
-
-
-removeTile : TileBaseData -> Model -> Model
-removeTile baseData model =
-    model |> Lens.modify Lenses.tiles (List.filter (.baseData >> (/=) baseData))
-
-
-modifyTile : Tile -> Model -> Model
-modifyTile tile model =
-    Lens.modify
-        Lenses.tiles
-        (List.map (\a -> ifThenElse (a.baseData == tile.baseData) tile a))
-        model
-
-
-clickTile : TileBaseData -> Model -> Model
-clickTile tileBaseData model =
-    Lens.modify
-        Lenses.tiles
-        (List.map
-            (\a ->
-                if (a.baseData == tileBaseData) then
-                    Lens.modify Lenses.data
-                        (\data ->
-                            case data of
-                                TileBasic ->
-                                    data
-
-                                TileRail _ ->
-                                    data
-
-                                TileRailFork trains isOn ->
-                                    TileRailFork trains (not isOn)
-
-                                TileDepot trains occupied ->
-                                    TileDepot (ifThenElse occupied (Train 0 0 :: trains) trains) False
-                        )
-                        a
-                else
-                    a
-            )
-        )
-        model
-
-
 setMousePosCurrent : Position -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 setMousePosCurrent position modelCmd =
     ( mousePosCurrent.set position (Tuple.first modelCmd), Tuple.second modelCmd )
-
-
-collidesWith : TileBaseData -> TileBaseData -> Bool
-collidesWith tileBase0 tileBase1 =
-    Point2.rectangleCollision
-        tileBase0.position
-        (Tile.gridSize tileBase0)
-        tileBase1.position
-        (Tile.gridSize tileBase1)
-
-
-collisionsAt : Point2 Int -> Point2 Int -> Model -> List Tile
-collisionsAt gridPosition gridSize model =
-    List.filter
-        (\a ->
-            Point2.rectangleCollision
-                a.baseData.position
-                (Tile.gridSize a.baseData)
-                gridPosition
-                gridSize
-        )
-        model.tiles
-
-
-getTileOrDefault : Model.TileTypeId -> TileType
-getTileOrDefault tileTypeId =
-    let
-        (Model.TileTypeId id) =
-            tileTypeId
-    in
-        case List.Extra.getAt id TileType.tiles of
-            Just tile ->
-                tile
-
-            Nothing ->
-                Debug.crash "Nonexistant tile id used." TileType.sidewalk
-
-
-getTileTypeByTile : TileBaseData -> TileType
-getTileTypeByTile tileBaseData =
-    let
-        (Model.TileTypeId id) =
-            tileBaseData.tileId
-    in
-        case List.Extra.getAt id TileType.tiles of
-            Just tile ->
-                tile
-
-            Nothing ->
-                TileType.sidewalk
 
 
 directions : number

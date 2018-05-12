@@ -8,8 +8,9 @@ import BinaryBase64
 import Fuzz exposing (list, int)
 import Main exposing (initModel)
 import TileType exposing (..)
-import Helpers exposing (collidesWith, addTile, intMin, intMax)
+import Helpers exposing (intMin, intMax)
 import Model exposing (TileBaseData)
+import Tile exposing (collidesWith, addTile)
 
 
 -- Check out http://package.elm-lang.org/packages/elm-community/elm-test/latest to learn more about testing in Elm!
@@ -121,7 +122,7 @@ all =
                             (Model.TileTypeId a)
                             (Point2 b c)
                             d
-                            |> Helpers.initTile
+                            |> Tile.initTile
                 in
                     writeTile input
                         ++ extraBytes
@@ -130,8 +131,8 @@ all =
         , test "Placing a house to the right of a sidewalk tile does not remove the sidewalk." <|
             \_ ->
                 Main.initModel
-                    |> addTile (TileBaseData sidewalkId Point2.zero 0 |> Helpers.initTile)
-                    |> addTile (TileBaseData redHouseId (Point2 1 0) 0 |> Helpers.initTile)
+                    |> addTile (TileBaseData sidewalkId Point2.zero 0 |> Tile.initTile)
+                    |> addTile (TileBaseData redHouseId (Point2 1 0) 0 |> Tile.initTile)
                     |> .tiles
                     |> List.length
                     |> Expect.equal 2

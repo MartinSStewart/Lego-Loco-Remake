@@ -1,12 +1,13 @@
 module Server exposing (..)
 
-import WebSocket
-import Model exposing (..)
 import BinaryBase64 exposing (..)
-import Point2 exposing (Point2)
 import Bitwise
-import Helpers
 import Config
+import Helpers
+import Model exposing (..)
+import Point2 exposing (Point2)
+import Tile
+import WebSocket
 
 
 version : number
@@ -63,11 +64,8 @@ writeAction action =
 
 serverUrl : String
 serverUrl =
-    "ws://40.114.70.41:5523/socketservice"
-
-
-
---"wss://localhost:5523/socketservice"
+    --"ws://40.114.70.41:5523/socketservice"
+    "ws://localhost:5523/socketservice"
 
 
 update : String -> Model -> Model
@@ -80,13 +78,13 @@ update data model =
                     (\response model ->
                         case response of
                             AddedTile tile ->
-                                Helpers.addTile tile model
+                                Tile.addTile tile model
 
                             RemovedTile baseData ->
-                                Helpers.removeTile baseData model
+                                Tile.removeTile baseData model
 
                             ClickedTile baseData ->
-                                Helpers.clickTile baseData model
+                                Tile.clickTile baseData model
 
                             GotRegion topLeft size tiles ->
                                 let

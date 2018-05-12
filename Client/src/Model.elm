@@ -3,6 +3,7 @@ module Model exposing (..)
 import Point2 exposing (Point2)
 import Mouse exposing (Position)
 import TileCategory exposing (..)
+import Dict exposing (Dict)
 
 
 type alias Model =

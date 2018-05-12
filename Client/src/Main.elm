@@ -117,7 +117,7 @@ keyMsg keyCode model =
         --
         --     else
         movement =
-            Point2.multScalar unit gridToPixels |> Point2.add model.viewPosition
+            Point2.multScalar unit Tile.gridToPixels |> Point2.add model.viewPosition
     in
         model
             |> viewPosition.set movement
@@ -134,13 +134,13 @@ mouseDown mouseEvent model =
             PlaceTiles tileId ->
                 let
                     tilePos =
-                        viewToTileGrid
+                        Tile.viewToTileGrid
                             position
                             model
                             tileId
 
                     tileInstance =
-                        TileBaseData tileId tilePos model.currentRotation |> Helpers.initTile
+                        TileBaseData tileId tilePos model.currentRotation |> Tile.initTile
 
                     newModel =
                         model |> lastTilePosition.set (Just tilePos)
@@ -148,16 +148,16 @@ mouseDown mouseEvent model =
                     ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
 
             Eraser ->
-                erase (viewToGrid position model) model
+                erase (Tile.viewToGrid position model) model
 
             Hand ->
                 let
                     gridPos =
-                        viewToGrid position model
+                        Tile.viewToGrid position model
 
                     cmd =
                         model
-                            |> Helpers.collisionsAt gridPos Point2.one
+                            |> Tile.collisionsAt gridPos Point2.one
                             |> List.map (.baseData >> Server.ClickTile)
                             |> Server.send
                 in
@@ -169,7 +169,7 @@ erase gridPosition model =
     let
         command =
             model
-                |> collisionsAt gridPosition Point2.one
+                |> Tile.collisionsAt gridPosition Point2.one
                 |> List.map (.baseData >> Server.RemoveTile)
                 |> Server.send
 
@@ -203,7 +203,7 @@ mouseMove mousePos model =
             PlaceTiles tileId ->
                 let
                     tilePos =
-                        viewToTileGrid mousePos model tileId
+                        Tile.viewToTileGrid mousePos model tileId
 
                     ( tiles, newModel ) =
                         model
@@ -222,7 +222,7 @@ mouseMove mousePos model =
             Eraser ->
                 let
                     gridPosition =
-                        viewToGrid mousePos model
+                        Tile.viewToGrid mousePos model
                 in
                     case model.lastTilePosition of
                         Just lastTilePosition ->
@@ -246,10 +246,10 @@ drawTiles newTilePosition tileId model =
                 tileId
                 newTilePosition
                 model.currentRotation
-                |> Helpers.initTile
+                |> Tile.initTile
 
         tileSize =
-            Tile.gridSize tileInstance.baseData
+            Tile.tileGridSize tileInstance.baseData
     in
         case model.lastTilePosition of
             Nothing ->
@@ -291,7 +291,7 @@ view model =
                 PlaceTiles tileId ->
                     let
                         mouseTilePos =
-                            viewToTileGrid
+                            Tile.viewToTileGrid
                                 model.mousePosCurrent
                                 model
                                 tileId
@@ -301,7 +301,7 @@ view model =
                         else
                             [ tileView
                                 model
-                                (TileBaseData tileId mouseTilePos model.currentRotation |> Helpers.initTile)
+                                (TileBaseData tileId mouseTilePos model.currentRotation |> Tile.initTile)
                                 True
                                 currentTileZIndex
                             ]
@@ -334,7 +334,7 @@ tileView : Model -> Tile -> Bool -> Int -> Html msg
 tileView model tile seeThrough zIndex =
     let
         tileType =
-            Helpers.getTileTypeByTile tile.baseData
+            Tile.getTileTypeByTile tile.baseData
 
         getSprite rotSprite =
             rotGetAt rotSprite tile.baseData.rotationIndex
@@ -399,12 +399,12 @@ tileView model tile seeThrough zIndex =
                                 tileDataAssert "TileDepot" tile spriteOccupied |> (,) False
 
         pos =
-            Point2.multScalar tile.baseData.position gridToPixels
+            Point2.multScalar tile.baseData.position Tile.gridToPixels
                 |> Point2.rsub model.viewPosition
 
         size =
             tileType.gridSize
-                |> Point2.mult (Point2 gridToPixels gridToPixels)
+                |> Point2.mult (Point2 Tile.gridToPixels Tile.gridToPixels)
 
         styleTuples =
             [ ( "z-index", toString zIndex ), ( "pointer-events", "none" ) ]

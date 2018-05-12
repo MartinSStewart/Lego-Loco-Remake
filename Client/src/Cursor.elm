@@ -1,12 +1,12 @@
 module Cursor exposing (..)
 
-import Model exposing (..)
-import Html exposing (Html)
-import Point2
-import Html.Styled exposing (toUnstyled)
 import Css
 import Css.Foreign exposing (Snippet, global)
-import Helpers
+import Html exposing (Html)
+import Html.Styled exposing (toUnstyled)
+import Model exposing (..)
+import Point2
+import Tile
 import Toybox
 
 
@@ -14,7 +14,7 @@ cursorView : Model -> Html msg
 cursorView model =
     let
         gridPosition =
-            Helpers.viewToGrid model.mousePosCurrent model
+            Tile.viewToGrid model.mousePosCurrent model
 
         cursor =
             if model.toolbox.drag /= Nothing then
@@ -30,7 +30,7 @@ cursorView model =
                         Css.default
 
                     Hand ->
-                        Helpers.collisionsAt gridPosition Point2.one model
+                        Tile.collisionsAt gridPosition Point2.one model
                             |> List.head
                             |> Maybe.map
                                 (\tile ->
