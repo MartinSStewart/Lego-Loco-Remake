@@ -15,7 +15,11 @@ namespace Server
     {
         public static Int2 MinGridPosition { get; } = new Int2(-1000000, -1000000);
         public static Int2 MaxGridPosition { get; } = new Int2(1000000, 1000000);
-        public const int SuperGridSize = 64;
+
+        /// <summary>
+        /// This value must be larger than all tile type grid sizes.
+        /// </summary>
+        public const int SuperGridSize = 32;
 
         public int TileCount => _superGrid.Values.SelectMany(item => item).Count();
 
@@ -89,6 +93,16 @@ namespace Server
                 }
             }
 
+            _superGrid.Add(superGridPos, tile);
+        }
+
+        /// <summary>
+        /// Adds a tile without any collision checks or bounds checks.
+        /// </summary>
+        /// <param name="tile"></param>
+        public void FastAddTile(Tile tile)
+        {
+            var superGridPos = GridToSuperGrid(tile.BaseData.GridPosition);
             _superGrid.Add(superGridPos, tile);
         }
 

@@ -4,10 +4,12 @@ import BinaryBase64 exposing (..)
 import Bitwise
 import Config
 import Helpers
+import Lenses
 import Model exposing (..)
+import Monocle.Lens as Lens
 import Point2 exposing (Point2)
-import Tile
 import WebSocket
+import Grid
 
 
 version : number
@@ -78,22 +80,19 @@ update data model =
                     (\response model ->
                         case response of
                             AddedTile tile ->
-                                Tile.addTile tile model
+                                model |> Lens.modify Lenses.tiles (Grid.addTile tile)
 
                             RemovedTile baseData ->
-                                Tile.removeTile baseData model
+                                model |> Lens.modify Lenses.tiles (Grid.removeTile baseData)
 
                             ClickedTile baseData ->
-                                Tile.clickTile baseData model
+                                model |> Lens.modify Lenses.tiles (Grid.clickTile baseData)
 
                             GotRegion topLeft size tiles ->
-                                let
-                                    newTiles =
-                                        model.tiles
-                                            |> List.filter (\a -> Point2.pointInRectangle topLeft size a.baseData.position |> not)
-                                            |> (++) tiles
-                                in
-                                    { model | tiles = newTiles }
+                                Lens.modify
+                                    Lenses.tiles
+                                    (Grid.clearRegion topLeft size >> Grid.loadTiles tiles)
+                                    model
                     )
                     model
 
@@ -358,8 +357,12 @@ readList reader data =
             if count == 0 then
                 Just ( data, items )
             else
-                reader data
-                    |> Maybe.andThen (\( remainingData, item ) -> readSubList reader remainingData (item :: items) (count - 1))
+                case reader data of
+                    Just ( remainingData, item ) ->
+                        readSubList reader remainingData (item :: items) (count - 1)
+
+                    Nothing ->
+                        Nothing
     in
         readInt data
             |> Maybe.andThen (\( bytesLeft, count ) -> readSubList reader bytesLeft [] count)

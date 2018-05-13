@@ -6,9 +6,7 @@ import Html.Events as Events
 import Point2 exposing (Point2)
 import Model exposing (..)
 import Lenses exposing (..)
-import Monocle.Lens as Lens
 import List.Extra
-import TileType
 import Model exposing (..)
 import Mouse exposing (Position)
 import Color exposing (Color)

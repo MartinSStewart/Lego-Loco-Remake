@@ -8,13 +8,14 @@ import Model exposing (..)
 import Point2
 import Tile
 import Toybox
+import Grid
 
 
 cursorView : Model -> Html msg
 cursorView model =
     let
         gridPosition =
-            Tile.viewToGrid model.mousePosCurrent model
+            Tile.viewToGrid model.mousePosCurrent model.viewPosition
 
         cursor =
             if model.toolbox.drag /= Nothing then
@@ -30,7 +31,7 @@ cursorView model =
                         Css.default
 
                     Hand ->
-                        Tile.collisionsAt gridPosition Point2.one model
+                        Grid.collisionsAt gridPosition Point2.one model.tiles
                             |> List.head
                             |> Maybe.map
                                 (\tile ->

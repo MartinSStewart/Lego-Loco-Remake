@@ -6,11 +6,11 @@ import Point2 exposing (..)
 import Server exposing (..)
 import BinaryBase64
 import Fuzz exposing (list, int)
-import Main exposing (initModel)
 import TileType exposing (..)
 import Helpers exposing (intMin, intMax)
 import Model exposing (TileBaseData)
-import Tile exposing (collidesWith, addTile)
+import Tile exposing (collidesWith)
+import Grid exposing (addTile)
 
 
 -- Check out http://package.elm-lang.org/packages/elm-community/elm-test/latest to learn more about testing in Elm!
@@ -107,22 +107,15 @@ all =
                     ++ b
                     |> readList readInt
                     |> Expect.equal (Just ( b, a ))
-        , fuzz5
-            (List.length tiles - 1 |> Fuzz.intRange 0)
-            (Fuzz.intRange intMin intMax)
-            (Fuzz.intRange intMin intMax)
-            (Fuzz.intRange intMin intMax)
+        , fuzz2
+            fuzzTile
             (list (Fuzz.intRange 0 255))
             "readTile undoes writeTile"
           <|
-            \a b c d extraBytes ->
+            \fuzzTile extraBytes ->
                 let
                     input =
-                        TileBaseData
-                            (Model.TileTypeId a)
-                            (Point2 b c)
-                            d
-                            |> Tile.initTile
+                        fuzzTileToTile fuzzTile
                 in
                     writeTile input
                         ++ extraBytes
@@ -130,10 +123,45 @@ all =
                         |> Expect.equal (Just ( extraBytes, input ))
         , test "Placing a house to the right of a sidewalk tile does not remove the sidewalk." <|
             \_ ->
-                Main.initModel
+                Grid.init
                     |> addTile (TileBaseData sidewalkId Point2.zero 0 |> Tile.initTile)
                     |> addTile (TileBaseData redHouseId (Point2 1 0) 0 |> Tile.initTile)
-                    |> .tiles
-                    |> List.length
+                    |> Grid.tileCount
                     |> Expect.equal 2
+        , fuzz (list fuzzTile) "Add and remove tiles" <|
+            \a ->
+                let
+                    tiles =
+                        a |> List.map fuzzTileToTile
+
+                    grid =
+                        tiles |> List.foldl Grid.addTile Grid.init
+                in
+                    tiles
+                        |> List.foldl (\a b -> Grid.removeTile a.baseData b) grid
+                        |> Grid.tileCount
+                        |> Expect.equal 0
         ]
+
+
+fuzzTile : Fuzz.Fuzzer ( Int, Int, Int, Int )
+fuzzTile =
+    Fuzz.tuple4
+        ( (List.length tiles - 1 |> Fuzz.intRange 0)
+        , (Fuzz.intRange intMin intMax)
+        , (Fuzz.intRange intMin intMax)
+        , (Fuzz.intRange intMin intMax)
+        )
+
+
+fuzzTileToTile : ( Int, Int, Int, Int ) -> Model.Tile
+fuzzTileToTile fuzzTile =
+    let
+        ( a, b, c, d ) =
+            fuzzTile
+    in
+        TileBaseData
+            (Model.TileTypeId a)
+            (Point2 b c)
+            d
+            |> Tile.initTile

@@ -4,12 +4,12 @@ import Point2 exposing (Point2)
 import Mouse exposing (Position)
 import TileCategory exposing (..)
 import Dict exposing (Dict)
+import Rectangle exposing (Rectangle)
 
 
 type alias Model =
     { viewPosition : Point2 Int -- Position of view in pixel coordinates.
-    , viewSize : Point2 Int -- Size of view in pixel coordinates.
-    , tiles : List Tile
+    , tiles : Grid
     , toolbox : Toybox
     , currentRotation : Int
     , lastTilePosition : Maybe (Point2 Int) -- Position of the last place tile.
@@ -17,7 +17,12 @@ type alias Model =
     , windowSize : Point2 Int
     , editMode : EditMode
     , ctrlDown : Bool
+    , pendingGetRegions : List (Rectangle Int)
     }
+
+
+type alias Grid =
+    Dict ( Int, Int ) (List Tile)
 
 
 type alias Sprite =

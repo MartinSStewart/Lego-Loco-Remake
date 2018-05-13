@@ -1,12 +1,12 @@
 module Tile exposing (..)
 
-import Point2 exposing (Point2)
-import TileType exposing (tiles)
+import Helpers exposing (ifThenElse)
 import List.Extra
 import Model exposing (..)
-import Lenses
-import Monocle.Lens as Lens
-import Helpers exposing (ifThenElse)
+import Point2 exposing (Point2)
+import TileType exposing (tiles)
+import Html exposing (Html)
+import SpriteHelper
 
 
 initTile : TileBaseData -> Tile
@@ -42,10 +42,19 @@ pixelsToGrid =
     1 / (toFloat gridToPixels)
 
 
-viewToGrid : Point2 Int -> Model -> Point2 Int
-viewToGrid viewPoint model =
+worldToGrid : Point2 Int -> Point2 Int
+worldToGrid worldPosition =
+    Point2.div worldPosition gridToPixels
+
+
+{-| viewPoint is a point in view coordinates.
+viewPosition is the position of the camera in world coordinates.
+The returned point is in grid coordinates.
+-}
+viewToGrid : Point2 Int -> Point2 Int -> Point2 Int
+viewToGrid viewPoint viewPosition =
     viewPoint
-        |> Point2.add model.viewPosition
+        |> Point2.add viewPosition
         |> Point2.toFloat
         |> Point2.rmultScalar pixelsToGrid
         |> Point2.floor
@@ -55,7 +64,7 @@ viewToTileGrid : Point2 Int -> Model -> Model.TileTypeId -> Point2 Int
 viewToTileGrid viewPoint model tileTypeId =
     tileTypeGridSize model.currentRotation (getTileOrDefault tileTypeId)
         |> Point2.rdiv 2
-        |> Point2.sub (viewToGrid viewPoint model)
+        |> Point2.sub (viewToGrid viewPoint model.viewPosition)
 
 
 {-| Gets the size of the tile when accounting for rotation.
@@ -88,57 +97,6 @@ tileTypeGridSize rotation tileType =
         Point2.transpose tileType.gridSize
 
 
-addTile : Tile -> Model -> Model
-addTile tile model =
-    Lens.modify
-        Lenses.tiles
-        (List.filter (.baseData >> collidesWith tile.baseData >> not) >> (::) tile)
-        model
-
-
-removeTile : TileBaseData -> Model -> Model
-removeTile baseData model =
-    model |> Lens.modify Lenses.tiles (List.filter (.baseData >> (/=) baseData))
-
-
-modifyTile : Tile -> Model -> Model
-modifyTile tile model =
-    Lens.modify
-        Lenses.tiles
-        (List.map (\a -> ifThenElse (a.baseData == tile.baseData) tile a))
-        model
-
-
-clickTile : TileBaseData -> Model -> Model
-clickTile tileBaseData model =
-    Lens.modify
-        Lenses.tiles
-        (List.map
-            (\a ->
-                if (a.baseData == tileBaseData) then
-                    Lens.modify Lenses.data
-                        (\data ->
-                            case data of
-                                TileBasic ->
-                                    data
-
-                                TileRail _ ->
-                                    data
-
-                                TileRailFork trains isOn ->
-                                    TileRailFork trains (not isOn)
-
-                                TileDepot trains occupied ->
-                                    TileDepot (ifThenElse occupied (Train 0 0 :: trains) trains) False
-                        )
-                        a
-                else
-                    a
-            )
-        )
-        model
-
-
 collidesWith : TileBaseData -> TileBaseData -> Bool
 collidesWith tileBase0 tileBase1 =
     Point2.rectangleCollision
@@ -146,19 +104,6 @@ collidesWith tileBase0 tileBase1 =
         (tileGridSize tileBase0)
         tileBase1.position
         (tileGridSize tileBase1)
-
-
-collisionsAt : Point2 Int -> Point2 Int -> Model -> List Tile
-collisionsAt gridPosition gridSize model =
-    List.filter
-        (\a ->
-            Point2.rectangleCollision
-                a.baseData.position
-                (tileGridSize a.baseData)
-                gridPosition
-                gridSize
-        )
-        model.tiles
 
 
 getTileOrDefault : Model.TileTypeId -> TileType
@@ -187,3 +132,85 @@ getTileTypeByTile tileBaseData =
 
             Nothing ->
                 TileType.sidewalk
+
+
+tileView : Tile -> Bool -> Int -> Html msg
+tileView tile seeThrough zIndex =
+    let
+        tileType =
+            getTileTypeByTile tile.baseData
+
+        getSprite rotSprite =
+            Helpers.rotGetAt rotSprite tile.baseData.rotationIndex
+
+        tileDataAssert expected tile sprite =
+            Debug.crash
+                (expected
+                    ++ " data was expected. Got "
+                    ++ toString tile.data
+                    ++ " instead."
+                )
+                sprite
+
+        ( clickable, tileSprite ) =
+            case tileType.data of
+                Basic rotSprite ->
+                    let
+                        sprite =
+                            getSprite rotSprite
+                    in
+                        case tile.data of
+                            TileBasic ->
+                                sprite |> (,) False
+
+                            _ ->
+                                tileDataAssert "TileBasic" tile sprite |> (,) False
+
+                Rail rotSprite _ ->
+                    let
+                        sprite =
+                            getSprite rotSprite
+                    in
+                        case tile.data of
+                            TileRail _ ->
+                                sprite |> (,) False
+
+                            _ ->
+                                tileDataAssert "TileRail" tile sprite |> (,) False
+
+                RailFork rotSprite _ _ ->
+                    let
+                        ( spriteOn, spriteOff ) =
+                            getSprite rotSprite
+                    in
+                        case tile.data of
+                            TileRailFork _ isOn ->
+                                ifThenElse isOn spriteOn spriteOff |> (,) True
+
+                            _ ->
+                                tileDataAssert "TileRailFork" tile spriteOff |> (,) False
+
+                Depot rotSprite ->
+                    let
+                        ( spriteOccupied, spriteOpen, spriteClosed ) =
+                            getSprite rotSprite
+                    in
+                        case tile.data of
+                            TileDepot _ isOn ->
+                                spriteOccupied |> (,) True
+
+                            _ ->
+                                tileDataAssert "TileDepot" tile spriteOccupied |> (,) False
+
+        pos =
+            Point2.multScalar tile.baseData.position gridToPixels
+
+        size =
+            tileType.gridSize
+                |> Point2.mult (Point2 gridToPixels gridToPixels)
+
+        styleTuples =
+            [ ( "z-index", toString zIndex ), ( "pointer-events", "none" ) ]
+                ++ ifThenElse seeThrough [ ( "opacity", "0.5" ) ] []
+    in
+        SpriteHelper.spriteViewWithStyle pos tileSprite styleTuples

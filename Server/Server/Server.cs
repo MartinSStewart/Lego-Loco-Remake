@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections.Immutable;
 using Newtonsoft.Json;
 using Common;
+using Common.TileData;
 
 namespace Server
 {
@@ -40,17 +41,30 @@ namespace Server
             socketServer.Start();
 
             var autosavePath = "autosave." + SaveFileExtension;
-            if (File.Exists(autosavePath))
+            //if (File.Exists(autosavePath))
+            //{
+            //    var json = File.ReadAllText(autosavePath);
+            //    try
+            //    {
+            //        World = World.Load(TileType.GetTileTypes(), json);
+            //        Console.WriteLine("Autosave loaded.");
+            //    }
+            //    catch (JsonSerializationException)
+            //    {
+            //        Console.WriteLine("Failed to load autosave.");
+            //    }
+            //}
+            for (int i = 0; i < 100; i++)
             {
-                var json = File.ReadAllText(autosavePath);
-                try
+                for (int j = 0; j < 100; j++)
                 {
-                    World = World.Load(TileType.GetTileTypes(), json);
-                    Console.WriteLine("Autosave loaded.");
-                }
-                catch (JsonSerializationException)
-                {
-                    Console.WriteLine("Failed to load autosave.");
+                    World.FastAddTile(
+                        new Tile(
+                            new TileBaseData(
+                                0, 
+                                new Int2(i * 3 - 100, j * 3 - 100), 
+                                0), 
+                            new TileBasic()));
                 }
             }
 

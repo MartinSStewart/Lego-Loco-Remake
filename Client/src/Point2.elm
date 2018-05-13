@@ -122,6 +122,12 @@ rectangleCollision topLeft0 size0 topLeft1 size1 =
 pointInRectangle : Point2 Int -> Point2 Int -> Point2 Int -> Bool
 pointInRectangle topLeft rectangleSize point =
     let
+        assertSize =
+            if rectangleSize.x < 0 || rectangleSize.y < 0 then
+                Debug.crash "Negative size not allowed."
+            else
+                ""
+
         bottomRight =
             add topLeft rectangleSize
     in

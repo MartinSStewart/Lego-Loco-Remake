@@ -13,12 +13,12 @@ import MouseEvents
 import Point2 exposing (Point2)
 import Server
 import Sprite
-import SpriteHelper
 import Task
 import Tile
 import Toybox
 import Window
 import Cursor
+import Grid
 
 
 ---- MODEL ----
@@ -28,8 +28,7 @@ initModel : Model
 initModel =
     Model
         (Point2 0 0)
-        (Point2 500 500)
-        []
+        Grid.init
         Toybox.default
         0
         Nothing
@@ -37,6 +36,7 @@ initModel =
         (Point2 1000 1000)
         Hand
         False
+        []
 
 
 init : ( Model, Cmd Msg )
@@ -44,7 +44,6 @@ init =
     ( initModel
     , Cmd.batch
         [ Task.perform WindowResize Window.size
-        , [ Server.GetRegion (Point2 0 0) (Point2 1000 1000) ] |> Server.send
         ]
     )
 
@@ -90,10 +89,15 @@ update msg model =
             ( lastTilePosition.set Nothing model, Cmd.none )
 
         WindowResize newSize ->
-            ( windowSize.set (Point2 newSize.width newSize.height) model, Cmd.none )
+            windowResize newSize model
 
         WebSocketRecieve text ->
             ( Server.update text model, Cmd.none )
+
+
+windowResize : Window.Size -> Model -> ( Model, Cmd msg )
+windowResize windowSize model =
+    ( .set Lenses.windowSize (Point2 windowSize.width windowSize.height) model, Cmd.none )
 
 
 keyMsg : number -> Model -> ( Model, Cmd msg )
@@ -148,16 +152,16 @@ mouseDown mouseEvent model =
                     ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
 
             Eraser ->
-                erase (Tile.viewToGrid position model) model
+                erase (Tile.viewToGrid position model.viewPosition) model
 
             Hand ->
                 let
                     gridPos =
-                        Tile.viewToGrid position model
+                        Tile.viewToGrid position model.viewPosition
 
                     cmd =
-                        model
-                            |> Tile.collisionsAt gridPos Point2.one
+                        model.tiles
+                            |> Grid.collisionsAt gridPos Point2.one
                             |> List.map (.baseData >> Server.ClickTile)
                             |> Server.send
                 in
@@ -168,8 +172,8 @@ erase : Point2 Int -> Model -> ( Model, Cmd msg )
 erase gridPosition model =
     let
         command =
-            model
-                |> Tile.collisionsAt gridPosition Point2.one
+            model.tiles
+                |> Grid.collisionsAt gridPosition Point2.one
                 |> List.map (.baseData >> Server.RemoveTile)
                 |> Server.send
 
@@ -222,7 +226,7 @@ mouseMove mousePos model =
             Eraser ->
                 let
                     gridPosition =
-                        Tile.viewToGrid mousePos model
+                        Tile.viewToGrid mousePos model.viewPosition
                 in
                     case model.lastTilePosition of
                         Just lastTilePosition ->
@@ -280,9 +284,6 @@ view model =
         toyboxZIndex =
             currentTileZIndex + 1
 
-        tileViews =
-            model.tiles |> List.map (\a -> tileView model a False (tileZIndex + a.baseData.position.y))
-
         toolbox =
             model.toolbox
 
@@ -299,11 +300,12 @@ view model =
                         if Toybox.insideToolbox model.windowSize model.mousePosCurrent model.toolbox then
                             []
                         else
-                            [ tileView
-                                model
-                                (TileBaseData tileId mouseTilePos model.currentRotation |> Tile.initTile)
-                                True
-                                currentTileZIndex
+                            [ div [ style <| Helpers.absoluteStyle (Point2.negate model.viewPosition) Point2.zero ]
+                                [ Tile.tileView
+                                    (TileBaseData tileId mouseTilePos model.currentRotation |> Tile.initTile)
+                                    True
+                                    currentTileZIndex
+                                ]
                             ]
 
                 Eraser ->
@@ -323,94 +325,11 @@ view model =
                 ]
             ]
         <|
-            tileViews
-                ++ currentTileView
-                ++ [ Toybox.toolboxView toyboxZIndex model.windowSize model |> Html.map (\a -> ToolboxMsg a)
+            Grid.view tileZIndex model.viewPosition model.windowSize model.tiles
+                :: currentTileView
+                ++ [ Toybox.toolboxView toyboxZIndex model.windowSize model |> Html.map ToolboxMsg
                    , Cursor.cursorView model
                    ]
-
-
-tileView : Model -> Tile -> Bool -> Int -> Html msg
-tileView model tile seeThrough zIndex =
-    let
-        tileType =
-            Tile.getTileTypeByTile tile.baseData
-
-        getSprite rotSprite =
-            rotGetAt rotSprite tile.baseData.rotationIndex
-
-        tileDataAssert expected tile sprite =
-            Debug.crash
-                (expected
-                    ++ " data was expected. Got "
-                    ++ toString tile.data
-                    ++ " instead."
-                )
-                sprite
-
-        ( clickable, tileSprite ) =
-            case tileType.data of
-                Basic rotSprite ->
-                    let
-                        sprite =
-                            getSprite rotSprite
-                    in
-                        case tile.data of
-                            TileBasic ->
-                                sprite |> (,) False
-
-                            _ ->
-                                tileDataAssert "TileBasic" tile sprite |> (,) False
-
-                Rail rotSprite _ ->
-                    let
-                        sprite =
-                            getSprite rotSprite
-                    in
-                        case tile.data of
-                            TileRail _ ->
-                                sprite |> (,) False
-
-                            _ ->
-                                tileDataAssert "TileRail" tile sprite |> (,) False
-
-                RailFork rotSprite _ _ ->
-                    let
-                        ( spriteOn, spriteOff ) =
-                            getSprite rotSprite
-                    in
-                        case tile.data of
-                            TileRailFork _ isOn ->
-                                ifThenElse isOn spriteOn spriteOff |> (,) True
-
-                            _ ->
-                                tileDataAssert "TileRailFork" tile spriteOff |> (,) False
-
-                Depot rotSprite ->
-                    let
-                        ( spriteOccupied, spriteOpen, spriteClosed ) =
-                            getSprite rotSprite
-                    in
-                        case tile.data of
-                            TileDepot _ isOn ->
-                                spriteOccupied |> (,) True
-
-                            _ ->
-                                tileDataAssert "TileDepot" tile spriteOccupied |> (,) False
-
-        pos =
-            Point2.multScalar tile.baseData.position Tile.gridToPixels
-                |> Point2.rsub model.viewPosition
-
-        size =
-            tileType.gridSize
-                |> Point2.mult (Point2 Tile.gridToPixels Tile.gridToPixels)
-
-        styleTuples =
-            [ ( "z-index", toString zIndex ), ( "pointer-events", "none" ) ]
-                ++ ifThenElse seeThrough [ ( "opacity", "0.5" ) ] []
-    in
-        SpriteHelper.spriteViewWithStyle pos tileSprite styleTuples
 
 
 
