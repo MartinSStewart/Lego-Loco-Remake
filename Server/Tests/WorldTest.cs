@@ -50,9 +50,9 @@ namespace Tests
                 world.AddTile(RandomTile(random, new Int2(-100, -100), new Int2(100, 100)));
             }
 
-            world.AddTile("redHouse", new Int2(World.SuperGridSize * 2, 20), 0);
+            world.AddTile("redHouse", new Int2(World.SuperGridSize * 4, 20), 0);
 
-            var result = world.GetRegion(new Int2(2, 0), new Int2(1, 1));
+            var result = world.GetRegion(new Int2(4, 0), new Int2(1, 1));
             Assert.AreEqual(1, result.Count());
         }
 

@@ -7,6 +7,7 @@ import Point2 exposing (Point2)
 import TileType exposing (tiles)
 import Html exposing (Html)
 import SpriteHelper
+import Rectangle
 
 
 initTile : TileBaseData -> Tile
@@ -99,7 +100,7 @@ tileTypeGridSize rotation tileType =
 
 collidesWith : TileBaseData -> TileBaseData -> Bool
 collidesWith tileBase0 tileBase1 =
-    Point2.rectangleCollision
+    Rectangle.overlap
         tileBase0.position
         (tileGridSize tileBase0)
         tileBase1.position

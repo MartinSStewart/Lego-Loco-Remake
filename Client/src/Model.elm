@@ -4,7 +4,7 @@ import Point2 exposing (Point2)
 import Mouse exposing (Position)
 import TileCategory exposing (..)
 import Dict exposing (Dict)
-import Rectangle exposing (Rectangle)
+import Set exposing (Set)
 
 
 type alias Model =
@@ -17,7 +17,7 @@ type alias Model =
     , windowSize : Point2 Int
     , editMode : EditMode
     , ctrlDown : Bool
-    , pendingGetRegions : List (Rectangle Int)
+    , pendingGetRegions : Set ( Int, Int )
     }
 
 

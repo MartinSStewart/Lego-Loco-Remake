@@ -2,7 +2,9 @@ module Point2 exposing (..)
 
 
 type alias Point2 number =
-    { x : number, y : number }
+    { x : number
+    , y : number
+    }
 
 
 add : Point2 number -> Point2 number -> Point2 number
@@ -86,6 +88,16 @@ toFloat int2 =
     Point2 (Basics.toFloat int2.x) (Basics.toFloat int2.y)
 
 
+toTuple : Point2 number -> ( number, number )
+toTuple point =
+    ( point.x, point.y )
+
+
+fromTuple : ( number, number ) -> Point2 number
+fromTuple ( x, y ) =
+    Point2 x y
+
+
 transpose : { x : a, y : a } -> { x : a, y : a }
 transpose point =
     { x = point.y, y = point.x }
@@ -96,31 +108,18 @@ intToInt2 width int =
     Point2 (int % width) (int // width)
 
 
-rectangleCollision : Point2 Int -> Point2 Int -> Point2 Int -> Point2 Int -> Bool
-rectangleCollision topLeft0 size0 topLeft1 size1 =
-    let
-        topRight0 =
-            add topLeft0 (Point2 (size0.x - 1) 0)
-
-        bottomRight0 =
-            add topLeft0 size0 |> add (Point2 -1 -1)
-
-        topRight1 =
-            add topLeft1 (Point2 (size1.x - 1) 0)
-
-        bottomRight1 =
-            add topLeft1 size1 |> add (Point2 -1 -1)
-    in
-        pointInRectangle topLeft0 size0 topLeft1
-            || pointInRectangle topLeft0 size0 topRight1
-            || pointInRectangle topLeft0 size0 bottomRight1
-            || pointInRectangle topLeft1 size1 topLeft0
-            || pointInRectangle topLeft1 size1 topRight0
-            || pointInRectangle topLeft1 size1 bottomRight0
+area : Point2 number -> number
+area point =
+    point.x * point.y
 
 
-pointInRectangle : Point2 Int -> Point2 Int -> Point2 Int -> Bool
-pointInRectangle topLeft rectangleSize point =
+length : Point2 Float -> Float
+length point =
+    point.x * point.x + point.y * point.y |> sqrt
+
+
+inRectangle : Point2 Int -> Point2 Int -> Point2 Int -> Bool
+inRectangle topLeft rectangleSize point =
     let
         assertSize =
             if rectangleSize.x < 0 || rectangleSize.y < 0 then

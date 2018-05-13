@@ -76,6 +76,11 @@ origin =
     Lens .origin (\value item -> { item | origin = value })
 
 
+pendingGetRegions : Lens { b | pendingGetRegions : a } a
+pendingGetRegions =
+    Lens .pendingGetRegions (\value item -> { item | pendingGetRegions = value })
+
+
 position : Lens { b | position : a } a
 position =
     Lens .position (\value item -> { item | position = value })
@@ -129,11 +134,6 @@ toolbox =
 viewPosition : Lens { b | viewPosition : a } a
 viewPosition =
     Lens .viewPosition (\value item -> { item | viewPosition = value })
-
-
-viewSize : Lens { b | viewSize : a } a
-viewSize =
-    Lens .viewSize (\value item -> { item | viewSize = value })
 
 
 windowSize : Lens { b | windowSize : a } a

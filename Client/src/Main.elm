@@ -19,6 +19,8 @@ import Toybox
 import Window
 import Cursor
 import Grid
+import Rectangle exposing (Rectangle)
+import Set
 
 
 ---- MODEL ----
@@ -36,7 +38,7 @@ initModel =
         (Point2 1000 1000)
         Hand
         False
-        []
+        Set.empty
 
 
 init : ( Model, Cmd Msg )
@@ -97,7 +99,25 @@ update msg model =
 
 windowResize : Window.Size -> Model -> ( Model, Cmd msg )
 windowResize windowSize model =
-    ( .set Lenses.windowSize (Point2 windowSize.width windowSize.height) model, Cmd.none )
+    let
+        viewSize =
+            Point2 windowSize.width windowSize.height
+
+        ( grid, updates ) =
+            Grid.update (Rectangle model.viewPosition viewSize) model.tiles
+
+        updatesSet =
+            updates |> List.map Point2.toTuple |> Set.fromList
+
+        getRegionsCmd =
+            Set.diff updatesSet model.pendingGetRegions
+                |> Set.toList
+                |> List.map (\a -> Server.GetRegion (Point2.fromTuple a) Point2.one)
+                |> Server.send
+    in
+        ( { model | windowSize = viewSize, pendingGetRegions = Set.union updatesSet model.pendingGetRegions }
+        , getRegionsCmd
+        )
 
 
 keyMsg : number -> Model -> ( Model, Cmd msg )
@@ -260,7 +280,7 @@ drawTiles newTilePosition tileId model =
                 ( [], model )
 
             Just pos ->
-                if Point2.rectangleCollision pos tileSize newTilePosition tileSize then
+                if Rectangle.overlap pos tileSize newTilePosition tileSize then
                     ( [], model )
                 else
                     model

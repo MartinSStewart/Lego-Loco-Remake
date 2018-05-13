@@ -10,6 +10,7 @@ import Monocle.Lens as Lens
 import Point2 exposing (Point2)
 import WebSocket
 import Grid
+import Set
 
 
 version : number
@@ -89,10 +90,13 @@ update data model =
                                 model |> Lens.modify Lenses.tiles (Grid.clickTile baseData)
 
                             GotRegion topLeft size tiles ->
-                                Lens.modify
-                                    Lenses.tiles
-                                    (Grid.clearRegion topLeft size >> Grid.loadTiles tiles)
-                                    model
+                                model
+                                    |> Lens.modify
+                                        Lenses.tiles
+                                        (Grid.clearRegion topLeft size >> Grid.loadTiles tiles)
+                                    |> Lens.modify
+                                        Lenses.pendingGetRegions
+                                        (Set.remove (Point2.toTuple topLeft))
                     )
                     model
 

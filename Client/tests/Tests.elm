@@ -1,16 +1,19 @@
 module Tests exposing (..)
 
-import Test exposing (..)
-import Expect
-import Point2 exposing (..)
-import Server exposing (..)
 import BinaryBase64
-import Fuzz exposing (list, int)
-import TileType exposing (..)
-import Helpers exposing (intMin, intMax)
-import Model exposing (TileBaseData)
-import Tile exposing (collidesWith)
+import Expect
+import Fuzz exposing (int, list)
 import Grid exposing (addTile)
+import Helpers exposing (intMax, intMin)
+import Main
+import Model exposing (TileBaseData)
+import Point2 exposing (..)
+import Rectangle
+import Server exposing (..)
+import Set
+import Test exposing (..)
+import Tile exposing (collidesWith)
+import TileType exposing (..)
 
 
 -- Check out http://package.elm-lang.org/packages/elm-community/elm-test/latest to learn more about testing in Elm!
@@ -39,15 +42,15 @@ all =
                     |> Expect.equal True
         , test "Rectangles next to eachother should not collide." <|
             \_ ->
-                rectangleCollision Point2.zero (Point2 3 3) (Point2 3 0) (Point2 3 3)
+                Rectangle.overlap Point2.zero (Point2 3 3) (Point2 3 0) (Point2 3 3)
                     |> Expect.equal False
         , test "Point outside rectangle." <|
             \_ ->
-                pointInRectangle Point2.zero (Point2 3 3) (Point2 3 0)
+                Point2.inRectangle Point2.zero (Point2 3 3) (Point2 3 0)
                     |> Expect.equal False
         , test "Point inside rectangle." <|
             \_ ->
-                pointInRectangle Point2.zero (Point2 3 3) (Point2 2 0)
+                Point2.inRectangle Point2.zero (Point2 3 3) (Point2 2 0)
                     |> Expect.equal True
         , test "Decode int" <|
             \_ -> BinaryBase64.decode "HgAAAA==" |> Expect.equal (Ok [ 30, 0, 0, 0 ])
@@ -141,6 +144,14 @@ all =
                         |> List.foldl (\a b -> Grid.removeTile a.baseData b) grid
                         |> Grid.tileCount
                         |> Expect.equal 0
+        , test "Window resize updates pending get regions." <|
+            \a ->
+                Main.initModel
+                    |> Main.update (Main.WindowResize { width = 1000, height = 1000 })
+                    |> Tuple.first
+                    |> .pendingGetRegions
+                    |> Set.size
+                    |> Expect.greaterThan 0
         ]
 
 

@@ -1,4 +1,4 @@
-module Grid exposing (addTile, removeTile, clickTile, collisionsAt, init, tileCount, clearRegion, loadTiles, view)
+module Grid exposing (addTile, removeTile, clickTile, collisionsAt, init, tileCount, clearRegion, loadTiles, view, update)
 
 import Config
 import Dict
@@ -82,8 +82,8 @@ loadTiles tiles grid =
                 grid
 
 
-updateGrid : Rectangle Int -> Grid -> ( Grid, List (Point2 Int) )
-updateGrid viewRegion grid =
+update : Rectangle Int -> Grid -> ( Grid, List (Point2 Int) )
+update viewRegion grid =
     let
         keyToWorldPos key =
             Point2 (Tuple.first key) (Tuple.second key)
@@ -94,15 +94,26 @@ updateGrid viewRegion grid =
 
         newGrid =
             Dict.filter
-                (\k _ -> Point2.rectangleCollision viewRegion.topLeft viewRegion.size (keyToWorldPos k) superWorldSize |> not)
+                (\k _ -> Rectangle.overlap viewRegion.topLeft viewRegion.size (keyToWorldPos k) superWorldSize |> not)
                 grid
+
+        superPosition =
+            viewRegion.topLeft |> Tile.worldToGrid |> gridPosToSuperPos
+
+        superSize =
+            viewRegion.size |> Tile.worldToGrid |> gridPosToSuperPos |> Point2.add Point2.one
+
+        needsUpdate =
+            List.range 0 (Point2.area superSize - 1)
+                |> List.map (Point2.intToInt2 superSize.x >> Point2.add superPosition)
+                |> List.filter (\a -> Dict.get ( a.x, a.y ) grid |> (==) Nothing)
     in
-        ( newGrid, [] )
+        ( newGrid, needsUpdate )
 
 
 clearRegion : Point2 Int -> Point2 Int -> Grid -> Grid
 clearRegion superPos superSize grid =
-    Dict.filter (\( x, y ) _ -> Point2.pointInRectangle superPos superSize (Point2 x y)) grid
+    Dict.filter (\( x, y ) _ -> Point2.inRectangle superPos superSize (Point2 x y) |> not) grid
 
 
 view : Int -> Point2 Int -> Point2 Int -> Grid -> Html msg
@@ -117,7 +128,7 @@ view minZIndex viewPosition viewSize grid =
 
         superTiles =
             grid
-                |> Dict.filter (\k v -> Point2.rectangleCollision viewPosition viewSize (keyToWorldPos k) superWorldSize)
+                |> Dict.filter (\k v -> Rectangle.overlap viewPosition viewSize (keyToWorldPos k) superWorldSize)
                 |> Dict.values
                 |> List.FlatMap.flatMap (\a -> a)
                 |> List.map (\a -> Tile.tileView a False (minZIndex + a.baseData.position.y))
@@ -187,7 +198,7 @@ collisionsAt gridPosition gridSize grid =
             |> List.FlatMap.flatMap (\a -> a)
             |> List.filter
                 (\tile ->
-                    Point2.rectangleCollision
+                    Rectangle.overlap
                         gridPosition
                         gridSize
                         tile.baseData.position

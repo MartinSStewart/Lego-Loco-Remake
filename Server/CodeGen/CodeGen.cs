@@ -110,7 +110,7 @@ messageVersion =
         {
             var text = elmCode
                 .ToDelimitedString("\n")
-                .SkipSections(a => a == '-', a => a == '\n')
+                .SkipSections(a => a == '-' || a == ':', a => a == '\n')
                 .ToDelimitedString("")
                 .Replace("\n", "")
                 .Replace("\r", "")
