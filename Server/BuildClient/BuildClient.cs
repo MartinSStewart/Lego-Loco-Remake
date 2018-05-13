@@ -24,19 +24,12 @@ namespace BuildClient
         {
             CodeGen.CodeGen.GenerateCodeToFiles();
 
-            var (result, _) = Common.Cmd.Run(ClientDirectory, new[] { "elm-app build" });
+            var (result, _) = Common.Cmd.Run(ClientDirectory, new[] { "elm-app build --debug" });
             Console.WriteLine(result);
             if (!result.Contains("Compiled successfully."))
             {
                 Console.Read();
             }
-
-            if (Directory.Exists(GithubDocsDirectory))
-            {
-                Directory.Delete(GithubDocsDirectory, true);
-            }
-            
-            CopyDirectoryContents(BuildDirectory, GithubDocsDirectory);
         }
 
         public static void CopyDirectoryContents(string sourcePath, string destinationPath)

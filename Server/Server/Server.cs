@@ -41,32 +41,39 @@ namespace Server
             socketServer.Start();
 
             var autosavePath = "autosave." + SaveFileExtension;
-            //if (File.Exists(autosavePath))
-            //{
-            //    var json = File.ReadAllText(autosavePath);
-            //    try
-            //    {
-            //        World = World.Load(TileType.GetTileTypes(), json);
-            //        Console.WriteLine("Autosave loaded.");
-            //    }
-            //    catch (JsonSerializationException)
-            //    {
-            //        Console.WriteLine("Failed to load autosave.");
-            //    }
-            //}
-            for (int i = 0; i < 100; i++)
+            if (File.Exists(autosavePath))
             {
-                for (int j = 0; j < 100; j++)
+                var json = File.ReadAllText(autosavePath);
+                try
                 {
-                    World.FastAddTile(
-                        new Tile(
-                            new TileBaseData(
-                                0, 
-                                new Int2(i * 3 - 100, j * 3 - 100), 
-                                0), 
-                            new TileBasic()));
+                    World = World.Load(TileType.GetTileTypes(), json);
+                    Console.WriteLine("Autosave loaded.");
+                }
+                catch (JsonSerializationException)
+                {
+                    Console.WriteLine("Failed to load autosave.");
                 }
             }
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    for (int j = 0; j < 100; j++)
+            //    {
+            //        World.FastAddTile(
+            //            new Tile(
+            //                new TileBaseData(
+            //                    0, 
+            //                    new Int2(i * 32 - 0, j * 32 - 0), 
+            //                    0), 
+            //                new TileBasic()));
+            //        World.FastAddTile(
+            //            new Tile(
+            //                new TileBaseData(
+            //                    0,
+            //                    new Int2(i * 32 + 31, j * 32 + 31),
+            //                    0),
+            //                new TileBasic()));
+            //    }
+            //}
 
             await Task.Run(async () =>
             {
@@ -106,9 +113,12 @@ namespace Server
                         }
                     }
 
-                    if (DateTime.UtcNow - lastSave > TimeSpan.FromMinutes(10))
+                    if (DateTime.UtcNow - lastSave > TimeSpan.FromMinutes(0.5))
                     {
-                        File.Copy(autosavePath, "autosave_backup." + SaveFileExtension, true);
+                        if (File.Exists(autosavePath))
+                        {
+                            File.Copy(autosavePath, "autosave_backup." + SaveFileExtension, true);
+                        }
                         File.WriteAllText(autosavePath, World.Save());
                         Console.WriteLine("World autosaved.");
                         lastSave = DateTime.UtcNow;

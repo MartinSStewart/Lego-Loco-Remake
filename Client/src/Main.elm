@@ -79,7 +79,7 @@ update msg model =
             mouseDown mouseEvent model
 
         MouseMoved xy ->
-            mouseMove xy model |> setMousePosCurrent xy
+            mouseMove xy ( model, Cmd.none ) |> setMousePosCurrent xy
 
         ToolboxMsg toolboxMsg ->
             ( Toybox.update model.windowSize toolboxMsg model |> Tuple.first, Cmd.none )
@@ -90,37 +90,14 @@ update msg model =
         MouseUp _ ->
             ( lastTilePosition.set Nothing model, Cmd.none )
 
-        WindowResize newSize ->
-            windowResize newSize model
+        WindowResize { width, height } ->
+            moveView (Rectangle model.viewPosition (Point2 width height)) model
 
         WebSocketRecieve text ->
             ( Server.update text model, Cmd.none )
 
 
-windowResize : Window.Size -> Model -> ( Model, Cmd msg )
-windowResize windowSize model =
-    let
-        viewSize =
-            Point2 windowSize.width windowSize.height
-
-        ( grid, updates ) =
-            Grid.update (Rectangle model.viewPosition viewSize) model.tiles
-
-        updatesSet =
-            updates |> List.map Point2.toTuple |> Set.fromList
-
-        getRegionsCmd =
-            Set.diff updatesSet model.pendingGetRegions
-                |> Set.toList
-                |> List.map (\a -> Server.GetRegion (Point2.fromTuple a) Point2.one)
-                |> Server.send
-    in
-        ( { model | windowSize = viewSize, pendingGetRegions = Set.union updatesSet model.pendingGetRegions }
-        , getRegionsCmd
-        )
-
-
-keyMsg : number -> Model -> ( Model, Cmd msg )
+keyMsg : number -> Model -> ( Model, Cmd Msg )
 keyMsg keyCode model =
     let
         unit =
@@ -134,7 +111,7 @@ keyMsg keyCode model =
             else if keyCode == 40 then
                 Point2 0 1
             else
-                Point2 0 0
+                Point2.zero
 
         -- ctrlDown =
         --     if keyCode ==  then
@@ -143,16 +120,47 @@ keyMsg keyCode model =
         movement =
             Point2.multScalar unit Tile.gridToPixels |> Point2.add model.viewPosition
     in
-        model
-            |> viewPosition.set movement
-            |> mouseMove model.mousePosCurrent
+        if unit == Point2.zero then
+            ( model, Cmd.none )
+        else
+            model
+                |> moveView (Rectangle movement model.windowSize)
+                |> mouseMove model.mousePosCurrent
 
 
-mouseDown : MouseEvents.MouseEvent -> Model -> ( Model, Cmd msg )
+moveView : Rectangle Int -> Model -> ( Model, Cmd Msg )
+moveView viewRegion model =
+    let
+        ( grid, updates ) =
+            Grid.update viewRegion model.tiles
+
+        updatesSet =
+            updates |> List.map Point2.toTuple |> Set.fromList
+
+        getRegionsCmd =
+            Set.diff updatesSet model.pendingGetRegions
+                |> Set.toList
+                |> List.map (\a -> Server.GetRegion (Point2.fromTuple a) Point2.one)
+                |> Server.send
+
+        newModel =
+            { model
+                | viewPosition = viewRegion.topLeft
+                , windowSize = viewRegion.size
+                , tiles = grid
+                , pendingGetRegions = Set.union updatesSet model.pendingGetRegions
+            }
+    in
+        ( newModel
+        , getRegionsCmd
+        )
+
+
+mouseDown : MouseEvents.MouseEvent -> Model -> ( Model, Cmd Msg )
 mouseDown mouseEvent model =
     let
         position =
-            MouseEvents.relPos mouseEvent
+            MouseEvents.relPos mouseEvent |> Point2.rsub model.viewPosition
     in
         case model.editMode of
             PlaceTiles tileId ->
@@ -172,7 +180,7 @@ mouseDown mouseEvent model =
                     ( newModel, [ Server.AddTile tileInstance ] |> Server.send )
 
             Eraser ->
-                erase (Tile.viewToGrid position model.viewPosition) model
+                erase (Tile.viewToGrid position model.viewPosition) ( model, Cmd.none )
 
             Hand ->
                 let
@@ -188,8 +196,8 @@ mouseDown mouseEvent model =
                     ( model, cmd )
 
 
-erase : Point2 Int -> Model -> ( Model, Cmd msg )
-erase gridPosition model =
+erase : Point2 Int -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+erase gridPosition ( model, cmdMsg ) =
     let
         command =
             model.tiles
@@ -200,7 +208,7 @@ erase gridPosition model =
         newModel =
             model |> lastTilePosition.set (Just gridPosition)
     in
-        ( newModel, command )
+        ( newModel, Cmd.batch [ cmdMsg, command ] )
 
 
 rotateTile : Int -> Model -> ( Model, Cmd msg )
@@ -218,10 +226,10 @@ rotateTile wheelDelta model =
         ( newModel, Cmd.none )
 
 
-mouseMove : Point2 Int -> Model -> ( Model, Cmd msg )
-mouseMove mousePos model =
+mouseMove : Point2 Int -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+mouseMove mousePos ( model, cmdMsg ) =
     if Toybox.insideToolbox model.windowSize mousePos model.toolbox then
-        ( model, Cmd.none )
+        ( model, cmdMsg )
     else
         case model.editMode of
             PlaceTiles tileId ->
@@ -241,7 +249,7 @@ mouseMove mousePos model =
                             _ ->
                                 Cmd.none
                 in
-                    ( newModel, cmd )
+                    ( newModel, Cmd.batch [ cmdMsg, cmd ] )
 
             Eraser ->
                 let
@@ -251,15 +259,15 @@ mouseMove mousePos model =
                     case model.lastTilePosition of
                         Just lastTilePosition ->
                             if gridPosition == lastTilePosition then
-                                ( model, Cmd.none )
+                                ( model, cmdMsg )
                             else
-                                erase gridPosition model
+                                erase gridPosition ( model, cmdMsg )
 
                         Nothing ->
-                            ( model, Cmd.none )
+                            ( model, cmdMsg )
 
             Hand ->
-                ( model, Cmd.none )
+                ( model, cmdMsg )
 
 
 drawTiles : Point2 Int -> Model.TileTypeId -> Model -> ( List Tile, Model )
@@ -345,7 +353,7 @@ view model =
                 ]
             ]
         <|
-            Grid.view tileZIndex model.viewPosition model.windowSize model.tiles
+            Grid.view tileZIndex (Rectangle model.viewPosition model.windowSize) model.tiles
                 :: currentTileView
                 ++ [ Toybox.toolboxView toyboxZIndex model.windowSize model |> Html.map ToolboxMsg
                    , Cursor.cursorView model
