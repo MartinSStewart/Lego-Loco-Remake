@@ -19,7 +19,7 @@ namespace Server
         /// <summary>
         /// This value must be larger than all tile type grid sizes.
         /// </summary>
-        public const int SuperGridSize = 32;
+        public const int SuperGridSize = 16;
 
         public int TileCount => _superGrid.Values.SelectMany(item => item).Count();
 
@@ -61,7 +61,7 @@ namespace Server
                 ? value
                 : new Tile[0];
 
-        private static Int2 GridToSuperGrid(Int2 gridPosition) =>
+        public static Int2 GridToSuperGrid(Int2 gridPosition) =>
             new Int2(
                 gridPosition.X / SuperGridSize - (gridPosition.X < 0 ? 1 : 0),
                 gridPosition.Y / SuperGridSize - (gridPosition.Y < 0 ? 1 : 0));
@@ -151,10 +151,14 @@ namespace Server
             return false;
         }
 
-        public IEnumerable<Tile> GetRegion(Int2 superGridTopLeft, Int2 superGridSize) => 
-            _superGrid
-                .Where(item => PointInRectangle(superGridTopLeft, superGridSize, item.Key))
-                .SelectMany(item => item.Value);
+        public IEnumerable<Tile> GetRegion(Int2 superGridTopLeft)
+        {
+            if (_superGrid.TryGetValue(superGridTopLeft, out IReadOnlyCollection<Tile> value))
+            {
+                return value;
+            }
+            return new Tile[0];
+        }
 
         /// <summary>
         /// Removes a tile that exactly matches the one provided.

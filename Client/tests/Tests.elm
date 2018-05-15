@@ -12,6 +12,7 @@ import Test exposing (..)
 import Tile exposing (collidesWith)
 import TileType exposing (..)
 import TestHelper
+import Config
 
 
 -- Check out http://package.elm-lang.org/packages/elm-community/elm-test/latest to learn more about testing in Elm!
@@ -80,8 +81,8 @@ all =
                     |> Expect.greaterThan 0
         , test "viewToTileGrid negative value" <|
             \_ ->
-                Tile.viewToTileGrid Point2.zero (Point2 -32 -16) 0 TileType.sidewalkId |> Expect.equal (Point2 -2 -1)
+                Tile.viewToTileGrid Point2.zero (Point2 (-Config.superGridSize * 2) -Config.superGridSize) 0 TileType.sidewalkId |> Expect.equal (Point2 -2 -1)
         , test "viewToTileGrid positive value" <|
             \_ ->
-                Tile.viewToTileGrid Point2.zero (Point2 32 16) 0 TileType.sidewalkId |> Expect.equal (Point2 2 1)
+                Tile.viewToTileGrid Point2.zero (Point2 (Config.superGridSize * 2) Config.superGridSize) 0 TileType.sidewalkId |> Expect.equal (Point2 2 1)
         ]

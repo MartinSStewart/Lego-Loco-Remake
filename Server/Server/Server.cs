@@ -104,16 +104,16 @@ namespace Server
                                 }
                                 break;
                             case GetRegionMessage msg:
-                                var region = World.GetRegion(msg.TopLeft, msg.GridSize);
+                                var region = World.GetRegion(msg.SuperGridPosition);
 
-                                SendToUser(socketServer, id, new GotRegionMessage(msg.TopLeft, msg.GridSize, region.ToImmutableList()));
+                                SendToUser(socketServer, id, new GotRegionMessage(msg.SuperGridPosition, region.ToImmutableList()));
                                 break;
                             default:
                                 throw new NotImplementedException();
                         }
                     }
 
-                    if (DateTime.UtcNow - lastSave > TimeSpan.FromMinutes(0.5))
+                    if (DateTime.UtcNow - lastSave > TimeSpan.FromMinutes(10))
                     {
                         if (File.Exists(autosavePath))
                         {

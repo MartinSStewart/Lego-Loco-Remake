@@ -39,14 +39,14 @@ type Action
     = AddTile Tile
     | RemoveTile TileBaseData
     | ClickTile TileBaseData
-    | GetRegion (Point2 Int) (Point2 Int)
+    | GetRegion (Point2 Int)
 
 
 type Response
     = AddedTile Tile
     | RemovedTile TileBaseData
     | ClickedTile TileBaseData
-    | GotRegion (Point2 Int) (Point2 Int) (List Tile)
+    | GotRegion (Point2 Int) (List Tile)
 
 
 writeAction : Action -> ByteString
@@ -61,8 +61,8 @@ writeAction action =
         ClickTile baseData ->
             writeInt Config.clickTile ++ writeTileBaseData baseData
 
-        GetRegion topLeft gridSize ->
-            writeInt Config.getRegion ++ writePoint2 topLeft ++ writePoint2 gridSize
+        GetRegion superGridPos ->
+            writeInt Config.getRegion ++ writePoint2 superGridPos
 
 
 serverUrl : String
@@ -89,14 +89,14 @@ update data model =
                             ClickedTile baseData ->
                                 model |> Lens.modify Lenses.tiles (Grid.clickTile baseData)
 
-                            GotRegion topLeft size tiles ->
+                            GotRegion superGridPos tiles ->
                                 model
                                     |> Lens.modify
                                         Lenses.tiles
-                                        (Grid.clearRegion topLeft size >> Grid.loadTiles tiles)
+                                        (Grid.loadTiles superGridPos tiles)
                                     |> Lens.modify
                                         Lenses.pendingGetRegions
-                                        (Set.remove (Point2.toTuple topLeft))
+                                        (Set.remove (Point2.toTuple superGridPos))
                     )
                     model
 
@@ -143,15 +143,11 @@ readResponse data =
             else if responseCode == Config.gotRegion then
                 readPoint2 bytes
                     |> Maybe.andThen
-                        (\( bytesLeft, topLeft ) ->
-                            readPoint2 bytesLeft
+                        (\( bytesLeft, superGridPos ) ->
+                            readList readTile bytesLeft
                                 |> Maybe.andThen
-                                    (\( bytesLeft, size ) ->
-                                        readList readTile bytesLeft
-                                            |> Maybe.andThen
-                                                (\( bytesLeft, tiles ) ->
-                                                    Just ( bytesLeft, GotRegion topLeft size tiles )
-                                                )
+                                    (\( bytesLeft, tiles ) ->
+                                        Just ( bytesLeft, GotRegion superGridPos tiles )
                                     )
                         )
             else

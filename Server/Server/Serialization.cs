@@ -127,8 +127,7 @@ namespace Server
                 case GotRegionMessage msg:
                     return stream
                         .WriteInt((int)MessageToClient.GotRegion)
-                        .WriteInt2(msg.TopLeft)
-                        .WriteInt2(msg.GridSize)
+                        .WriteInt2(msg.SuperGridPosition)
                         .WriteList(msg.Tiles, WriteTile);
                 default:
                     throw new NotImplementedException();
@@ -267,11 +266,7 @@ namespace Server
                 case MessageToServer.ClickTile:
                     return new ClickTileMessage(ReadTileBaseData(stream));
                 case MessageToServer.GetRegion:
-                    {
-                        var topLeft = ReadInt2(stream);
-                        var gridSize = ReadInt2(stream);
-                        return new GetRegionMessage(topLeft, gridSize);
-                    }
+                    return new GetRegionMessage(ReadInt2(stream));
                 default:
                     throw new NotImplementedException();
             }

@@ -14,46 +14,29 @@ namespace Tests
     {
         private static readonly ImmutableList<TileType> _tileTypes = TileType.GetTileTypes();
 
-        [TestCase(0, 0, 0, 0, 1, 1, true)]
-        [TestCase(-1, -1, 0, 0, 1, 1, false)]
-        [TestCase(-1, 0, 0, 0, 1, 1, false)]
-        [TestCase(0, -1, 0, 0, 1, 1, false)]
-        [TestCase(100, 0, 0, 0, 1, 1, false)]
-        [TestCase(-3, -3, 0, 0, 1, 1, false)]
-        [TestCase(-3, 0, 0, 0, 1, 1, false)]
-        [TestCase(0, -3, 0, 0, 1, 1, false)]
-        [TestCase(-2, -2, 0, 0, 1, 1, false)]
-        [TestCase(0, 0, 3, 0, 3, 3, false)]
-        [TestCase(6, 0, 3, 0, 3, 3, false)]
-        public void AddAndGetTile(int tileX, int tileY, int superGridX, int superGridY, int superGridWidth, int SuperGridHeight, bool tileInRegion)
+        [TestCase(0, 0, 0, 0, true)]
+        [TestCase(-1, -1, 0, 0, false)]
+        [TestCase(-1, 0, 0, 0, false)]
+        [TestCase(0, -1, 0, 0, false)]
+        [TestCase(100, 0, 0, 0, false)]
+        [TestCase(-3, -3, 0, 0, false)]
+        [TestCase(-3, 0, 0, 0, false)]
+        [TestCase(0, -3, 0, 0, false)]
+        [TestCase(-2, -2, 0, 0, false)]
+        [TestCase(0, 0, 3, 0, false)]
+        [TestCase(6, 0, 3, 0, false)]
+        public void AddAndGetTile(int tileX, int tileY, int superGridX, int superGridY, bool tileInRegion)
         {
             var world = new World(_tileTypes);
 
             world.AddTile("redHouse", new Int2(tileX, tileY), 0);
 
-            var result = world.GetRegion(new Int2(superGridX, superGridY), new Int2(superGridWidth, SuperGridHeight));
+            var result = world.GetRegion(new Int2(superGridX, superGridY));
 
             var expected = tileInRegion
                 ? new[] { world.CreateFromName("redHouse", new Int2(tileX, tileY), 0) }
                 : new Tile[0];
             Assert.AreEqual(expected, result);
-        }
-
-        [Test]
-        public void BugTest()
-        {
-            var world = new World(_tileTypes);
-
-            var random = new Random(123123);
-            for (var i = 0; i < 1000; i++)
-            {
-                world.AddTile(RandomTile(random, new Int2(-100, -100), new Int2(100, 100)));
-            }
-
-            world.AddTile("redHouse", new Int2(World.SuperGridSize * 4, 20), 0);
-
-            var result = world.GetRegion(new Int2(4, 0), new Int2(1, 1));
-            Assert.AreEqual(1, result.Count());
         }
 
         [Test]
@@ -151,6 +134,19 @@ namespace Tests
             world.AddTile("redHouse", new Int2(1, 0));
 
             Assert.AreEqual(2, world.TileCount);
+        }
+
+        [TestCase(World.SuperGridSize - 1, World.SuperGridSize, 0, 1)]
+        [TestCase(World.SuperGridSize, World.SuperGridSize - 1, 1, 0)]
+        [TestCase(0, 0, 0, 0)]
+        [TestCase(-1, -1, -1, -1)]
+        [TestCase(-World.SuperGridSize, -World.SuperGridSize + 1, -2, -1)]
+        [TestCase(-World.SuperGridSize + 1, -World.SuperGridSize, -1, -2)]
+        public void GridToSuperGridTest(int gridX, int gridY, int expectedSuperGridX, int expectedSuperGridY)
+        {
+            var result = World.GridToSuperGrid(new Int2(gridX, gridY));
+            var expected = new Int2(expectedSuperGridX, expectedSuperGridY);
+            Assert.AreEqual(expected, result);
         }
     }
 }

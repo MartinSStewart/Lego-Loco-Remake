@@ -13,7 +13,7 @@ messageVersion =
 
 superGridSize : Int
 superGridSize =
-    32
+    16
 
 
 minGridPosition : Point2 Int

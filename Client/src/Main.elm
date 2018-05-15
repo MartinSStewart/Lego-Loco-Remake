@@ -140,7 +140,7 @@ moveView viewRegion model =
         getRegionsCmd =
             Set.diff updatesSet model.pendingGetRegions
                 |> Set.toList
-                |> List.map (\a -> Server.GetRegion (Point2.fromTuple a) Point2.one)
+                |> List.map (Point2.fromTuple >> Server.GetRegion)
                 |> Server.send
 
         newModel =

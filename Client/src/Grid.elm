@@ -6,7 +6,6 @@ import Helpers exposing (ifThenElse)
 import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Lenses
-import List.Extra
 import List.FlatMap
 import Model exposing (Grid, Tile, TileBaseData)
 import Monocle.Lens as Lens exposing (Lens)
@@ -22,7 +21,9 @@ init =
 
 gridPosToSuperPos : Point2 Int -> Point2 Int
 gridPosToSuperPos gridPosition =
-    Point2.div gridPosition Config.superGridSize
+    Point2
+        (gridPosition.x // Config.superGridSize - (ifThenElse (gridPosition.x < 0) 1 0))
+        (gridPosition.y // Config.superGridSize - (ifThenElse (gridPosition.y < 0) 1 0))
 
 
 getSetAt : Point2 Int -> Lens Grid (List Tile)
@@ -59,26 +60,30 @@ addTile tile grid =
             |> Lens.modify (getSetAt superPosition) ((::) tile)
 
 
-loadTiles : List Tile -> Grid -> Grid
-loadTiles tiles grid =
+loadTiles : Point2 Int -> List Tile -> Grid -> Grid
+loadTiles superGridPosition tiles grid =
     let
-        tilePos tile =
-            tile.baseData.position
-    in
-        tiles
-            |> List.Extra.groupWhile (\a b -> gridPosToSuperPos (tilePos a) == gridPosToSuperPos (tilePos b))
-            |> List.foldl
-                (\a b ->
-                    let
-                        superPos =
-                            a
-                                |> List.head
-                                |> Maybe.map (tilePos >> gridPosToSuperPos)
-                                |> Maybe.withDefault Point2.zero
-                    in
-                        .set (getSetAt superPos) a b
+        tilesInCorrectSuperPos =
+            List.all
+                (.baseData
+                    >> .position
+                    >> gridPosToSuperPos
+                    >> (==) superGridPosition
                 )
-                grid
+                tiles
+
+        _ =
+            if tilesInCorrectSuperPos then
+                ()
+            else
+                Debug.crash
+                    ("Tiles loaded must be in correct super grid."
+                        ++ toString superGridPosition
+                        ++ toString tiles
+                    )
+                    ()
+    in
+        .set (getSetAt superGridPosition) tiles grid
 
 
 update : Rectangle Int -> Grid -> ( Grid, List (Point2 Int) )
@@ -128,9 +133,9 @@ insideView viewRegion superPos =
         Point2.inRectangle viewSuperPos viewSuperSize superPos
 
 
-clearRegion : Point2 Int -> Point2 Int -> Grid -> Grid
-clearRegion superPos superSize grid =
-    Dict.filter (\( x, y ) _ -> Point2.inRectangle superPos superSize (Point2 x y) |> not) grid
+clearRegion : Point2 Int -> Grid -> Grid
+clearRegion superPos grid =
+    Dict.remove (Point2.toTuple superPos) grid
 
 
 view : Int -> Rectangle Int -> Grid -> Html msg

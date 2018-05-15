@@ -44,13 +44,11 @@ namespace Server
 
     public class GetRegionMessage : IClientMessage
     {
-        public Int2 TopLeft { get; }
-        public Int2 GridSize { get; }
+        public Int2 SuperGridPosition { get; }
 
-        public GetRegionMessage(Int2 topLeft, Int2 gridSize)
+        public GetRegionMessage(Int2 superGridPosition)
         {
-            TopLeft = topLeft;
-            GridSize = gridSize;
+            SuperGridPosition = superGridPosition;
         }
     }
 
@@ -60,14 +58,15 @@ namespace Server
 
     public class GotRegionMessage : IServerMessage
     {
-        public Int2 TopLeft { get; }
-        public Int2 GridSize { get; }
+        public Int2 SuperGridPosition { get; }
         public ImmutableList<Tile> Tiles { get; }
 
-        public GotRegionMessage(Int2 topLeft, Int2 gridSize, ImmutableList<Tile> tiles)
+        public GotRegionMessage(Int2 superGridPosition, ImmutableList<Tile> tiles)
         {
-            TopLeft = topLeft;
-            GridSize = gridSize;
+            DebugEx.Assert(
+                tiles.All(
+                    item => World.GridToSuperGrid(item.BaseData.GridPosition).Equals(superGridPosition)));
+            SuperGridPosition = superGridPosition;
             Tiles = tiles;
         }
     }
