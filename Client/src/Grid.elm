@@ -109,7 +109,6 @@ update viewRegion grid =
             List.range 0 (Point2.area superSize - 1)
                 |> List.map (Point2.intToInt2 superSize.x >> Point2.add superPosition)
                 |> List.filter (\a -> Dict.get ( a.x, a.y ) grid |> (==) Nothing)
-                |> Debug.log "a"
     in
         ( newGrid, needsUpdate )
 
@@ -153,7 +152,7 @@ view minZIndex viewRegion grid =
                 |> List.map (\a -> Tile.tileView a False (minZIndex + a.baseData.position.y))
     in
         -- The view offset is applied to a parent div to minimize the amount of virtual dom changes when the view moves.
-        div [ style <| Helpers.absoluteStyle (Point2.negate viewRegion.topLeft) viewRegion.size ]
+        div [ style <| ( "pointer-events", "none" ) :: Helpers.absoluteStyle (Point2.negate viewRegion.topLeft) viewRegion.size ]
             superTiles
 
 

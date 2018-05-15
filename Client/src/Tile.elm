@@ -61,11 +61,11 @@ viewToGrid viewPoint viewPosition =
         |> Point2.floor
 
 
-viewToTileGrid : Point2 Int -> Model -> Model.TileTypeId -> Point2 Int
-viewToTileGrid viewPoint model tileTypeId =
-    tileTypeGridSize model.currentRotation (getTileOrDefault tileTypeId)
+viewToTileGrid : Point2 Int -> Point2 Int -> Int -> Model.TileTypeId -> Point2 Int
+viewToTileGrid viewPoint viewPosition tileRotation tileTypeId =
+    tileTypeGridSize tileRotation (getTileOrDefault tileTypeId)
         |> Point2.rdiv 2
-        |> Point2.sub (viewToGrid viewPoint model.viewPosition)
+        |> Point2.sub (viewToGrid viewPoint viewPosition)
 
 
 {-| Gets the size of the tile when accounting for rotation.

@@ -160,7 +160,7 @@ mouseDown : MouseEvents.MouseEvent -> Model -> ( Model, Cmd Msg )
 mouseDown mouseEvent model =
     let
         position =
-            MouseEvents.relPos mouseEvent |> Point2.rsub model.viewPosition
+            MouseEvents.relPos mouseEvent
     in
         case model.editMode of
             PlaceTiles tileId ->
@@ -168,7 +168,8 @@ mouseDown mouseEvent model =
                     tilePos =
                         Tile.viewToTileGrid
                             position
-                            model
+                            model.viewPosition
+                            model.currentRotation
                             tileId
 
                     tileInstance =
@@ -235,7 +236,7 @@ mouseMove mousePos ( model, cmdMsg ) =
             PlaceTiles tileId ->
                 let
                     tilePos =
-                        Tile.viewToTileGrid mousePos model tileId
+                        Tile.viewToTileGrid mousePos model.viewPosition model.currentRotation tileId
 
                     ( tiles, newModel ) =
                         model
@@ -322,7 +323,8 @@ view model =
                         mouseTilePos =
                             Tile.viewToTileGrid
                                 model.mousePosCurrent
-                                model
+                                model.viewPosition
+                                model.currentRotation
                                 tileId
                     in
                         if Toybox.insideToolbox model.windowSize model.mousePosCurrent model.toolbox then
