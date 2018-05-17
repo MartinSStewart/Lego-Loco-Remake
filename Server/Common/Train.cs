@@ -10,12 +10,21 @@ namespace Common
     public class Train : MemberwiseEquatable<Train>
     {
         public double T { get; }
+        /// <summary>
+        /// In grid units per second. Positive means moving in the direction the train is facing.
+        /// </summary>
         public double Speed { get; }
+        public bool FacingEnd { get; }
+        public int Id { get; }
 
-        public Train(double t, double speed)
+        public static double GridLength => 1;
+
+        public Train(double t, double speed, bool facingEnd, int id)
         {
             T = t;
             Speed = speed;
+            FacingEnd = facingEnd;
+            Id = id;
         }
     }
 }

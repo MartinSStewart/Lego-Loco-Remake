@@ -79,8 +79,14 @@ type TileTypeId
 
 type alias Train =
     { t : Float -- The distance along the current rail path where 0 == start and 1 == end.
-    , speed : Float -- In grid units per second. Positive means towards path end, negative means towards path start.
+    , speed : Float -- In grid units per second. Positive means moving in the direction the train is facing.
+    , facingEnd : Bool -- If true, the train is pointing towards the path end.
+    , id : TrainId
     }
+
+
+type TrainId
+    = TrainId Int
 
 
 type alias Toybox =

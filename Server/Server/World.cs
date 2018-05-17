@@ -8,6 +8,7 @@ using MoreLinq;
 using Common;
 using Common.TileData;
 using Newtonsoft.Json;
+using Common.TileTypeData;
 
 namespace Server
 {
@@ -26,6 +27,7 @@ namespace Server
         public ImmutableList<TileType> TileTypes { get; }
 
         private readonly MultiValueDictionary<Int2, Tile> _superGrid = new MultiValueDictionary<Int2, Tile>();
+        public readonly HashSet<Tile> RailTiles = new HashSet<Tile>();
 
         public World(ImmutableList<TileType> tileTypes)
         {
@@ -43,7 +45,7 @@ namespace Server
                 });
             foreach (var tile in tiles)
             {
-                world._superGrid.Add(GridToSuperGrid(tile.BaseData.GridPosition), tile);
+                world.FastAddTile(tile);
             }
             return world;
         }
@@ -56,7 +58,7 @@ namespace Server
                     TypeNameHandling = TypeNameHandling.Auto
                 });
 
-        private IEnumerable<Tile> GetTiles(Int2 superGridPosition) =>
+        public IEnumerable<Tile> GetTiles(Int2 superGridPosition) =>
             _superGrid.TryGetValue(superGridPosition, out IReadOnlyCollection<Tile> value)
                 ? value
                 : new Tile[0];
@@ -77,12 +79,7 @@ namespace Server
             var gridPos = tile.BaseData.GridPosition;
             var superGridPos = GridToSuperGrid(gridPos);
 
-            var superGridTiles = new[]
-            {
-                new Int2(-1, -1), new Int2(0, -1), new Int2(1, -1),
-                new Int2(-1, 0), new Int2(0, 0), new Int2(1, 0),
-                new Int2(-1, 1), new Int2(0, 1), new Int2(1, 1),
-            }.Select(item => (item + superGridPos, GetTiles(item + superGridPos).ToArray()));
+            var superGridTiles = GetPointNeighbors(superGridPos).Select(item => (item, GetTiles(item).ToArray()));
 
             foreach (var (pos, tiles) in superGridTiles)
             {
@@ -93,8 +90,16 @@ namespace Server
                 }
             }
 
-            _superGrid.Add(superGridPos, tile);
+            FastAddTile(tile);
         }
+
+        public static IEnumerable<Int2> GetPointNeighbors(Int2 point) =>
+            new[]
+            {
+                new Int2(-1, -1), new Int2(0, -1), new Int2(1, -1),
+                new Int2(-1, 0), new Int2(0, 0), new Int2(1, 0),
+                new Int2(-1, 1), new Int2(0, 1), new Int2(1, 1),
+            }.Select(item => item + point);
 
         /// <summary>
         /// Adds a tile without any collision checks or bounds checks.
@@ -104,6 +109,10 @@ namespace Server
         {
             var superGridPos = GridToSuperGrid(tile.BaseData.GridPosition);
             _superGrid.Add(superGridPos, tile);
+            if (tile.Data is IRailTileData railTile && railTile.Trains.Any())
+            {
+                RailTiles.Add(tile);
+            }
         }
 
         /// <summary>
@@ -126,7 +135,7 @@ namespace Server
                 case TileRail _:
                     break;
                 case TileRailFork fork:
-                    ReplaceTileData(tile, new TileRailFork(fork.Trains, !fork.IsOn));
+                    ReplaceTileData(tile.BaseData, new TileRailFork(fork.Trains, !fork.IsOn));
                     break;
                 case TileDepot depot:
                     break;
@@ -140,12 +149,12 @@ namespace Server
         public void AddTile(string tileTypeName, Int2 gridPosition, int rotation = 0) =>
             AddTile(CreateFromName(tileTypeName, gridPosition, rotation));
 
-        private bool ReplaceTileData(Tile tile, ITileData newTileData)
+        public bool ReplaceTileData(TileBaseData tileBaseData, ITileData newTileData)
         {
-            var key = GridToSuperGrid(tile.BaseData.GridPosition);
-            if (_superGrid.Remove(key, tile))
+            var key = GridToSuperGrid(tileBaseData.GridPosition);
+            if (Remove(tileBaseData))
             {
-                _superGrid.Add(key, new Tile(tile.BaseData, newTileData));
+                FastAddTile(new Tile(tileBaseData, newTileData));
                 return true;
             }
             return false;
@@ -163,8 +172,21 @@ namespace Server
         /// <summary>
         /// Removes a tile that exactly matches the one provided.
         /// </summary>
-        public bool Remove(TileBaseData baseData) => 
-            _superGrid.Remove(GridToSuperGrid(baseData.GridPosition), GetTile(baseData));
+        public bool Remove(TileBaseData baseData)
+        {
+            var tile = GetTile(baseData);
+            if (tile != null)
+            {
+                if (tile.Data is IRailTileData railTile && railTile.Trains.Any())
+                {
+                    var result = RailTiles.Remove(tile);
+                    DebugEx.Assert(result, "Couldn't find train tile to remove.");
+                }
+                return _superGrid.Remove(GridToSuperGrid(baseData.GridPosition), tile);
+            }
+            return false;
+        }
+            
 
         public bool TilesOverlap(Tile tile0, Tile tile1) => 
             RectanglesOverlap(

@@ -40,6 +40,7 @@ type Action
     | RemoveTile TileBaseData
     | ClickTile TileBaseData
     | GetRegion (Point2 Int)
+    | GetTrains (Point2 Int)
 
 
 type Response
@@ -47,6 +48,7 @@ type Response
     | RemovedTile TileBaseData
     | ClickedTile TileBaseData
     | GotRegion (Point2 Int) (List Tile)
+    | GotTrains (Point2 Int) (List Tile)
 
 
 writeAction : Action -> ByteString
@@ -63,6 +65,9 @@ writeAction action =
 
         GetRegion superGridPos ->
             writeInt Config.getRegion ++ writePoint2 superGridPos
+
+        GetTrains _ ->
+            Debug.crash "TODO"
 
 
 serverUrl : String
@@ -97,6 +102,9 @@ update data model =
                                     |> Lens.modify
                                         Lenses.pendingGetRegions
                                         (Set.remove (Point2.toTuple superGridPos))
+
+                            GotTrains _ _ ->
+                                Debug.crash "TODO"
                     )
                     model
 
@@ -291,7 +299,15 @@ readTrain data =
                 readFloat bytesLeft
                     |> Maybe.andThen
                         (\( bytesLeft, speed ) ->
-                            Just ( bytesLeft, Train t speed )
+                            readBool bytesLeft
+                                |> Maybe.andThen
+                                    (\( bytesLeft, facingEnd ) ->
+                                        readInt bytesLeft
+                                            |> Maybe.andThen
+                                                (\( bytesLeft, trainId ) ->
+                                                    Just ( bytesLeft, Train t speed facingEnd (TrainId trainId) )
+                                                )
+                                    )
                         )
             )
 
@@ -408,7 +424,14 @@ writeTileData tileData =
 
 writeTrain : Train -> ByteString
 writeTrain train =
-    writeFloat train.t ++ writeFloat train.speed
+    let
+        (TrainId id) =
+            train.id
+    in
+        writeFloat train.t
+            ++ writeFloat train.speed
+            ++ writeBool train.facingEnd
+            ++ writeInt id
 
 
 inIntRange : Int -> Bool

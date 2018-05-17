@@ -90,7 +90,9 @@ namespace Server
         public static MemoryStream WriteTrain(this MemoryStream stream, Train train) =>
             stream
                 .WriteElmFloat(train.T)
-                .WriteElmFloat(train.Speed);
+                .WriteElmFloat(train.Speed)
+                .WriteBool(train.FacingEnd)
+                .WriteInt(train.Id);
 
         public static MemoryStream WriteList<T>(this MemoryStream stream, ICollection<T> list, Func<MemoryStream, T, MemoryStream> writer)
         {
@@ -237,7 +239,9 @@ namespace Server
         {
             var t = stream.ReadElmFloat();
             var speed = stream.ReadElmFloat();
-            return new Train(t, speed);
+            var facingEnd = stream.ReadBool();
+            var id = stream.ReadInt();
+            return new Train(t, speed, facingEnd, id);
         }
 
         public static List<T> ReadList<T>(this MemoryStream stream, Func<MemoryStream, T> reader)

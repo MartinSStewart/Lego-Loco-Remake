@@ -12,11 +12,16 @@ namespace Common.TileData
     {
     }
 
+    public interface IRailTileData : ITileData
+    {
+        ImmutableList<Train> Trains { get; }
+    }
+
     public class TileBasic : MemberwiseEquatable<TileBasic>, ITileData
     {
     }
 
-    public class TileRail : MemberwiseEquatable<TileRail>, ITileData
+    public class TileRail : MemberwiseEquatable<TileRail>, IRailTileData
     {
         public ImmutableList<Train> Trains { get; }
 
@@ -26,7 +31,7 @@ namespace Common.TileData
         }
     }
 
-    public class TileRailFork : MemberwiseEquatable<TileRailFork>, ITileData
+    public class TileRailFork : MemberwiseEquatable<TileRailFork>, IRailTileData
     {
         public ImmutableList<Train> Trains { get; }
         public bool IsOn { get; }
@@ -38,7 +43,7 @@ namespace Common.TileData
         }
     }
 
-    public class TileDepot : MemberwiseEquatable<TileDepot>, ITileData
+    public class TileDepot : MemberwiseEquatable<TileDepot>, IRailTileData
     {
         public ImmutableList<Train> Trains { get; }
         public bool Occupied { get; }

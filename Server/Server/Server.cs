@@ -54,33 +54,15 @@ namespace Server
                     Console.WriteLine("Failed to load autosave.");
                 }
             }
-            //for (int i = 0; i < 100; i++)
-            //{
-            //    for (int j = 0; j < 100; j++)
-            //    {
-            //        World.FastAddTile(
-            //            new Tile(
-            //                new TileBaseData(
-            //                    0, 
-            //                    new Int2(i * 32 - 0, j * 32 - 0), 
-            //                    0), 
-            //                new TileBasic()));
-            //        World.FastAddTile(
-            //            new Tile(
-            //                new TileBaseData(
-            //                    0,
-            //                    new Int2(i * 32 + 31, j * 32 + 31),
-            //                    0),
-            //                new TileBasic()));
-            //    }
-            //}
 
             await Task.Run(async () =>
             {
                 var lastSave = DateTime.UtcNow;
+                var stepSize = TimeSpan.FromMilliseconds(100);
                 while (true)
                 {
-                    await Task.Delay(10);
+                    await Task.Delay(stepSize);
+                    World.MoveTrains(stepSize);
                     while (MessageQueue.TryDequeue(out (string, IClientMessage) item))
                     {
                         var (id, message) = item;

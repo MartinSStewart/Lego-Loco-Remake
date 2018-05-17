@@ -16,8 +16,13 @@ namespace Server
 
         public Tile(TileBaseData baseData, ITileData data)
         {
+            DebugEx.Assert(baseData != null);
+            DebugEx.Assert(data != null);
             BaseData = baseData;
             Data = data;
         }
+
+        public Tile With(TileBaseData baseData = null, ITileData data = null) =>
+            new Tile(baseData ?? BaseData, data ?? Data);
     }
 }

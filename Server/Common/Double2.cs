@@ -17,6 +17,8 @@ namespace Common
 
         [JsonIgnore]
         public Double2 Transpose => new Double2(Y, X);
+        [JsonIgnore]
+        public double Length => Math.Sqrt(X * X + Y * Y);
 
         public Double2(double x, double y)
         {
@@ -27,6 +29,8 @@ namespace Common
         public override string ToString() => $"{X},{Y}";
 
         public Double2 ValueWrap(Double2 mod) => new Double2(ValueWrap(X, mod.X), ValueWrap(Y, mod.Y));
+
+        public Double2 Normalize() => new Double2(X / Length, Y / Length);
 
         private static double ValueWrap(double value, double mod)
         {

@@ -7,7 +7,7 @@ import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Lenses
 import List.FlatMap
-import Model exposing (Grid, Tile, TileBaseData)
+import Model exposing (Grid, Tile, TileBaseData, TrainId(..))
 import Monocle.Lens as Lens exposing (Lens)
 import Point2 exposing (Point2)
 import Rectangle exposing (Rectangle)
@@ -189,7 +189,9 @@ clickTile tileBaseData superGrid =
                                     Model.TileRailFork trains (not isOn)
 
                                 Model.TileDepot trains occupied ->
-                                    Model.TileDepot (ifThenElse occupied (Model.Train 0 0 :: trains) trains) False
+                                    Model.TileDepot
+                                        (ifThenElse occupied (Model.Train 0 0 True (TrainId 0) :: trains) trains)
+                                        False
                         )
                         a
                 else
