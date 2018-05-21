@@ -3,6 +3,7 @@ using Common.TileData;
 using Common.TileTypeData;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,16 @@ namespace Server
             }
         }
 
+        /// <summary>
+        /// Returns a tile path in grid coordinates.
+        /// </summary>
+        /// <returns></returns>
+        private static Func<double, Double2> GetGridPath(this World world, Tile tile)
+        {
+            var path = GetPath(world, tile);
+            return t => path(t) + tile.BaseData.GridPosition.ToDouble2();
+        }
+
         private static (double T, double MovementLeft) MoveOnPath(Func<double, Double2> path, double t, double movementLeft)
         {
             var moveSign = movementLeft > 0 ? 1 : -1;
@@ -38,11 +49,11 @@ namespace Server
             var newT = t + 0.01 * moveSign;
             var pos = path(newT);
             var newMovementLeft = movementLeft - (pos - posPrev).Length * moveSign;
-            if (t >= 1 && movementLeft > 0)
+            if (t > 1 && movementLeft > 0)
             {
                 return (1, Math.Max(newMovementLeft, 0));
             }
-            if (t <= 0 && movementLeft < 0)
+            if (t < 0 && movementLeft < 0)
             {
                 return (0, Math.Min(newMovementLeft, 0));
             }
@@ -55,15 +66,19 @@ namespace Server
 
         private static (Tile Tile, bool AtEndOfPath)? GetNextPath(this World world, Tile tile, bool atEndOfPath)
         {
-            var path = world.GetPath(tile);
+            var path = world.GetGridPath(tile);
             var pos = atEndOfPath ? path(1) : path(0);
             var superGridPos = World.GridToSuperGrid(tile.BaseData.GridPosition);
 
-            return World.GetPointNeighbors(superGridPos)
+            var tiles = World.GetPointNeighbors(superGridPos)
                 .SelectMany(item => world.GetTiles(item))
+                .Where(item => item != tile)
+                .ToList();
+
+            var nextTiles = tiles
                 .Select<Tile, (Tile, bool)?>(item =>
                 {
-                    var otherPath = world.GetPath(item);
+                    var otherPath = world.GetGridPath(item);
                     if (otherPath == null)
                     {
                         return null;
@@ -79,7 +94,9 @@ namespace Server
                         return (item, true);
                     }
                     return null;
-                })
+                }).ToList();
+
+            return nextTiles
                 .SingleOrDefault(item => item != null);
         }
 
@@ -104,44 +121,19 @@ namespace Server
             return (tile, new Train(t, train.Speed, train.FacingEnd, train.Id));
         }
 
-        private static IRailTileData RemoveTrain(Tile tile, Train train)
+        private static IRailTileData ModifyTrains(IRailTileData tileData, Func<ImmutableList<Train>, ImmutableList<Train>> trainFunc)
         {
-            IRailTileData newTileData;
-            switch (tile.Data)
+            switch (tileData)
             {
                 case TileRail rail:
-                    newTileData = new TileRail(rail.Trains.Remove(train));
-                    break;
+                    return new TileRail(trainFunc(rail.Trains));
                 case TileRailFork railFork:
-                    newTileData = new TileRailFork(railFork.Trains.Remove(train), railFork.IsOn);
-                    break;
+                    return new TileRailFork(trainFunc(railFork.Trains), railFork.IsOn);
                 case TileDepot depot:
-                    newTileData = new TileDepot(depot.Trains.Remove(train), depot.Occupied);
-                    break;
+                    return new TileDepot(trainFunc(depot.Trains), depot.Occupied);
                 default:
                     throw new NotImplementedException();
             }
-            return newTileData;
-        }
-
-        private static IRailTileData AddTrain(Tile tile, Train train)
-        {
-            IRailTileData newTileData;
-            switch (tile.Data)
-            {
-                case TileRail rail:
-                    newTileData = new TileRail(rail.Trains.Add(train));
-                    break;
-                case TileRailFork railFork:
-                    newTileData = new TileRailFork(railFork.Trains.Add(train), railFork.IsOn);
-                    break;
-                case TileDepot depot:
-                    newTileData = new TileDepot(depot.Trains.Add(train), depot.Occupied);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-            return newTileData;
         }
 
         public static void MoveTrains(this World world, TimeSpan stepSize)
@@ -150,10 +142,10 @@ namespace Server
 
             void Move(Tile tile, Train train)
             {
-                var (newTile, newTrain) = world._move(tile, train, train.Speed * substepSize.TotalSeconds * (train.FacingEnd ? 1 : -1));
+                var (nextTile, newTrain) = world._move(tile, train, train.Speed * substepSize.TotalSeconds * (train.FacingEnd ? 1 : -1));
 
-                world.ReplaceTileData(tile.BaseData, RemoveTrain(tile, train));
-                world.ReplaceTileData(newTile.BaseData, AddTrain(newTile, newTrain));
+                world.ModifyTileData(tile.BaseData, data => ModifyTrains((IRailTileData)data, trains => trains.Remove(train)));
+                world.ModifyTileData(nextTile.BaseData, data => ModifyTrains((IRailTileData)data, trains => trains.Add(newTrain)));
             }
 
             var iterations = stepSize.Ticks / substepSize.Ticks;
@@ -176,6 +168,20 @@ namespace Server
                 }
                 iterations--;
             }
+        }
+
+        public static Double2? GetTrainPosition(this World world, int trainId)
+        {
+            foreach (var item in world.RailTiles)
+            {
+                var train = ((IRailTileData)item.Data).Trains.SingleOrDefault(trainItem => trainItem.Id == trainId);
+                if (train != null)
+                {
+                    var path = GetGridPath(world, item);
+                    return path(train.T);
+                }
+            }
+            return null;
         }
     }
 }

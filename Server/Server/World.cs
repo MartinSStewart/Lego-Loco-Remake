@@ -151,9 +151,21 @@ namespace Server
 
         public bool ReplaceTileData(TileBaseData tileBaseData, ITileData newTileData)
         {
-            var key = GridToSuperGrid(tileBaseData.GridPosition);
             if (Remove(tileBaseData))
             {
+                FastAddTile(new Tile(tileBaseData, newTileData));
+                return true;
+            }
+            return false;
+        }
+
+        public bool ModifyTileData(TileBaseData tileBaseData, Func<ITileData, ITileData> modifyTileData)
+        {
+            var oldTile = GetTile(tileBaseData);
+            if (Remove(tileBaseData))
+            {
+                var newTileData = modifyTileData(oldTile.Data);
+                DebugEx.Assert(newTileData.GetType() == oldTile.Data.GetType());
                 FastAddTile(new Tile(tileBaseData, newTileData));
                 return true;
             }

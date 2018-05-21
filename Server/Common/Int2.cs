@@ -28,6 +28,8 @@ namespace Common
 
         public Int2 ValueWrap(Int2 mod) => new Int2(ValueWrap(X, mod.X), ValueWrap(Y, mod.Y));
 
+        public Double2 ToDouble2() => new Double2(X, Y);
+
         private static int ValueWrap(int value, int mod)
         {
             value = value % mod;

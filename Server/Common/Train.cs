@@ -17,6 +17,9 @@ namespace Common
         public bool FacingEnd { get; }
         public int Id { get; }
 
+        /// <summary>
+        /// Length of train in grid units.
+        /// </summary>
         public static double GridLength => 1;
 
         public Train(double t, double speed, bool facingEnd, int id)
