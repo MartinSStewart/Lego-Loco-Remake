@@ -1,4 +1,17 @@
-module Grid exposing (addTile, removeTile, clickTile, collisionsAt, init, tileCount, clearRegion, loadTiles, view, update)
+module Grid
+    exposing
+        ( addTile
+        , removeTile
+        , clickTile
+        , collisionsAt
+        , init
+        , tileCount
+        , clearRegion
+        , loadTiles
+        , loadTrains
+        , view
+        , update
+        )
 
 import Config
 import Dict
@@ -60,16 +73,19 @@ addTile tile grid =
             |> Lens.modify (getSetAt superPosition) ((::) tile)
 
 
+tileInSuperGridPos : Point2 Int -> Tile -> Bool
+tileInSuperGridPos superGridPosition tile =
+    tile.baseData.position
+        |> gridPosToSuperPos
+        |> (==) superGridPosition
+
+
 loadTiles : Point2 Int -> List Tile -> Grid -> Grid
 loadTiles superGridPosition tiles grid =
     let
         tilesInCorrectSuperPos =
             List.all
-                (.baseData
-                    >> .position
-                    >> gridPosToSuperPos
-                    >> (==) superGridPosition
-                )
+                (tileInSuperGridPos superGridPosition)
                 tiles
 
         _ =
@@ -84,6 +100,50 @@ loadTiles superGridPosition tiles grid =
                     ()
     in
         .set (getSetAt superGridPosition) tiles grid
+
+
+loadTrains : Point2 Int -> List Tile -> Grid -> Grid
+loadTrains superGridPosition trainTiles grid =
+    let
+        tilesInCorrectSuperPos =
+            List.all
+                (tileInSuperGridPos superGridPosition)
+                trainTiles
+
+        _ =
+            if tilesInCorrectSuperPos then
+                ()
+            else
+                Debug.crash
+                    ("Tiles loaded must be in correct super grid."
+                        ++ toString superGridPosition
+                        ++ toString trainTiles
+                    )
+                    ()
+
+        tileKey =
+            .baseData >> .position >> Point2.toTuple
+
+        trainTileDict =
+            trainTiles
+                |> List.map (\a -> ( tileKey a, a ))
+                |> Dict.fromList
+    in
+        Lens.modify
+            (getSetAt superGridPosition)
+            (List.map
+                (\tile ->
+                    Lens.modify
+                        Lenses.data
+                        (\tileData ->
+                            Dict.get (tileKey tile) trainTileDict
+                                |> Maybe.map .data
+                                |> Maybe.withDefault (Tile.tileDataWithoutTrains tileData)
+                        )
+                        tile
+                )
+            )
+            grid
 
 
 update : Rectangle Int -> Grid -> ( Grid, List (Point2 Int) )

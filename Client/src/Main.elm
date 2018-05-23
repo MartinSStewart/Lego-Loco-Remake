@@ -21,6 +21,8 @@ import Cursor
 import Grid
 import Rectangle exposing (Rectangle)
 import Set
+import Time
+import Dict
 
 
 ---- MODEL ----
@@ -64,6 +66,7 @@ type Msg
     | RotateTile Int
     | WindowResize Window.Size
     | WebSocketRecieve String
+    | UpdateTrains Time.Time
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -95,6 +98,16 @@ update msg model =
 
         WebSocketRecieve text ->
             ( Server.update text model, Cmd.none )
+
+        UpdateTrains _ ->
+            let
+                updateTrainMessages =
+                    model.tiles
+                        |> Dict.toList
+                        |> List.map (Tuple.first >> Point2.fromTuple >> Server.GetTrains)
+                        |> Server.send
+            in
+                ( model, updateTrainMessages )
 
 
 keyMsg : number -> Model -> ( Model, Cmd Msg )
@@ -376,6 +389,7 @@ subscriptions model =
             , Mouse.ups MouseUp
             , Window.resizes WindowResize
             , Server.subscription WebSocketRecieve
+            , Time.every (Time.second * 2) UpdateTrains
             ]
         ]
 

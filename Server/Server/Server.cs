@@ -63,9 +63,9 @@ namespace Server
                 {
                     await Task.Delay(stepSize);
                     World.MoveTrains(stepSize);
-                    while (MessageQueue.TryDequeue(out (string, IClientMessage) item))
+                    while (MessageQueue.TryDequeue(out (string, IClientMessage) idAndMessage))
                     {
-                        var (id, message) = item;
+                        var (id, message) = idAndMessage;
                         switch (message)
                         {
                             case AddTileMessage msg:
@@ -89,6 +89,17 @@ namespace Server
                                 var region = World.GetRegion(msg.SuperGridPosition);
 
                                 SendToUser(socketServer, id, new GotRegionMessage(msg.SuperGridPosition, region.ToImmutableList()));
+                                break;
+                            case GetTrainsMessage msg:
+                                SendToUser(
+                                    socketServer, 
+                                    id, 
+                                    new GotTrainsMessage(
+                                        msg.SuperGridPosition, 
+                                        World
+                                            .GetRegion(msg.SuperGridPosition)
+                                            .Where(tile => tile.Data is IRailTileData railData && railData.Trains.Any())
+                                            .ToImmutableList()));
                                 break;
                             default:
                                 throw new NotImplementedException();

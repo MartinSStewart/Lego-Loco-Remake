@@ -32,6 +32,27 @@ namespace Common
 
         public Double2 Normalize() => new Double2(X / Length, Y / Length);
 
+        /// <summary>
+        /// Rotate by n 90 degree counter clockwise rotations (assuming the x-axis is positive to the right and the y-axis is positive downward).
+        /// </summary>
+        public Double2 RotateBy90(int rotateBy)
+        {
+            switch (ValueWrap(rotateBy, 4))
+            {
+                case 1:
+                    return new Double2(Y, -X);
+                case 2:
+                    return new Double2(-X, -Y);
+                case 3:
+                    return new Double2(-Y, X);
+                default:
+                    return this;
+            }
+        }
+
+        public Double2 FlipX() => new Double2(-X, Y);
+        public Double2 FlipY() => new Double2(X, -Y);
+
         private static double ValueWrap(double value, double mod)
         {
             value = value % mod;
@@ -60,6 +81,8 @@ namespace Common
             new Double2(left.X * right, left.Y * right);
         public static Double2 operator /(Double2 left, Double2 right) =>
             new Double2(left.X / right.X, left.Y / right.Y);
+        public static Double2 operator /(Double2 left, double right) =>
+            new Double2(left.X / right, left.Y / right);
 
         public override int GetHashCode()
         {

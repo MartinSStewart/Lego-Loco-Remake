@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.TileData;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -52,6 +53,16 @@ namespace Server
         }
     }
 
+    public class GetTrainsMessage : IClientMessage
+    {
+        public Int2 SuperGridPosition { get; }
+
+        public GetTrainsMessage(Int2 superGridPosition)
+        {
+            SuperGridPosition = superGridPosition;
+        }
+    }
+
     public interface IServerMessage
     {
     }
@@ -68,6 +79,22 @@ namespace Server
                     item => World.GridToSuperGrid(item.BaseData.GridPosition).Equals(superGridPosition)));
             SuperGridPosition = superGridPosition;
             Tiles = tiles;
+        }
+    }
+
+    public class GotTrainsMessage : IServerMessage
+    {
+        public Int2 SuperGridPosition { get; }
+        public ImmutableList<Tile> TrainTiles { get; }
+
+        public GotTrainsMessage(Int2 superGridPosition, ImmutableList<Tile> tiles)
+        {
+            DebugEx.Assert(tiles.All(item => item.Data is IRailTileData));
+            DebugEx.Assert(
+                tiles.All(
+                    item => World.GridToSuperGrid(item.BaseData.GridPosition).Equals(superGridPosition)));
+            SuperGridPosition = superGridPosition;
+            TrainTiles = tiles;
         }
     }
 

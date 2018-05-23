@@ -46,6 +46,11 @@ editMode =
     Lens .editMode (\value item -> { item | editMode = value })
 
 
+facingEnd : Lens { b | facingEnd : a } a
+facingEnd =
+    Lens .facingEnd (\value item -> { item | facingEnd = value })
+
+
 filepath : Lens { b | filepath : a } a
 filepath =
     Lens .filepath (\value item -> { item | filepath = value })
@@ -59,6 +64,11 @@ gridSize =
 icon : Lens { b | icon : a } a
 icon =
     Lens .icon (\value item -> { item | icon = value })
+
+
+id : Lens { b | id : a } a
+id =
+    Lens .id (\value item -> { item | id = value })
 
 
 lastTilePosition : Lens { b | lastTilePosition : a } a

@@ -30,6 +30,27 @@ namespace Common
 
         public Double2 ToDouble2() => new Double2(X, Y);
 
+        /// <summary>
+        /// Rotate by n 90 degree counter clockwise rotations (assuming the x-axis is positive to the right and the y-axis is positive downward).
+        /// </summary>
+        public Int2 RotateBy90(int rotateBy)
+        {
+            switch (ValueWrap(rotateBy, 4))
+            {
+                case 1:
+                    return new Int2(Y, -X);
+                case 2:
+                    return new Int2(-X, -Y);
+                case 3:
+                    return new Int2(-Y, X);
+                default:
+                    return this;
+            }
+        }
+
+        public Int2 FlipX() => new Int2(-X, Y);
+        public Int2 FlipY() => new Int2(X, -Y);
+
         private static int ValueWrap(int value, int mod)
         {
             value = value % mod;

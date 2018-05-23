@@ -17,6 +17,13 @@ namespace Server
         public static Int2 MinGridPosition { get; } = new Int2(-1000000, -1000000);
         public static Int2 MaxGridPosition { get; } = new Int2(1000000, 1000000);
 
+        public int TrainIdCounter = 0;
+
+        /// <summary>
+        /// Number of grid units a train covers per second.
+        /// </summary>
+        public const int TrainSpeed = 4;
+
         /// <summary>
         /// This value must be larger than all tile type grid sizes.
         /// </summary>
@@ -127,37 +134,29 @@ namespace Server
             {
                 return false;
             }
-
-            switch (tile.Data)
+            ModifyTileData(tile.BaseData, data =>
             {
-                case TileBasic _:
-                    break;
-                case TileRail _:
-                    break;
-                case TileRailFork fork:
-                    ReplaceTileData(tile.BaseData, new TileRailFork(fork.Trains, !fork.IsOn));
-                    break;
-                case TileDepot depot:
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
+                switch (data)
+                {
+                    case TileRailFork fork:
+                        return new TileRailFork(fork.Trains, !fork.IsOn);
+                    case TileDepot depot:
+                        if (depot.Occupied)
+                        {
+                            TrainIdCounter++;
+                            return new TileDepot(depot.Trains.Add(new Train(1, TrainSpeed, false, TrainIdCounter - 1)), false);
+                        }
+                        break;
+                }
+                return data;
+            });
+            
 
             return true;
         }
 
         public void AddTile(string tileTypeName, Int2 gridPosition, int rotation = 0) =>
             AddTile(CreateFromName(tileTypeName, gridPosition, rotation));
-
-        public bool ReplaceTileData(TileBaseData tileBaseData, ITileData newTileData)
-        {
-            if (Remove(tileBaseData))
-            {
-                FastAddTile(new Tile(tileBaseData, newTileData));
-                return true;
-            }
-            return false;
-        }
 
         public bool ModifyTileData(TileBaseData tileBaseData, Func<ITileData, ITileData> modifyTileData)
         {

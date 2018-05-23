@@ -16,7 +16,7 @@ sidewalk =
 
 roadStraight : TileType
 roadStraight =
-    TileType 
+    TileType
         (Point2 2 2)
         Sprite.roadHorizontal
         Roads
@@ -25,7 +25,7 @@ roadStraight =
 
 roadTurn : TileType
 roadTurn =
-    TileType 
+    TileType
         (Point2 2 2)
         Sprite.roadTurnLeftUp
         Roads
@@ -34,7 +34,7 @@ roadTurn =
 
 redHouse : TileType
 redHouse =
-    TileType 
+    TileType
         (Point2 3 3)
         Sprite.redHouseIcon
         Buildings
@@ -43,7 +43,7 @@ redHouse =
 
 railStraight : TileType
 railStraight =
-    TileType 
+    TileType
         (Point2 1 1)
         Sprite.railHorizontal
         Roads
@@ -55,7 +55,7 @@ railStraight =
 
 railTurn : TileType
 railTurn =
-    TileType 
+    TileType
         (Point2 3 3)
         Sprite.railTurnLeftUp
         Roads
@@ -67,7 +67,7 @@ railTurn =
 
 railSplitRight : TileType
 railSplitRight =
-    TileType 
+    TileType
         (Point2 3 3)
         Sprite.railSplitVerticalLeftUpOff
         Roads
@@ -80,7 +80,7 @@ railSplitRight =
 
 railSplitLeft : TileType
 railSplitLeft =
-    TileType 
+    TileType
         (Point2 3 3)
         Sprite.railSplitHorizontalLeftUpOff
         Roads
@@ -93,7 +93,7 @@ railSplitLeft =
 
 roadRailCrossing : TileType
 roadRailCrossing =
-    TileType 
+    TileType
         (Point2 3 2)
         Sprite.roadRailCrossingOpenHorizontal
         Roads
@@ -105,12 +105,13 @@ roadRailCrossing =
 
 depot : TileType
 depot =
-    TileType 
+    TileType
         (Point2 5 3)
         Sprite.depotLeftOccupied
         Roads
         (Depot
             (Rot4 ( Sprite.depotLeftOccupied, Sprite.depotLeftOccupied, Sprite.depotLeftOccupied ) ( Sprite.depotDownOccupied, Sprite.depotDownOpen, Sprite.depotDownClosed ) ( Sprite.depotRightOccupied, Sprite.depotRightOpen, Sprite.depotRightClosed ) ( Sprite.depotUpOccupied, Sprite.depotUpOpen, Sprite.depotUpClosed ))
+            (\t -> Point2 4 1.5 |> Point2.rsub (Point2 0 1.5) |> Point2.rmultScalar t |> Point2.add (Point2 0 1.5))
         )
 
 
@@ -165,7 +166,7 @@ depotId =
 
 
 tiles : List TileType
-tiles = 
+tiles =
     [ sidewalk
     , roadStraight
     , roadTurn

@@ -46,6 +46,11 @@ gotRegion =
     3
 
 
+gotTrains : Int
+gotTrains =
+    4
+
+
 addTile : Int
 addTile =
     0
@@ -64,3 +69,8 @@ clickTile =
 getRegion : Int
 getRegion =
     3
+
+
+getTrains : Int
+getTrains =
+    4

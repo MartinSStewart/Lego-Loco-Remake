@@ -66,8 +66,8 @@ writeAction action =
         GetRegion superGridPos ->
             writeInt Config.getRegion ++ writePoint2 superGridPos
 
-        GetTrains _ ->
-            Debug.crash "TODO"
+        GetTrains superGridPos ->
+            writeInt Config.getTrains ++ writePoint2 superGridPos
 
 
 serverUrl : String
@@ -103,8 +103,8 @@ update data model =
                                         Lenses.pendingGetRegions
                                         (Set.remove (Point2.toTuple superGridPos))
 
-                            GotTrains _ _ ->
-                                Debug.crash "TODO"
+                            GotTrains superGridPos trainTiles ->
+                                model |> Lens.modify Lenses.tiles (Grid.loadTrains superGridPos (Debug.log "trains" trainTiles))
                     )
                     model
 
@@ -156,6 +156,16 @@ readResponse data =
                                 |> Maybe.andThen
                                     (\( bytesLeft, tiles ) ->
                                         Just ( bytesLeft, GotRegion superGridPos tiles )
+                                    )
+                        )
+            else if responseCode == Config.gotTrains then
+                readPoint2 bytes
+                    |> Maybe.andThen
+                        (\( bytesLeft, superGridPos ) ->
+                            readList readTile bytesLeft
+                                |> Maybe.andThen
+                                    (\( bytesLeft, trainTiles ) ->
+                                        Just ( bytesLeft, GotTrains superGridPos trainTiles )
                                     )
                         )
             else

@@ -35,10 +35,20 @@ namespace Server
         /// Returns a tile path in grid coordinates.
         /// </summary>
         /// <returns></returns>
-        private static Func<double, Double2> GetGridPath(this World world, Tile tile)
+        public static Func<double, Double2> GetGridPath(this World world, Tile tile)
         {
             var path = GetPath(world, tile);
-            return t => path(t) + tile.BaseData.GridPosition.ToDouble2();
+            if (path == null)
+            {
+                return null;
+            }
+
+            var tileType = world.TileTypes[tile.BaseData.TileTypeId];
+            var size = tileType.GridSize;
+
+            var halfSize = size.ToDouble2() / 2;
+            var halfSizeRotated = world.GetTileSize(tile).ToDouble2() / 2;
+            return t => (path(t) - halfSize).RotateBy90(tile.BaseData.Rotation) + halfSizeRotated + tile.BaseData.GridPosition.ToDouble2();
         }
 
         private static (double T, double MovementLeft) MoveOnPath(Func<double, Double2> path, double t, double movementLeft)
@@ -112,10 +122,13 @@ namespace Server
                 {
                     var nextTile = nextPath?.Tile;
                     var endOfNextPath = nextPath?.AtEndOfPath ?? false;
+
+                    var flip = train.FacingEnd == endOfNextPath;
+
                     return world._move(
                         nextTile,
-                        new Train(endOfNextPath ? 1 : 0, train.Speed, !endOfNextPath, train.Id),
-                        newMovementLeft);
+                        new Train(endOfNextPath ? 1 : 0, train.Speed, flip ? !train.FacingEnd : train.FacingEnd, train.Id),
+                        flip ? -newMovementLeft : newMovementLeft);
                 }
             }
             return (tile, new Train(t, train.Speed, train.FacingEnd, train.Id));

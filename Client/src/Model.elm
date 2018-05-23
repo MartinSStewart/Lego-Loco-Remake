@@ -70,7 +70,7 @@ type TileTypeData
     = Basic (Rot Sprite)
     | Rail (Rot Sprite) (Float -> Point2 Float)
     | RailFork (Rot ( Sprite, Sprite )) (Float -> Point2 Float) (Float -> Point2 Float)
-    | Depot (Rot ( Sprite, Sprite, Sprite ))
+    | Depot (Rot ( Sprite, Sprite, Sprite )) (Float -> Point2 Float)
 
 
 type TileTypeId

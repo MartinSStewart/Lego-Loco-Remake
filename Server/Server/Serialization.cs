@@ -12,8 +12,8 @@ namespace Server
 {
     public static class Serialization
     {
-        public enum MessageToClient { AddedTile, RemovedTile, ClickedTile, GotRegion }
-        public enum MessageToServer { AddTile, RemoveTile, ClickTile, GetRegion }
+        public enum MessageToClient { AddedTile, RemovedTile, ClickedTile, GotRegion, GotTrains }
+        public enum MessageToServer { AddTile, RemoveTile, ClickTile, GetRegion, GetTrains }
 
         public static MemoryStream GetWriteStream()
         {
@@ -131,6 +131,11 @@ namespace Server
                         .WriteInt((int)MessageToClient.GotRegion)
                         .WriteInt2(msg.SuperGridPosition)
                         .WriteList(msg.Tiles, WriteTile);
+                case GotTrainsMessage msg:
+                    return stream
+                        .WriteInt((int)MessageToClient.GotTrains)
+                        .WriteInt2(msg.SuperGridPosition)
+                        .WriteList(msg.TrainTiles, WriteTile);
                 default:
                     throw new NotImplementedException();
             }
@@ -271,6 +276,8 @@ namespace Server
                     return new ClickTileMessage(ReadTileBaseData(stream));
                 case MessageToServer.GetRegion:
                     return new GetRegionMessage(ReadInt2(stream));
+                case MessageToServer.GetTrains:
+                    return new GetTrainsMessage(ReadInt2(stream));
                 default:
                     throw new NotImplementedException();
             }

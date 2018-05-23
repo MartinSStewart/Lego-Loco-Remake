@@ -8,6 +8,8 @@ import TileType exposing (tiles)
 import Html exposing (Html)
 import SpriteHelper
 import Rectangle
+import Html exposing (div)
+import Sprite
 
 
 initTile : TileBaseData -> Tile
@@ -29,7 +31,7 @@ initTileData tileTypeData =
         RailFork _ _ _ ->
             TileRailFork [] False
 
-        Model.Depot _ ->
+        Model.Depot _ _ ->
             TileDepot [] True
 
 
@@ -135,6 +137,22 @@ getTileTypeByTile tileBaseData =
                 TileType.sidewalk
 
 
+tileDataWithoutTrains : TileData -> TileData
+tileDataWithoutTrains tileData =
+    case tileData of
+        TileBasic ->
+            tileData
+
+        TileRail trainList ->
+            TileRail []
+
+        TileRailFork trainList bool ->
+            TileRailFork [] bool
+
+        TileDepot trainList bool ->
+            TileDepot [] bool
+
+
 tileView : Tile -> Bool -> Int -> Html msg
 tileView tile seeThrough zIndex =
     let
@@ -191,7 +209,7 @@ tileView tile seeThrough zIndex =
                             _ ->
                                 tileDataAssert "TileRailFork" tile spriteOff |> (,) False
 
-                Depot rotSprite ->
+                Depot rotSprite _ ->
                     let
                         ( spriteOccupied, spriteOpen, spriteClosed ) =
                             getSprite rotSprite
@@ -214,4 +232,55 @@ tileView tile seeThrough zIndex =
             [ ( "z-index", toString zIndex ), ( "pointer-events", "none" ) ]
                 ++ ifThenElse seeThrough [ ( "opacity", "0.5" ) ] []
     in
-        SpriteHelper.spriteViewWithStyle pos tileSprite styleTuples
+        div [] [ SpriteHelper.spriteViewWithStyle pos tileSprite styleTuples, tileTrainView tile (zIndex + 1) ]
+
+
+tileTrainView : Tile -> Int -> Html msg
+tileTrainView tile zIndex =
+    let
+        tileType =
+            getTileTypeByTile tile.baseData
+
+        styleTuples =
+            [ ( "z-index", toString zIndex ), ( "pointer-events", "none" ) ]
+
+        trainDiv pos path train =
+            SpriteHelper.spriteViewWithStyle
+                (train.t
+                    |> path
+                    |> Point2.add (Point2.toFloat pos)
+                    |> Point2.rmultScalar (toFloat gridToPixels)
+                    |> Point2.floor
+                )
+                Sprite.sidewalk
+                styleTuples
+    in
+        case tileType.data of
+            Basic _ ->
+                div [] []
+
+            Rail _ path ->
+                case tile.data of
+                    TileRail trains ->
+                        trains |> List.map (trainDiv tile.baseData.position path) |> div []
+
+                    _ ->
+                        div [] []
+
+            RailFork _ pathOn pathOff ->
+                case tile.data of
+                    TileRailFork trains isOn ->
+                        trains
+                            |> List.map (trainDiv tile.baseData.position (ifThenElse isOn pathOn pathOff))
+                            |> div []
+
+                    _ ->
+                        div [] []
+
+            Depot _ path ->
+                case tile.data of
+                    TileDepot trains isOccupied ->
+                        trains |> List.map (trainDiv tile.baseData.position path) |> div []
+
+                    _ ->
+                        div [] []

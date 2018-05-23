@@ -98,7 +98,7 @@ namespace Common.TileTypeData
             Path = path;
         }
 
-        public string GetElmParameter() => $"(Depot\n            {TileTypeData.SpritesToParams(Sprites)}\n        )";
+        public string GetElmParameter() => $"(Depot\n            {TileTypeData.SpritesToParams(Sprites)}\n            ({Path.ElmCode})\n        )";
         public ITileData GetDefaultTileData() => new TileDepot(ImmutableList<Train>.Empty, true);
     }
 }
