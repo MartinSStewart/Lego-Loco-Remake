@@ -11,6 +11,7 @@ module Grid
         , loadTrains
         , view
         , update
+        , getSetAt
         )
 
 import Config
@@ -52,7 +53,7 @@ getSetAt superPosition =
 
 neighborPoints : Point2 Int -> List (Point2 Int)
 neighborPoints point =
-    List.range 0 8 |> List.map (Point2.intToInt2 3 >> Point2.add point)
+    List.range 0 8 |> List.map (Point2.intToInt2 3 >> Point2.add point >> Point2.rsub Point2.one)
 
 
 addTile : Tile -> Grid -> Grid

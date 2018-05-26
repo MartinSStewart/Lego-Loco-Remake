@@ -86,24 +86,37 @@ namespace Server
                 .ToList();
 
             var nextTiles = tiles
-                .Select<Tile, (Tile, bool)?>(item =>
+                .Select(item =>
                 {
-                    var otherPath = world.GetGridPath(item);
-                    if (otherPath == null)
+                    (Tile, bool)? NextPath(Tile tileItem)
                     {
+                        var otherPath = world.GetGridPath(tileItem);
+                        if (otherPath == null)
+                        {
+                            return null;
+                        }
+
+                        if ((pos - otherPath(0)).Length < 0.1)
+                        {
+                            return (tileItem, false);
+                        }
+
+                        if ((pos - otherPath(1)).Length < 0.1)
+                        {
+                            return (tileItem, true);
+                        }
                         return null;
                     }
 
-                    if ((pos - otherPath(0)).Length < 0.1)
+                    var result = NextPath(item);
+                    if (result == null && 
+                        item.Data is TileRailFork railFork && 
+                        railFork.Trains.Count == 0)
                     {
-                        return (item, false);
+                        return NextPath(item.With(data: new TileRailFork(railFork.Trains, !railFork.IsOn)));
                     }
-
-                    if ((pos - otherPath(1)).Length < 0.1)
-                    {
-                        return (item, true);
-                    }
-                    return null;
+                    return result;
+                    
                 }).ToList();
 
             return nextTiles
@@ -124,6 +137,8 @@ namespace Server
                     var endOfNextPath = nextPath?.AtEndOfPath ?? false;
 
                     var flip = train.FacingEnd == endOfNextPath;
+
+                    DebugEx.Assert(world.ModifyTileData(nextTile.BaseData, _ => nextTile.Data), "Tile could not be found.");
 
                     return world._move(
                         nextTile,

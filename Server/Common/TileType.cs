@@ -78,15 +78,15 @@ namespace Common
         public static ImmutableList<TileType> GetTileTypes()
         {
             var railTurnLeftUp = new ElmFunc<double, Double2>(
-                "\\t -> Point2 (sin t) (cos t) |> Point2.rmultScalar 2.5",
-                t => new Double2(Math.Sin(t), Math.Cos(t)) * 2.5);
+                @"\t -> Point2 (sin (t * Math.PI / 2)) (cos (t * Math.PI / 2)) |> Point2.rmultScalar 2.5",
+                t => new Double2(Math.Sin(t * Math.PI / 2), Math.Cos(t * Math.PI / 2)) * 2.5);
 
             var railTurnRightUp = new ElmFunc<double, Double2>(
-                "\\t -> Point2 -(sin t) (cos t) |> Point2.rmultScalar 2.5 |> Point2.add (Point2 3 0)",
-                t => new Double2(-Math.Sin(t) + 3, Math.Cos(t)) * 2.5);
+                @"\t -> Point2 -(sin (t * Math.PI / 2)) (cos (t * Math.PI / 2)) |> Point2.rmultScalar 2.5 |> Point2.add (Point2 3 0)",
+                t => new Double2(-Math.Sin(t * Math.PI / 2), Math.Cos(t * Math.PI / 2)) * 2.5 + new Double2(3, 0));
 
             ElmFunc<double, Double2> RailLinearPath(Double2 start, Double2 end) => new ElmFunc<double, Double2>(
-                $"\\t -> Point2 {end.X} {end.Y} |> Point2.rsub (Point2 {start.X} {start.Y}) |> Point2.rmultScalar t |> Point2.add (Point2 {start.X} {start.Y})",
+                $@"\t -> Point2 {end.X} {end.Y} |> Point2.rsub (Point2 {start.X} {start.Y}) |> Point2.rmultScalar t |> Point2.add (Point2 {start.X} {start.Y})",
                 t => (end - start) * t + start);
 
             return new[]

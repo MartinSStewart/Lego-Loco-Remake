@@ -160,5 +160,48 @@ namespace Tests
             };
             Assert.AreEqual(expected, world.RailTiles);
         }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void TrainTurn(bool turnUp)
+        {
+            var world = new World(TileType.GetTileTypes());
+
+            var depot = world.CreateFromName("depot", new Int2(), 2);
+            world.AddTile(depot);
+            var rail = world.CreateFromName("railTurn", new Int2(5, turnUp ? -1 : 1), turnUp ? 0 : 1);
+            world.AddTile(rail);
+
+            world.ClickTile(depot.BaseData);
+
+            world.MoveTrains(TimeSpan.FromSeconds(3));
+
+            var expected = new[]
+            {
+                rail.With(data: new TileRail(new[] { new Train(turnUp ? 1 : 0, World.TrainSpeed, turnUp, 0) }.ToImmutableList()))
+            };
+            Assert.AreEqual(expected, world.RailTiles);
+        }
+
+        [Test]
+        public void TrainFlipsTurnFork()
+        {
+            var world = new World(TileType.GetTileTypes());
+
+            var depot = world.CreateFromName("depot", new Int2(), 2);
+            world.AddTile(depot);
+            var rail = world.CreateFromName("railSplitLeft", new Int2(5, 1), 1);
+            world.AddTile(rail);
+
+            world.ClickTile(depot.BaseData);
+
+            world.MoveTrains(TimeSpan.FromSeconds(3));
+
+            var expected = new[]
+            {
+                rail.With(data: new TileRailFork(new[] { new Train(0, World.TrainSpeed, false, 0) }.ToImmutableList(), true))
+            };
+            Assert.AreEqual(expected, world.RailTiles);
+        }
     }
 }
