@@ -273,8 +273,8 @@ menuView pixelPosition model =
             , ( Sprite.toyboxHouse, categoryOnClick TileCategory.Buildings, category == Just TileCategory.Buildings )
             , ( Sprite.toyboxPlants, categoryOnClick TileCategory.Nature, category == Just TileCategory.Nature )
             , ( Sprite.toyboxEraser, EraserSelect, model.editMode == Eraser )
-            , ( Sprite.toyboxBomb, HandSelect, model.editMode == Hand )
-            , ( Sprite.toyboxLeftArrow, Undo, False )
+            , ( Sprite.toyboxHand, HandSelect, model.editMode == Hand )
+            , ( Sprite "" Point2.zero Point2.zero, Undo, False )
             ]
     in
         buttons

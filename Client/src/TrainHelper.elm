@@ -296,7 +296,7 @@ moveSubstep grid tile train movementLeft =
                         moveOnPath path train.t movementLeft
                 in
                     if newMovementLeft /= 0 then
-                        case getNextPath grid tile ((t == 1)) of
+                        case getNextPath grid tile (t == 1) of
                             Just ( nextTile, atEndOfPath ) ->
                                 let
                                     flip =

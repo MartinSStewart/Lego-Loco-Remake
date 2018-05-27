@@ -25,6 +25,7 @@ import Time
 import Toybox
 import TrainHelper
 import Window
+import SpriteHelper
 
 
 ---- MODEL ----
@@ -341,6 +342,13 @@ view model =
         toolbox =
             model.toolbox
 
+        placeHolders =
+            div [ style <| absoluteStyle (Point2 -1000 0) (Point2 100 100) ]
+                (List.range 1 Tile.trainSprites
+                    |> List.map (\a -> Sprite (Tile.trainImageUrl a) (Point2 100 100) Point2.zero)
+                    |> List.map (SpriteHelper.spriteView Point2.zero)
+                )
+
         currentTileView =
             case model.editMode of
                 PlaceTiles tileId ->
@@ -384,6 +392,7 @@ view model =
                 :: currentTileView
                 ++ [ Toybox.toolboxView toyboxZIndex model.windowSize model |> Html.map ToolboxMsg
                    , Cursor.cursorView model
+                   , placeHolders
                    ]
 
 

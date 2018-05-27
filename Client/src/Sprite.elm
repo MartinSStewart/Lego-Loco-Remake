@@ -149,6 +149,11 @@ toyboxHouse =
     Sprite "Images/toyboxHouse.png" (Point2 28 35) (Point2 0 0)
 
 
+toyboxHand : Sprite
+toyboxHand =
+    Sprite "Images/toyboxHand.png" (Point2 35 28) (Point2 0 0)
+
+
 railHorizontal : Sprite
 railHorizontal =
     Sprite "Images/railHorizontal.png" (Point2 16 16) (Point2 0 0)

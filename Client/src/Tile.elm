@@ -235,6 +235,16 @@ tileView tile seeThrough zIndex =
         div [] [ SpriteHelper.spriteViewWithStyle pos tileSprite styleTuples, tileTrainView tile (zIndex + 1) ]
 
 
+trainSprites : number
+trainSprites =
+    36
+
+
+trainImageUrl : Int -> String
+trainImageUrl index =
+    ("Images/train/" ++ String.padLeft 4 '0' (toString index) ++ ".png")
+
+
 tileTrainView : Tile -> Int -> Html msg
 tileTrainView tile zIndex =
     let
@@ -242,19 +252,38 @@ tileTrainView tile zIndex =
             getTileTypeByTile tile.baseData
 
         styleTuples =
-            [ ( "z-index", toString zIndex ), ( "pointer-events", "none" ) ]
+            [ ( "z-index", toString (zIndex + 10) ), ( "pointer-events", "none" ) ]
 
         trainDiv pos path train =
-            SpriteHelper.spriteViewWithStyle
-                (train.t
-                    --|> path
-                    |> (pathToGridPath tile path)
-                    --|> Point2.add (Point2.toFloat pos)
-                    |> Point2.rmultScalar (toFloat gridToPixels)
-                    |> Point2.floor
-                )
-                Sprite.sidewalk
-                styleTuples
+            let
+                gridPath =
+                    pathToGridPath tile path
+
+                angle =
+                    gridPath (train.t + (ifThenElse train.facingEnd 0.001 -0.001))
+                        |> Point2.sub (gridPath train.t)
+                        |> Point2.angle
+                        |> (+) -pi
+                        |> negate
+
+                trainImageIndex =
+                    angle * trainSprites / (2 * pi) |> round
+
+                trainSprite =
+                    Sprite
+                        (trainImageUrl (trainImageIndex + 1))
+                        (Point2 100 100)
+                        (Point2 50 50)
+            in
+                SpriteHelper.spriteViewScaledWithStyle
+                    (train.t
+                        |> gridPath
+                        |> Point2.rmultScalar (toFloat gridToPixels)
+                        |> Point2.floor
+                    )
+                    (Point2 1 1)
+                    trainSprite
+                    styleTuples
     in
         case tileType.data of
             Basic _ ->

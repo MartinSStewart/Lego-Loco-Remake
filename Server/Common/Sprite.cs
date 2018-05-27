@@ -59,6 +59,7 @@ namespace Common
                 new Sprite("toyboxLeftArrow.png"),
                 new Sprite("toyboxRailroad.png"),
                 new Sprite("toyboxHouse.png"),
+                new Sprite("toyboxHand.png"),
 
                 // Rail
                 new Sprite("railHorizontal.png"),

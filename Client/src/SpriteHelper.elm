@@ -25,6 +25,29 @@ spriteViewWithStyle topLeft sprite styleTuples =
         []
 
 
+spriteViewScaled : Point2 Int -> Point2 Float -> Sprite -> Html msg
+spriteViewScaled topLeft scale sprite =
+    spriteViewScaledWithStyle topLeft scale sprite []
+
+
+spriteViewScaledWithStyle : Point2 Int -> Point2 Float -> Sprite -> List ( String, String ) -> Html msg
+spriteViewScaledWithStyle topLeft scale sprite styleTuples =
+    let
+        percent value =
+            toString (value * 100) ++ "%"
+    in
+        div
+            [ style <|
+                [ background sprite.filepath
+                , ( "background-repeat", "no-repeat" )
+                , ( "background-size", (percent scale.x) ++ " " ++ (percent scale.y) )
+                ]
+                    ++ absoluteStyle (Point2.sub topLeft sprite.origin) sprite.size
+                    ++ styleTuples
+            ]
+            []
+
+
 spriteViewAlign : Point2 Int -> Point2 Float -> Sprite -> Html msg
 spriteViewAlign topLeft alignment sprite =
     let

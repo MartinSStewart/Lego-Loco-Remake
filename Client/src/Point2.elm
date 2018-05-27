@@ -143,3 +143,10 @@ rotateBy90 rotateBy point =
         Point2 -point.y point.x
     else
         point
+
+
+{-| Returns the angle of this point in radians.
+-}
+angle : Point2 Float -> Float
+angle point =
+    atan2 point.y point.x
