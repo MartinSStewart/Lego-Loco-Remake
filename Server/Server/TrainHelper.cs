@@ -82,7 +82,7 @@ namespace Server
 
             var tiles = World.GetPointNeighbors(superGridPos)
                 .SelectMany(item => world.GetTiles(item))
-                .Where(item => item != tile)
+                .Where(item => item.BaseData != tile.BaseData)
                 .ToList();
 
             var nextTiles = tiles
