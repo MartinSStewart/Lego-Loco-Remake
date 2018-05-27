@@ -152,3 +152,12 @@ rotGetAt rotSprite index =
 
             Nothing ->
                 Debug.crash "There is no way this can happen."
+
+
+print : String -> a -> a
+print message value =
+    let
+        _ =
+            Debug.log message ()
+    in
+        value

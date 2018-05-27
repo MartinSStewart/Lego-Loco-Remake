@@ -131,3 +131,15 @@ inRectangle topLeft rectangleSize point =
             add topLeft rectangleSize
     in
         topLeft.x <= point.x && point.x < bottomRight.x && topLeft.y <= point.y && point.y < bottomRight.y
+
+
+rotateBy90 : Int -> Point2 number -> Point2 number
+rotateBy90 rotateBy point =
+    if rotateBy % 4 == 1 then
+        Point2 point.y -point.x
+    else if rotateBy % 4 == 2 then
+        Point2 -point.x -point.y
+    else if rotateBy % 4 == 3 then
+        Point2 -point.y point.x
+    else
+        point

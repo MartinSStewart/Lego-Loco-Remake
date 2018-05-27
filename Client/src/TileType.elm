@@ -61,7 +61,7 @@ railTurn =
         Roads
         (Rail
             (Rot4 Sprite.railTurnLeftUp Sprite.railTurnLeftDown Sprite.railTurnRightDown Sprite.railTurnRightUp)
-            (\t -> Point2 (sin t) (cos t) |> Point2.rmultScalar 2.5)
+            (\t -> Point2 (sin (t * pi / 2)) (cos (t * pi / 2)) |> Point2.rmultScalar 2.5)
         )
 
 
@@ -73,7 +73,7 @@ railSplitRight =
         Roads
         (RailFork
             (Rot4 ( Sprite.railSplitHorizontalRightUpOn, Sprite.railSplitHorizontalRightUpOff ) ( Sprite.railSplitVerticalLeftUpOn, Sprite.railSplitVerticalLeftUpOff ) ( Sprite.railSplitHorizontalLeftDownOn, Sprite.railSplitHorizontalLeftDownOff ) ( Sprite.railSplitVerticalRightDownOn, Sprite.railSplitVerticalRightDownOff ))
-            (\t -> Point2 -(sin t) (cos t) |> Point2.rmultScalar 2.5 |> Point2.add (Point2 3 0))
+            (\t -> Point2 -(sin (t * pi / 2)) (cos (t * pi / 2)) |> Point2.rmultScalar 2.5 |> Point2.add (Point2 3 0))
             (\t -> Point2 3 2.5 |> Point2.rsub (Point2 0 2.5) |> Point2.rmultScalar t |> Point2.add (Point2 0 2.5))
         )
 
@@ -86,7 +86,7 @@ railSplitLeft =
         Roads
         (RailFork
             (Rot4 ( Sprite.railSplitHorizontalLeftUpOn, Sprite.railSplitHorizontalLeftUpOff ) ( Sprite.railSplitVerticalLeftDownOn, Sprite.railSplitVerticalLeftDownOff ) ( Sprite.railSplitHorizontalRightDownOn, Sprite.railSplitHorizontalRightDownOff ) ( Sprite.railSplitVerticalRightUpOn, Sprite.railSplitVerticalRightUpOff ))
-            (\t -> Point2 (sin t) (cos t) |> Point2.rmultScalar 2.5)
+            (\t -> Point2 (sin (t * pi / 2)) (cos (t * pi / 2)) |> Point2.rmultScalar 2.5)
             (\t -> Point2 3 2.5 |> Point2.rsub (Point2 0 2.5) |> Point2.rmultScalar t |> Point2.add (Point2 0 2.5))
         )
 

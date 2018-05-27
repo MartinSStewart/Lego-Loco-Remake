@@ -183,7 +183,6 @@ namespace Server
                 {
                     if (tile.Data is IRailTileData railData)
                     {
-                        var tileType = world.TileTypes[tile.BaseData.TileTypeId];
                         foreach (var train in railData.Trains)
                         {
                             Move(tile, train);

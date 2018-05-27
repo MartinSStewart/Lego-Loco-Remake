@@ -78,11 +78,11 @@ namespace Common
         public static ImmutableList<TileType> GetTileTypes()
         {
             var railTurnLeftUp = new ElmFunc<double, Double2>(
-                @"\t -> Point2 (sin (t * Math.PI / 2)) (cos (t * Math.PI / 2)) |> Point2.rmultScalar 2.5",
+                @"\t -> Point2 (sin (t * pi / 2)) (cos (t * pi / 2)) |> Point2.rmultScalar 2.5",
                 t => new Double2(Math.Sin(t * Math.PI / 2), Math.Cos(t * Math.PI / 2)) * 2.5);
 
             var railTurnRightUp = new ElmFunc<double, Double2>(
-                @"\t -> Point2 -(sin (t * Math.PI / 2)) (cos (t * Math.PI / 2)) |> Point2.rmultScalar 2.5 |> Point2.add (Point2 3 0)",
+                @"\t -> Point2 -(sin (t * pi / 2)) (cos (t * pi / 2)) |> Point2.rmultScalar 2.5 |> Point2.add (Point2 3 0)",
                 t => new Double2(-Math.Sin(t * Math.PI / 2), Math.Cos(t * Math.PI / 2)) * 2.5 + new Double2(3, 0));
 
             ElmFunc<double, Double2> RailLinearPath(Double2 start, Double2 end) => new ElmFunc<double, Double2>(

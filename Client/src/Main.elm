@@ -1,6 +1,10 @@
 module Main exposing (..)
 
+import AnimationFrame
 import Config exposing (maxGridPosition, minGridPosition)
+import Cursor
+import Dict
+import Grid
 import Helpers exposing (..)
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src, style)
@@ -11,18 +15,16 @@ import Monocle.Lens as Lens
 import Mouse exposing (Position)
 import MouseEvents
 import Point2 exposing (Point2)
+import Rectangle exposing (Rectangle)
 import Server
+import Set
 import Sprite
 import Task
 import Tile
-import Toybox
-import Window
-import Cursor
-import Grid
-import Rectangle exposing (Rectangle)
-import Set
 import Time
-import Dict
+import Toybox
+import TrainHelper
+import Window
 
 
 ---- MODEL ----
@@ -67,6 +69,7 @@ type Msg
     | WindowResize Window.Size
     | WebSocketRecieve String
     | UpdateTrains Time.Time
+    | Animation Time.Time
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -108,6 +111,15 @@ update msg model =
                         |> Server.send
             in
                 ( model, updateTrainMessages )
+
+        Animation timeElapsed ->
+            let
+                millisecondsElapsed =
+                    Time.inMilliseconds timeElapsed |> floor
+            in
+                ( Lens.modify Lenses.tiles (TrainHelper.moveTrains millisecondsElapsed) model
+                , Cmd.none
+                )
 
 
 keyMsg : number -> Model -> ( Model, Cmd Msg )
@@ -389,7 +401,8 @@ subscriptions model =
             , Mouse.ups MouseUp
             , Window.resizes WindowResize
             , Server.subscription WebSocketRecieve
-            , Time.every (Time.second * 2) UpdateTrains
+            , Time.every (Time.second * 0.2) UpdateTrains
+            , AnimationFrame.diffs Animation
             ]
         ]
 

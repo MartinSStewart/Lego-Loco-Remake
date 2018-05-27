@@ -1,18 +1,4 @@
-module Grid
-    exposing
-        ( addTile
-        , removeTile
-        , clickTile
-        , collisionsAt
-        , init
-        , tileCount
-        , clearRegion
-        , loadTiles
-        , loadTrains
-        , view
-        , update
-        , getSetAt
-        )
+module Grid exposing (..)
 
 import Config
 import Dict
@@ -21,7 +7,7 @@ import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Lenses
 import List.FlatMap
-import Model exposing (Grid, Tile, TileBaseData, TrainId(..))
+import Model exposing (..)
 import Monocle.Lens as Lens exposing (Lens)
 import Point2 exposing (Point2)
 import Rectangle exposing (Rectangle)
@@ -63,6 +49,7 @@ addTile tile grid =
             gridPosToSuperPos tile.baseData.position
     in
         neighborPoints superPosition
+            |> List.filter (\a -> Dict.get (Point2.toTuple a) grid |> (/=) Nothing)
             |> List.foldl
                 (\superPos a ->
                     Lens.modify
@@ -260,6 +247,47 @@ clickTile tileBaseData superGrid =
             )
         )
         superGrid
+
+
+modifyTileData : TileBaseData -> (TileData -> TileData) -> Grid -> Grid
+modifyTileData tileBaseData modify grid =
+    let
+        superPos =
+            gridPosToSuperPos tileBaseData.position
+    in
+        Lens.modify (getSetAt superPos)
+            (\tiles ->
+                List.map
+                    (\tile ->
+                        if tile.baseData == tileBaseData then
+                            { tile | data = modify tile.data }
+                        else
+                            tile
+                    )
+                    tiles
+            )
+            grid
+
+
+getTrainTiles : Grid -> List Tile
+getTrainTiles grid =
+    Dict.toList grid
+        |> List.FlatMap.flatMap (\( key, value ) -> value)
+        |> List.filter
+            (\a ->
+                case a.data of
+                    TileBasic ->
+                        False
+
+                    TileRail trains ->
+                        List.length trains > 0
+
+                    TileRailFork trains _ ->
+                        List.length trains > 0
+
+                    TileDepot trains _ ->
+                        List.length trains > 0
+            )
 
 
 tileCount : Grid -> Int

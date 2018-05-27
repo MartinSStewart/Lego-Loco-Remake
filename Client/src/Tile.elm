@@ -247,8 +247,9 @@ tileTrainView tile zIndex =
         trainDiv pos path train =
             SpriteHelper.spriteViewWithStyle
                 (train.t
-                    |> path
-                    |> Point2.add (Point2.toFloat pos)
+                    --|> path
+                    |> (pathToGridPath tile path)
+                    --|> Point2.add (Point2.toFloat pos)
                     |> Point2.rmultScalar (toFloat gridToPixels)
                     |> Point2.floor
                 )
@@ -284,3 +285,28 @@ tileTrainView tile zIndex =
 
                     _ ->
                         div [] []
+
+
+pathToGridPath : Tile -> (Float -> Point2 Float) -> (Float -> Point2 Float)
+pathToGridPath tile path =
+    let
+        halfSize =
+            getTileTypeByTile tile.baseData
+                |> .gridSize
+                |> Point2.toFloat
+                |> Point2.rmultScalar 0.5
+
+        halfSizeRotated =
+            tileGridSize tile.baseData
+                |> Point2.toFloat
+                |> Point2.rmultScalar 0.5
+
+        tilePos =
+            tile.baseData.position |> Point2.toFloat
+    in
+        (path
+            >> Point2.rsub halfSize
+            >> Point2.rotateBy90 tile.baseData.rotationIndex
+            >> Point2.add halfSizeRotated
+            >> Point2.add tilePos
+        )

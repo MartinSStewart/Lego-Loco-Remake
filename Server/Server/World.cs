@@ -139,7 +139,11 @@ namespace Server
                 switch (data)
                 {
                     case TileRailFork fork:
-                        return new TileRailFork(fork.Trains, !fork.IsOn);
+                        if (!fork.Trains.Any())
+                        {
+                            return new TileRailFork(fork.Trains, !fork.IsOn);
+                        }
+                        break;
                     case TileDepot depot:
                         if (depot.Occupied)
                         {
