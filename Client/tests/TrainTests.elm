@@ -56,20 +56,7 @@ all =
                         ()
         , test "Train moves forward" <|
             \_ ->
-                let
-                    grid =
-                        Grid.init |> Grid.addTile railTile
-
-                    expectedRail =
-                        Tile
-                            (TileBaseData TileType.railStraightId Point2.zero 0)
-                            (TileRail [ Train 1 1 True (TrainId 0) ])
-
-                    expectedGrid =
-                        Grid.init |> Grid.addTile expectedRail
-                in
-                    moveTrains 1000 grid
-                        |> Expect.equal expectedGrid
+                trainMovesForward
         , test "Train moves to next rail" <|
             (\_ -> trainMovesToNextRail)
         , test "Get train tiles" <|
@@ -85,6 +72,22 @@ all =
             \_ ->
                 moveFromTurnToStraight
         ]
+
+
+trainMovesForward : Expect.Expectation
+trainMovesForward =
+    let
+        grid =
+            Grid.init |> Grid.addTile railTile
+
+        expected =
+            TileRail [ Train 1 1 True (TrainId 0) ]
+    in
+        moveTrains 1000 grid
+            |> .get (Grid.getSetAt Point2.zero)
+            |> List.head
+            |> Maybe.map .data
+            |> Expect.equal (Just expected)
 
 
 moveFromTurnToStraight : Expect.Expectation
@@ -103,7 +106,6 @@ moveFromTurnToStraight =
             Grid.init
                 |> Grid.addTile turnRail
                 |> Grid.addTile nextRail
-                |> Debug.log "\ngrid values"
 
         expectedRail =
             { nextRail | data = (TileRail [ Train 1 3 True (TrainId 0) ]) }

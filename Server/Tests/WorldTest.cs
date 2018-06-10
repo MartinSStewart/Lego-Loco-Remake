@@ -27,7 +27,7 @@ namespace Tests
         [TestCase(6, 0, 3, 0, false)]
         public void AddAndGetTile(int tileX, int tileY, int superGridX, int superGridY, bool tileInRegion)
         {
-            var world = new World(_tileTypes);
+            var world = new World(_tileTypes, new DateTime());
 
             world.AddTile("redHouse", new Int2(tileX, tileY), 0);
 
@@ -91,7 +91,7 @@ namespace Tests
         [Test]
         public void RemoveTest()
         {
-            var world = new World(_tileTypes);
+            var world = new World(_tileTypes, new DateTime());
 
             var seed = 123123;
             var random0 = new Random(seed);
@@ -129,7 +129,7 @@ namespace Tests
         [Test]
         public void SidewalkTileCollisionBug()
         {
-            var world = new World(_tileTypes);
+            var world = new World(_tileTypes, new DateTime());
             world.AddTile("sidewalk", new Int2());
             world.AddTile("redHouse", new Int2(1, 0));
 

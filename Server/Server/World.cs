@@ -20,6 +20,11 @@ namespace Server
         public int TrainIdCounter = 0;
 
         /// <summary>
+        /// Time that move trains was last called.
+        /// </summary>
+        public DateTime LastUpdate;
+
+        /// <summary>
         /// Number of grid units a train covers per second.
         /// </summary>
         public const int TrainSpeed = 4;
@@ -36,14 +41,15 @@ namespace Server
         private readonly MultiValueDictionary<Int2, Tile> _superGrid = new MultiValueDictionary<Int2, Tile>();
         public readonly HashSet<Tile> RailTiles = new HashSet<Tile>();
 
-        public World(ImmutableList<TileType> tileTypes)
+        public World(ImmutableList<TileType> tileTypes, DateTime currentTime)
         {
+            LastUpdate = currentTime;
             TileTypes = tileTypes;
         }
 
-        public static World Load(ImmutableList<TileType> tileTypes, string json)
+        public static World Load(ImmutableList<TileType> tileTypes, string json, DateTime currentTime)
         {
-            var world = new World(tileTypes);
+            var world = new World(tileTypes, currentTime);
             var tiles = JsonConvert.DeserializeObject<Tile[]>(
                 json, 
                 new JsonSerializerSettings

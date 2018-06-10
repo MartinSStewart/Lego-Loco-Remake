@@ -51,27 +51,48 @@ namespace Server
             return t => (path(t) - halfSize).RotateBy90(tile.BaseData.Rotation) + halfSizeRotated + tile.BaseData.GridPosition.ToDouble2();
         }
 
-        private static (double T, double MovementLeft) MoveOnPath(Func<double, Double2> path, double t, double movementLeft)
+        public static (double T, double MovementLeft) MoveOnPath(Func<double, Double2> path, double t, double movementLeft)
+        {
+            DebugEx.Assert(t >= 0 && t <= 1);
+            if (Math.Abs(movementLeft) < 0.000001 || 
+                (t < 0.000001 && movementLeft < 0) || 
+                (t > 0.999999 && movementLeft > 0))
+            {
+                var newT = t;
+                if (t < 0.000001 && movementLeft < 0)
+                {
+                    newT = 0;
+                }
+                else if (t > 0.999999 && movementLeft > 0)
+                {
+                    newT = 1;
+                }
+                return (newT, movementLeft);
+            }
+            
+            return _moveOnPath(path, t, movementLeft);
+        }
+
+        public static (double T, double MovementLeft) _moveOnPath(Func<double, Double2> path, double t, double movementLeft)
         {
             var moveSign = movementLeft > 0 ? 1 : -1;
 
             var posPrev = path(t);
-            var newT = t + 0.01 * moveSign;
+            var newT = t + 0.1 * moveSign;
             var pos = path(newT);
             var newMovementLeft = movementLeft - (pos - posPrev).Length * moveSign;
-            if (t > 1 && movementLeft > 0)
+
+            if (newT >= 1 || newT <= 0 || Math.Sign(newMovementLeft) != Math.Sign(movementLeft))
             {
-                return (1, Math.Max(newMovementLeft, 0));
+                var endT = movementLeft > 0 ? 1 : 0;
+                var a = Math.Min(
+                    (endT - t) / (newT - t), 
+                    (0 - movementLeft) / (newMovementLeft - movementLeft));
+                var b = (newT - t) * a + t;
+                var c = (newMovementLeft - movementLeft) * a + movementLeft;
+                return (b, c);
             }
-            if (t < 0 && movementLeft < 0)
-            {
-                return (0, Math.Min(newMovementLeft, 0));
-            }
-            if (Math.Sign(newMovementLeft) != Math.Sign(movementLeft))
-            {
-                return (t, 0);
-            }
-            return MoveOnPath(path, newT, newMovementLeft);
+            return _moveOnPath(path, newT, newMovementLeft);
         }
 
         private static (Tile Tile, bool AtEndOfPath)? GetNextPath(this World world, Tile tile, bool atEndOfPath)
@@ -164,9 +185,9 @@ namespace Server
             }
         }
 
-        public static void MoveTrains(this World world, TimeSpan stepSize)
+        public static void MoveTrains(this World world, DateTime currentTime)
         {
-            var substepSize = TimeSpan.FromMilliseconds(33);
+            var substepSize = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / 30);
 
             void Move(Tile tile, Train train)
             {
@@ -175,6 +196,10 @@ namespace Server
                 world.ModifyTileData(tile.BaseData, data => ModifyTrains((IRailTileData)data, trains => trains.Remove(train)));
                 world.ModifyTileData(nextTile.BaseData, data => ModifyTrains((IRailTileData)data, trains => trains.Add(newTrain)));
             }
+
+            var stepSize = currentTime - world.LastUpdate;
+            world.LastUpdate = currentTime;
+            DebugEx.Assert(currentTime.Kind != DateTimeKind.Local);
 
             var iterations = stepSize.Ticks / substepSize.Ticks;
             while (iterations > 0)

@@ -22,7 +22,7 @@ namespace Server
         public static ConcurrentQueue<(string Id, IClientMessage Message)> MessageQueue { get; } = new ConcurrentQueue<(string, IClientMessage)>();
 
         public static World World { get; private set; } = 
-            new World(TileType.GetTileTypes());
+            new World(TileType.GetTileTypes(), DateTime.UtcNow);
 
         /// <summary>
         /// Stands for Lego Loco Save.
@@ -46,7 +46,7 @@ namespace Server
                 var json = File.ReadAllText(autosavePath);
                 try
                 {
-                    World = World.Load(TileType.GetTileTypes(), json);
+                    World = World.Load(TileType.GetTileTypes(), json, DateTime.UtcNow);
                     Console.WriteLine("Autosave loaded.");
                 }
                 catch (JsonSerializationException)
@@ -62,7 +62,7 @@ namespace Server
                 while (true)
                 {
                     await Task.Delay(stepSize);
-                    World.MoveTrains(stepSize);
+                    World.MoveTrains(DateTime.UtcNow);
                     while (MessageQueue.TryDequeue(out (string, IClientMessage) idAndMessage))
                     {
                         var (id, message) = idAndMessage;
