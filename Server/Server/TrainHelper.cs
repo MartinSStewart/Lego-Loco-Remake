@@ -54,21 +54,21 @@ namespace Server
         public static (double T, double MovementLeft) MoveOnPath(Func<double, Double2> path, double t, double movementLeft)
         {
             DebugEx.Assert(t >= 0 && t <= 1);
-            if (Math.Abs(movementLeft) < 0.000001 || 
-                (t < 0.000001 && movementLeft < 0) || 
-                (t > 0.999999 && movementLeft > 0))
-            {
-                var newT = t;
-                if (t < 0.000001 && movementLeft < 0)
-                {
-                    newT = 0;
-                }
-                else if (t > 0.999999 && movementLeft > 0)
-                {
-                    newT = 1;
-                }
-                return (newT, movementLeft);
-            }
+            //if (Math.Abs(movementLeft) < 0.000001 || 
+            //    (t < 0.000001 && movementLeft < 0) || 
+            //    (t > 0.999999 && movementLeft > 0))
+            //{
+            //    var newT = t;
+            //    if (t < 0.000001 && movementLeft < 0)
+            //    {
+            //        newT = 0;
+            //    }
+            //    else if (t > 0.999999 && movementLeft > 0)
+            //    {
+            //        newT = 1;
+            //    }
+            //    return (newT, movementLeft);
+            //}
             
             return _moveOnPath(path, t, movementLeft);
         }
@@ -149,7 +149,7 @@ namespace Server
             DebugEx.Assert(train.T >= 0 && train.T <= 1);
             var path = world.GetPath(tile);
             var (t, newMovementLeft) = MoveOnPath(path, train.T, movementLeft);
-            if (newMovementLeft != 0)
+            if (Math.Abs(newMovementLeft) > 0.000001)
             {
                 var nextPath = world.GetNextPath(tile, t == 1);
                 if (nextPath != null)

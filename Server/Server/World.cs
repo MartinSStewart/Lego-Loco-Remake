@@ -224,9 +224,24 @@ namespace Server
                 : size.Transpose;
         }
 
+        /// <summary>
+        /// Returns a tile with matching base data. Null is returned if no tile is found.
+        /// </summary>
+        /// <param name="tileBaseData"></param>
+        /// <returns></returns>
         public Tile GetTile(TileBaseData tileBaseData) =>
             _superGrid.TryGetValue(GridToSuperGrid(tileBaseData.GridPosition), out IReadOnlyCollection<Tile> value)
                 ? value.SingleOrDefault(item => item.BaseData == tileBaseData)
+                : null;
+
+        /// <summary>
+        /// Returns a tile with matching grid position. Null is returned if no tile is found.
+        /// </summary>
+        /// <param name="gridPosition"></param>
+        /// <returns></returns>
+        public Tile GetTileAtPosition(Int2 gridPosition) =>
+            _superGrid.TryGetValue(GridToSuperGrid(gridPosition), out IReadOnlyCollection<Tile> value)
+                ? value.SingleOrDefault(item => item.BaseData.GridPosition.Equals(gridPosition))
                 : null;
 
         public Tile CreateFromName(string tileTypeCodeName, Int2 gridPosition, int rotation)

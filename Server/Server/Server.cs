@@ -140,7 +140,7 @@ namespace Server
             socketServer.WebSocketServices["/socketservice"].Sessions.BroadcastAsync(reply, () => { });
         }
 
-        public class SocketService : WebSocketBehavior
+        private class SocketService : WebSocketBehavior
         {
             protected override void OnOpen()
             {

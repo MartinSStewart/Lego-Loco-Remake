@@ -82,33 +82,6 @@ getGridPath tile =
     getPath tile |> Maybe.map (Tile.pathToGridPath tile)
 
 
-
-{-
-   private static (double T, double MovementLeft) MoveOnPath(Func<double, Double2> path, double t, double movementLeft)
-   {
-       var moveSign = movementLeft > 0 ? 1 : -1;
-
-       var posPrev = path(t);
-       var newT = t + 0.01 * moveSign;
-       var pos = path(newT);
-       var newMovementLeft = movementLeft - (pos - posPrev).Length * moveSign;
-       if (t > 1 && movementLeft > 0)
-       {
-           return (1, Math.Max(newMovementLeft, 0));
-       }
-       if (t < 0 && movementLeft < 0)
-       {
-           return (0, Math.Min(newMovementLeft, 0));
-       }
-       if (Math.Sign(newMovementLeft) != Math.Sign(movementLeft))
-       {
-           return (t, 0);
-       }
-       return MoveOnPath(path, newT, newMovementLeft);
-   }
--}
-
-
 sign : Float -> Int
 sign value =
     if value > 0 then
@@ -119,8 +92,66 @@ sign value =
         0
 
 
+
+-- public static (double T, double MovementLeft) MoveOnPath(Func<double, Double2> path, double t, double movementLeft)
+-- {
+--     DebugEx.Assert(t >= 0 && t <= 1);
+--     if (Math.Abs(movementLeft) < 0.000001 ||
+--         (t < 0.000001 && movementLeft < 0) ||
+--         (t > 0.999999 && movementLeft > 0))
+--     {
+--         var newT = t;
+--         if (t < 0.000001 && movementLeft < 0)
+--         {
+--             newT = 0;
+--         }
+--         else if (t > 0.999999 && movementLeft > 0)
+--         {
+--             newT = 1;
+--         }
+--         return (newT, movementLeft);
+--     }
+--
+--     return _moveOnPath(path, t, movementLeft);
+-- }
+--
+-- public static (double T, double MovementLeft) _moveOnPath(Func<double, Double2> path, double t, double movementLeft)
+-- {
+--     var moveSign = movementLeft > 0 ? 1 : -1;
+--
+--     var posPrev = path(t);
+--     var newT = t + 0.1 * moveSign;
+--     var pos = path(newT);
+--     var newMovementLeft = movementLeft - (pos - posPrev).Length * moveSign;
+--
+--     if (newT >= 1 || newT <= 0 || Math.Sign(newMovementLeft) != Math.Sign(movementLeft))
+--     {
+--         var endT = movementLeft > 0 ? 1 : 0;
+--         var a = Math.Min(
+--             (endT - t) / (newT - t),
+--             (0 - movementLeft) / (newMovementLeft - movementLeft));
+--         var b = (newT - t) * a + t;
+--         var c = (newMovementLeft - movementLeft) * a + movementLeft;
+--         return (b, c);
+--     }
+--     return _moveOnPath(path, newT, newMovementLeft);
+-- }
+
+
 moveOnPath : (Float -> Point2 Float) -> Float -> Float -> ( Float, Float )
 moveOnPath path t movementLeft =
+    let
+        _ =
+            if t >= 0 || t <= 1 then
+                ()
+            else
+                Debug.crash "t outside range" t
+    in
+        moveOnPathHelper path t movementLeft
+
+
+moveOnPathHelper : (Float -> Point2 Float) -> Float -> Float -> ( Float, Float )
+moveOnPathHelper path t movementLeft =
     let
         moveSign =
             ifThenElse (movementLeft > 0) 1 -1
@@ -129,22 +160,33 @@ moveOnPath path t movementLeft =
             path t
 
         newT =
-            t + 0.01 * moveSign
+            t + 0.1 * moveSign
 
         pos =
             path newT
 
         newMovementLeft =
-            movementLeft - (Point2.sub pos posPrev |> Point2.length) * moveSign
+            movementLeft - (Point2.sub pos posPrev |> Point2.length |> (*) moveSign)
     in
-        if t > 1 && movementLeft > 0 then
-            ( 1, max newMovementLeft 0 )
-        else if t < 0 && movementLeft < 0 then
-            ( 0, min newMovementLeft 0 )
-        else if sign newMovementLeft /= sign movementLeft then
-            ( t, 0 )
+        if newT >= 1 || newT <= 0 || sign newMovementLeft /= sign movementLeft then
+            let
+                endT =
+                    ifThenElse (movementLeft > 0) 1 0
+
+                a =
+                    min
+                        ((endT - t) / (newT - t))
+                        ((0 - movementLeft) / (newMovementLeft - movementLeft))
+
+                b =
+                    (newT - t) * a + t
+
+                c =
+                    (newMovementLeft - movementLeft) * a + movementLeft
+            in
+                ( b, c )
         else
-            moveOnPath path newT newMovementLeft
+            moveOnPathHelper path newT newMovementLeft
 
 
 
@@ -295,7 +337,7 @@ moveSubstep grid tile train movementLeft =
                     ( t, newMovementLeft ) =
                         moveOnPath path train.t movementLeft
                 in
-                    if newMovementLeft /= 0 then
+                    if abs newMovementLeft > 0.000001 then
                         case getNextPath grid tile (t == 1) of
                             Just ( nextTile, atEndOfPath ) ->
                                 let

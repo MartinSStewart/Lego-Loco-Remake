@@ -92,8 +92,8 @@ namespace Tests
 
                 var train = new Train(0, trainSpeed, true, 0);
 
-                var gridX = 0;// random.Next(World.MinGridPosition.X, World.MaxGridPosition.X);
-                var gridY = 0;// random.Next(World.MinGridPosition.Y, World.MaxGridPosition.Y);
+                var gridX = random.Next(World.MinGridPosition.X, World.MaxGridPosition.X);
+                var gridY = random.Next(World.MinGridPosition.Y, World.MaxGridPosition.Y);
 
                 var trackLength = 5;
                 for (var j = 0; j < trackLength; j++)
@@ -239,6 +239,37 @@ namespace Tests
                 rail.With(data: new TileRailFork(new[] { new Train(0, World.TrainSpeed, false, 0) }.ToImmutableList(), true))
             };
             Assert.AreEqual(expected, world.RailTiles);
+        }
+
+        [Test]
+        public void StackOverflowTest()
+        {
+            var world = new World(TileType.GetTileTypes(), new DateTime());
+
+            world.AddTile(
+                new Tile(
+                    new TileBaseData(world.TileTypes.FindIndex(item => item.CodeName == "railTurn"), new Int2(40, 25), 3),
+                    new TileRail(new[] { new Train(0.99785386021710187, 4, true, 3) }.ToImmutableList())));
+
+            world.AddTile("railSplitRight", new Int2(43, 22), 1);
+
+            world.AddTile(new Tile(new TileBaseData(6, new Int2(43, 25), 1), new TileRailFork(ImmutableList<Train>.Empty, true)));
+
+            world.MoveTrains(new DateTime() + TimeSpan.FromMilliseconds(100));
+        }
+
+        [Test]
+        public void StackOverflowTest2()
+        {
+            var world = new World(TileType.GetTileTypes(), new DateTime());
+            world.AddTile(
+                new Tile(
+                    new TileBaseData(5, new Int2(40, 13), 2),
+                    new TileRail(new[] { new Train(0.98829291305018363, 4, true, 3) }.ToImmutableList())));
+
+            world.AddTile(new Tile(new TileBaseData(6, new Int2(40, 16), 3), new TileRailFork(ImmutableList<Train>.Empty, true)));
+
+            world.MoveTrains(new DateTime() + TimeSpan.FromMilliseconds(100));
         }
     }
 }
